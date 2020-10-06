@@ -1,0 +1,10 @@
+/** 
+
+If an unexpected interrupt occurs (interrupt is enabled and no handler is installed, which usually indicates a bug), then the default action is to reset the device by jumping to the reset vector. You can override this by supplying a function named BADISR_vect which should be defined with ISR() as such. (The name BADISR_vect is actually an alias for __vector_default. The latter must be used inside assembly code in case <avr/interrupt.h> is not included.)
+
+#include <avr/interrupt.h>
+ISR(BADISR_vect)
+{
+    // user code here
+}
+*/
