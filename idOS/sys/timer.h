@@ -27,14 +27,6 @@
  */
 typedef unsigned long time_usec_t;
 
-/** ----------------- Definiciones de rtimer ------------------ */
-
-
-
-
-
-
-
 /** ----------------- Definiciones de timer ------------------ */
 
 
@@ -44,18 +36,40 @@ typedef unsigned long time_usec_t;
  */
 #define TIMER_SECOND 66
 
+#define TIMER_INIT(timer_name)                      \
+            static struct timer_st timer_name = {   \
+                    0,                              \
+                    NULL,                           \
+                    NULL,                           \
+                    NULL                            \
+                }
 
+
+#define TIMER_SET(timer, usec)                      \
+            do{                                     \
+                timer.task = task;                  \
+                timer_set(&timer, usec);            \
+            } while(0)
 
 /** ----------------- Definiciones de tipos de rtimer ------------------ */
+
+#define RTIMER_INIT(timer_name, call_back)          \
+            static struct timer_st timer_name = {   \
+                    0,                              \
+                    NULL,                           \
+                    &call_back,                     \
+                    NULL                            \
+                }
 
 /** \struct rtimer_st
  *  \brief  Definición de la estructura que recoge el evento completo de timer
  *  \note   La variable time se debe entender como "en el usec tal" y no como "dentro de time usec"
  */
 struct timer_st {
-    time_usec_t usec_time;               /**< Momento (en usec) en que ocurrirá la interrupción del rtimer */
-    struct timer_st * next;
-    void (* rtimer_call)(void *);
+    time_usec_t usec_time;                  /**< Momento (en usec) en que ocurrirá la interrupción del timer */
+    struct timer_st * next;                 /**< Próximo timer en la lista */
+    void (* rtimer_call)(void);             /**< Función callback para timer */
+    struct task_st * task;                  /**< Puntero a la tarea que seteó el timer */
 };
 
 /** \struct timer_wait_list

@@ -90,12 +90,12 @@ struct msg_st {
  */
 #define MSG_TIMER_SEND(msg_send_to, msg_data)               \
             do {                                            \
-                * msg_send_to.msg = {                       \
+                * msg_send_to->msg = {                      \
                     MSG_TIMER,                              \
                     0,                                      \
                     msg_data                                \
                 };                                          \
-                task_set_ready(&msg_send_to);               \
+                task_set_ready(msg_send_to);                \
             } while (0)
 
 
