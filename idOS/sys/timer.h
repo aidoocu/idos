@@ -47,7 +47,7 @@ typedef unsigned long time_usec_t;
 
 #define TIMER_SET(timer, usec)                      \
             do{                                     \
-                timer->usec_time = usec + MICROS;   \
+                timer.usec_time = usec /* + MICROS */;    \
                 timer.task = task;                  \
                 timer_set(&timer, usec);            \
             } while(0)

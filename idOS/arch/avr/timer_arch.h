@@ -14,6 +14,7 @@
 #define _TIMER_ARCH_H_
 
 #include "../arch.h"
+#include <avr/interrupt.h>
 
 /** \def    F_CPU
  *  \brief  Reloj (CLK) de la CPU
@@ -26,7 +27,7 @@
 /** \def    FM_CPU 
  *  \brief  Frecuencia de la CPU en MHz para facilitar cálculos
 */
-#define  FM_CPU (F_CPU / 1000000)
+#define  FM_CPU (F_CPU / 1000000L)
 
 /** \def    TIMER_CONT
  *  \brief  Registro que lleva el contador del timer en el micro, en este caso, Timer1 (16 bits) 
@@ -38,7 +39,7 @@
  */
 #define TIMER_COMP OCR1A
 
-/** \def    RTIMER_PRESCALER 
+/** \def    TIMER_PRESCALER 
  *  \brief  Definición del prescalador para el rtimer
  *  \note   A 16 MHz, el período por preecalador:
  *              Prescaler   Período     1 mS                            1 Seg
@@ -48,7 +49,7 @@
  *              256         16   uSeg   62,5   ciclos (62 = 0.992 mSeg) 62 500
  *              1024        64   uSeg   16,625 ciclos (16 = 0.960 mSeg) 16 625
 */
-#define TIMER_PRESCALER    1024
+#define TIMER_PRESCALER    64
 
 /** \def        MSEC_TO_CLOCK 
  *  \brief      De mseg a clk_ticks
@@ -72,6 +73,24 @@
  *  \brief  Es la cantidad máxima de microsegundos que se pueden contar en un ciclo completo de
  *          del Timer1, que cuenta desde 0x0000 hasta 0xFFFF (16 bits) 65535
  */
+
+#if TIMER_PRESCALER < 64
+
+/** \def        USEC_PER_CLK_CYCLES
+ *  \brief      Cantidad de incrementos del contador del timer TIMER_TEMP por cada microsegundo
+ *  \attention  Esta constate solo existe para los prescaladores 1 y 8
+ */
+#define USEC_PER_CLK_CYCLES (FM_CPU / TIMER_PRESCALER)
+
+#else
+/** \def        CLK_CYCLES_PER_USEC
+ *  \brief      Cantidad de microsegundos por cada incremento del contador del timer TIMER_TEMP
+ *  \attention  Esta constate solo existe para los prescaladores 64, 256 y 1024
+ */
+#define CLK_CYCLES_PER_USEC (TIMER_PRESCALER / FM_CPU)
+
+#endif
+
 #define MAX_USEC            \
           0xFFFFUL * TIMER_PRESCALER / FM_CPU
 
@@ -79,13 +98,13 @@
  *  \note En este caso, como se usa el framework de Arduino, se llama a micros(). En una posible 
  *        implenetación deberá emular esta función
 */
-#define MICROS micros()
+//#define MICROS micros()
 
 /** \def  Macro que devuelve los milisegundos desde reset 
  *  \note En este caso, como se usa el framework de Arduino, se llama a millis(). En una posible 
  *        implenetación deberá emular esta función.
 */
-#define MILLIS millis()
+//#define MILLIS millis()
 
 /** \def    SEI_TIMER
  *  \brief  Activa la interrupción del timer. 

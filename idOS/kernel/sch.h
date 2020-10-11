@@ -44,6 +44,10 @@ struct sch_st {
 
 /* -------------------- funciones ------------------- */
 
+/** \brief  Se incluye en la macro TASKS_AUTO_START que arranca a las tareas con el arranque del idOS
+ */
+void task_start(void);
+
 /** 
  * \brief   Marca como activas (pone en a cola) todas las tareas 
  *          que estén en el arreglo de punteros a task.

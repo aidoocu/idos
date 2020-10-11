@@ -58,11 +58,11 @@ typedef unsigned int    data_event_t;
  *          tarea. ........
  * */
 struct task_st{
-    struct task_st * next;              /**< Puntero a próxima tarea en cola. Si no está en la cola se apunta a NULL */
+    struct task_st * next;              /**< Puntero a próxima tarea en cola. Si no está en la cola se apunta a __null */
     const char * task_strname;          /**< Descripción de la tarea */
     const unsigned char priority;       /**< Prioridad de la tarea. Ver Prioridades */
     unsigned char status;               /**< Estado de la tarea. Ver Estados del protohilo */
-    unsigned char pc;                   /**< Pseudo contador de programa. Guarda __LINE__ cuando la tarea cede (YIELD) el CPU o es 0 cuando comienza desde el principio */
+    unsigned int pc;                    /**< Pseudo contador de programa. Guarda __LINE__ cuando la tarea cede (YIELD) el CPU o es 0 cuando comienza desde el principio */
     struct msg_st * msg;                /**< Mensaje que se envía a esta misma tarea */
     void (* pt)(struct task_st *);      /**< Puntero al callback del protohilo */
 };
@@ -76,7 +76,7 @@ struct task_st{
  * \param   event decriptor del evento
  * \param   data_event datos del evento
  * \note    La función declarada se apunta desde la misma estructura.
- *          Si no existe un evento, o el evento no porta datos, se pasará NULL
+ *          Si no existe un evento, o el evento no porta datos, se pasará __null
 * */
 #define TASK_PT(task_name)                              \
             void task_pt_##task_name(task_st *task)
@@ -85,7 +85,7 @@ struct task_st{
  *          los mensajes y eventos
  */
 #define TASK_MSG(task_name) \
-            static struct msg_st msg_from_##task_name = {0, 0, NULL}
+            static struct msg_st msg_from_##task_name = {0, 0, __null}
 
 /**
  * \brief   Primero define el prototipo de la función cuerpo del pt con la macro 
@@ -100,7 +100,7 @@ struct task_st{
             TASK_PT(task_name);                         \
             TASK_MSG(task_name);                        \
             static struct task_st task_name = {         \
-                NULL,                                   \
+                __null,                                   \
                 task_strmane,                           \
                 NORMAL,                                 \
                 INACTIVE,                               \
@@ -115,8 +115,9 @@ struct task_st{
  *  \note   Esta macro debe ser llamada después de haber de haber definido todas
  *          las tareas de usuario.
   */
-#define TASKS_AUTO_START(...)                  \
-        struct task_st * const tasks_auto_start[] = {__VA_ARGS__, NULL};
+#define TASKS_AUTO_START(...)                           \
+        struct task_st * const tasks_auto_start[] = {__VA_ARGS__, __null}; \
+        void task_start(void){ task_autostart(tasks_auto_start); }
 
 /** 
  * \brief   El task es un switch/case, por lo que no se recomienda utilizar esta 
@@ -124,9 +125,9 @@ struct task_st{
  *          TASK_BEGIN comienza poniendo el estado del task a RUNING e inicializar
  *          el switch y el primer case: 0
  */
-#define TASK_BEGIN                              \
-        task->status = RUNNING;                 \
-        switch(task->pc) {                      \
+#define TASK_BEGIN                                      \
+        task->status = RUNNING;                         \
+        switch(task->pc) {                              \
             case 0:
 
 /** 

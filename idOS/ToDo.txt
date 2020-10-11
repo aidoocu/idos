@@ -1,3 +1,4 @@
+
 /** 
 
 If an unexpected interrupt occurs (interrupt is enabled and no handler is installed, which usually indicates a bug), then the default action is to reset the device by jumping to the reset vector. You can override this by supplying a function named BADISR_vect which should be defined with ISR() as such. (The name BADISR_vect is actually an alias for __vector_default. The latter must be used inside assembly code in case <avr/interrupt.h> is not included.)
@@ -8,3 +9,9 @@ ISR(BADISR_vect)
     // user code here
 }
 */
+
+ Interrupt Flags can also be cleared by writ- ing a logic one to the flag bit position(s) to be cleared. If an interrupt condition occurs while the corresponding interrupt enable bit is cleared, the Interrupt Flag will be set and remembered until the interrupt is enabled, or the flag is cleared by software. Similarly, if one or more interrupt conditions occur while the Global Interrupt Enable bit is cleared, the corresponding Interrupt Flag(s) will be set and remembered until the Global Interrupt Enable bit is set, and will then be executed by order of priority.
+The second type of interrupts will trigger as long as the interrupt condition is present. These interrupts do not nec- essarily have Interrupt Flags. If the interrupt condition disappears before the interrupt is enabled, the interrupt will not be triggered.
+When the AVR exits from an interrupt, it will always return to the main program and execute one more instruction before any pending interrupt is served.
+Note that the Status Register is not automatically stored when entering an interrupt routine, nor restored when returning from an interrupt routine. This must be handled by software.
+When using the CLI instruction to disable interrupts, the interrupts will be immediately disabled. No interrupt will be executed after the CLI instruction, even if it occurs simultaneously with the CLI instruction. The following example shows how this can be used to avoid interrupts during the timed EEPROM write sequence.

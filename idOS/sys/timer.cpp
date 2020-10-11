@@ -17,12 +17,12 @@
 //#define _DEBUG_TIMER_
 /* 
 static struct timer_wait_list_st timer_wait_list {
-    NULL,
-    NULL
+    __null,
+    __null
 }; */
 
 /** \brief  Puntero al timer activo */
-static timer_st * timer_active = __null;
+static volatile timer_st * timer_active = __null;
 
 
 void timer_init(void){
@@ -34,6 +34,7 @@ void timer_init(void){
 
 uint8_t timer_set(timer_st * timer, time_usec_t time_usec) {
     
+
     /* Si el tiempo es mayor que el desvorde del timer */
     /** \todo   no devolver un error y ser capaz de programar un timer mayor que MAX_USEC */
     if(time_usec > MAX_USEC) {
@@ -45,21 +46,14 @@ uint8_t timer_set(timer_st * timer, time_usec_t time_usec) {
         /* Se setea el timer el que entró como parámentro */
         timer_active = timer;
 
+        TIMER_COMP = USEC_TO_CLK(time_usec);
+        TIMER_TEMP = 0x0000;
+
         /* Activa la interrupción por comparación del Timer */
         SEI_TIMER();
     
         return 0;
-//    }
-
-    /* Si hay un timer programado, poner en la lista de espera de timers */
-//    if (timer_wait_list.begin == NULL) {
-//        timer_wait_list.begin = timer;
-//    } else {
-//        /* Poniendo a timer como último elemento de la lista */
-//        timer_wait_list.end->next = timer;
-//        timer_wait_list.end = timer;
-//        timer_wait_list.end->next = NULL;
-//    }
+    }
 
     return 0;
 }

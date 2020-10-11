@@ -1,6 +1,22 @@
 
 #include "idos.h"
 
+/** \brief  Punto de entrada para idOS */
+int main(void){
+
+    /* Inicializamos idOS */
+    idos_init();
+
+    /* Arrancamos las tareas que inician al principio */
+    task_start();
+    
+    while(1){
+        /* Correr el planificador continuamente */
+        schedule();
+    }
+    return 0;
+    }
+
 
 uint8_t idos_init(void){
 
@@ -10,7 +26,6 @@ uint8_t idos_init(void){
     cli();
 
     timer_init();
-    //task_autostart(tasks_auto_start);
 
     /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
     SREG = cSREG;

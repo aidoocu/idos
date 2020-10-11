@@ -1,13 +1,20 @@
 
 #include "idOS/idos.h"
 
-TIMER_INIT (etimer);
+//TIMER_INIT (etimer);
 
+static volatile bool toggle = 0; 
 
 TASK(hola_mundo, "descripcion_task");
 
 void rtimer_fun(void){
-  Serial.println("-real-timer-");
+  if (toggle)
+    toggle = 0;
+  else
+    toggle = 1;
+
+  //digitalWrite(9, toggle);
+
   task_set_ready(&hola_mundo);
 }
 
@@ -23,13 +30,13 @@ TASK_PT(hola_mundo){
 
 TASK_BEGIN
 
-  Serial.println("H: 1");
+  //Serial.println("H: 1");
 
 
-  TIMER_SET(etimer, 1000000); //1Hz
+  TIMER_SET(rtimer, 100);
 
 
-  Serial.println("H: 2");
+  //Serial.println("H: 2");
 
   //TASK_YIELD
 
@@ -43,7 +50,8 @@ TASK_END
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  //Serial.begin(9600);
+  //pinMode(9, OUTPUT);
 
   idos_init();
   task_autostart(tasks_auto_start);

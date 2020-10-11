@@ -5,9 +5,10 @@
 #ifndef _IDOS_H_
 #define _IDOS_H_
 
-/** \brief Dentro de arch está la verificación de la arquitectura para la cuál se compilará */
-#include "arch/arch.h"
+#include <stdint.h>
 
+/** \brief  Dentro de arch está la verificación de la arquitectura para la cuál se compilará */
+#include "arch/arch.h"
 
 /** Definiciones del kernel  */
 #include "kernel/task.h"
