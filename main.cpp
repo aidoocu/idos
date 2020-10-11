@@ -26,11 +26,11 @@ TASK_BEGIN
   Serial.println("H: 1");
 
 
-  TIMER_SET(rtimer, 1000000); //1Hz
+  TIMER_SET(etimer, 1000000); //1Hz
 
 
   Serial.println("H: 2");
-  //Serial.println(TIFR1);
+
   //TASK_YIELD
 
 

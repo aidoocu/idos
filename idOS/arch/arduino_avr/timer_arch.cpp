@@ -3,8 +3,6 @@
 #include "timer_arch.h"
 
 
-//#define _DEBUG_TIMER_ARCH_
-
 void rtimer_init_arch(void){
 
     /* Limpiar por completo  los registros de configuración de Timer1 TCCR1A/B */
@@ -29,7 +27,7 @@ void rtimer_init_arch(void){
     TCCR1B = TCCR1B | 2;                /**< TCCR1B == b0000 0010 */
     #endif
     #if TIMER_PRESCALER == 64
-    TCCR1B = TCCR1B | 3                 /**< TCCR1B == b0000 0011 */
+    TCCR1B = TCCR1B | 3;                 /**< TCCR1B == b0000 0011 */
     #endif
     #if TIMER_PRESCALER == 256
     TCCR1B = TCCR1B | 4;                /**< TCCR1B == b0000 0100 */
@@ -38,15 +36,9 @@ void rtimer_init_arch(void){
     TCCR1B = TCCR1B | 5;                /**< TCCR1B == b0000 0101 */
     #endif
 
+    /* Nos aseguramos que la interrupción comience desactivada */
+    TIMSK1 = 0;
 
-    #ifdef _DEBUG_TIMER_ARCH_
-    Serial.print("Timer init: TCCR1A ");
-    Serial.println(TCCR1A);
-    Serial.print("TCCR1B: ");
-    Serial.println(TCCR1B);
-    Serial.print("MAX usec: ");
-    Serial.println(MAX_USEC);
-    #endif
 }
 
 

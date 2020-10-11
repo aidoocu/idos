@@ -56,23 +56,15 @@ typedef unsigned int    data_event_t;
  * \brief   La tarea (process en Contiki) es el administrador de recursos
  *          incluye el nombre (name) y la descrición (task_strname) de la 
  *          tarea. ........
- *          next: Puntero a próxima tarea en cola. Si no está en la cola 
- *                se apunta a NULL
- *          task_strname: Descripción de la tarea
- *          priority: Prioridad de la tarea. Ver Prioridades
- *          state: Estado de la tarea. Ver Estados del protohilo
- *          pc: Pseudo contador de programa. Guarda __LINE__ cuando la tarea
- *              cede (YIELD) el CPU o es 0 cuando comienza desde el principio
- *          pt: Puntero al callback del protohilo
  * */
 struct task_st{
-    struct task_st * next;
-    const char * task_strname;
-    const unsigned char priority;
-    unsigned char status;
-    int8_t pc;
-    struct msg_st * msg;
-    void (* pt)(struct task_st *);
+    struct task_st * next;              /**< Puntero a próxima tarea en cola. Si no está en la cola se apunta a NULL */
+    const char * task_strname;          /**< Descripción de la tarea */
+    const unsigned char priority;       /**< Prioridad de la tarea. Ver Prioridades */
+    unsigned char status;               /**< Estado de la tarea. Ver Estados del protohilo */
+    unsigned char pc;                   /**< Pseudo contador de programa. Guarda __LINE__ cuando la tarea cede (YIELD) el CPU o es 0 cuando comienza desde el principio */
+    struct msg_st * msg;                /**< Mensaje que se envía a esta misma tarea */
+    void (* pt)(struct task_st *);      /**< Puntero al callback del protohilo */
 };
 
 /* ------------- Macros de definicion de tareas y protohilos ---------------- */

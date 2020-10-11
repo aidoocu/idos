@@ -18,7 +18,6 @@
 
 #ifdef ARDUINO_ARCH_AVR
 #include "arduino_avr/timer_arch.h"
-#include "arduino_avr/int_arch.h"
 #endif
 
 #endif //_ARCH_H_

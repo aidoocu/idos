@@ -22,7 +22,8 @@ static struct timer_wait_list_st timer_wait_list {
 }; */
 
 /** \brief  Puntero al timer activo */
-static timer_st * timer_active = NULL;
+static timer_st * timer_active = __null;
+
 
 void timer_init(void){
 
@@ -32,25 +33,18 @@ void timer_init(void){
 
 
 uint8_t timer_set(timer_st * timer, time_usec_t time_usec) {
-
-    /* Guardamos en el timer cuando deberá activarse lo antes posible para minimizar errores*/
-    //!!!!!!!!!!!!!!!!!!! - > timer->usec_time = time_usec + MICROS;
-
+    
     /* Si el tiempo es mayor que el desvorde del timer */
     /** \todo   no devolver un error y ser capaz de programar un timer mayor que MAX_USEC */
     if(time_usec > MAX_USEC) {
         return 1;
     }
 
-//    /* Aqui es donde se verifica que no hay un timer corriendo */
-//    if(!IS_TIMER_SET){
-
-        /* Si no hay un timer corriendo se setea el timer el que entró como parámentro */
+    if(!IS_TIMER_SET){
+    
+        /* Se setea el timer el que entró como parámentro */
         timer_active = timer;
 
-        TIMER_COMP = USEC_TO_CLK(time_usec);
-        TIMER_TEMP = 0x0000;
-        
         /* Activa la interrupción por comparación del Timer */
         SEI_TIMER();
     
@@ -71,9 +65,9 @@ uint8_t timer_set(timer_st * timer, time_usec_t time_usec) {
 }
 
 ISR(TIMER1_COMPA_vect){
-    if (timer_active->rtimer_call == NULL){
-        Serial.println("-INT-");
-        MSG_TIMER_SEND(timer_active->task, NULL);
+    //time_usec_t tiempo = MICROS;
+    if (timer_active->rtimer_call == __null){
+        MSG_TIMER_SEND(timer_active->task, __null);
         CLI_TIMER();
     } else {
         timer_active->rtimer_call();

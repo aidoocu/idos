@@ -90,22 +90,24 @@
 /** \def    SEI_TIMER
  *  \brief  Activa la interrupción del timer. 
  * 
- *          Limpiar la baderas del comparador del Timer1 y se activa la interrupciónpor el  
- *          ComparadorA del Timer1.
+ *          Limpiar todas la baderas del comparador del Timer1 y se activa la interrupciónpor el  
+ *          ComparadorA del Timer1 (OCIE1A).
 */
-#define SEI_TIMER()                      \
-            TIFR1 |= (1<<OCF1A);         \
-            TIMSK1 |= (1 << OCIE1A)
+#define SEI_TIMER()                     \
+            TIFR1 = 0xFF;               \
+            TIMSK1 = 2
 
 /** \def    CLI_TIMER
  *  \brief  Desactiva la interrupción del timer. 
  * 
  *          Se desactiva por el ComparadorA del Timer1.
 */
-#define CLI_TIMER() (TIMSK1 &= (0 << OCIE1A))
+#define CLI_TIMER()\
+            TIFR1 = 0xFF;               \
+            (TIMSK1 = 0)                \
 
 /** \def    IS_TIMER_SET 
- *  \brief  Verifica si la interrupción del Timer1 está activa.
+ *  \brief  Verifica si la interrupción del Timer1 está activa (OCIE1A).
 */
 #define IS_TIMER_SET (TIMSK1 & 2)  
 

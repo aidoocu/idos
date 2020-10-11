@@ -39,14 +39,15 @@ typedef unsigned long time_usec_t;
 #define TIMER_INIT(timer_name)                      \
             static struct timer_st timer_name = {   \
                     0,                              \
-                    NULL,                           \
-                    NULL,                           \
-                    NULL                            \
+                    __null,                         \
+                    __null,                         \
+                    __null                          \
                 }
 
 
 #define TIMER_SET(timer, usec)                      \
             do{                                     \
+                timer->usec_time = usec + MICROS;   \
                 timer.task = task;                  \
                 timer_set(&timer, usec);            \
             } while(0)
@@ -56,14 +57,14 @@ typedef unsigned long time_usec_t;
 #define RTIMER_INIT(timer_name, call_back)          \
             static struct timer_st timer_name = {   \
                     0,                              \
-                    NULL,                           \
+                    __null,                         \
                     &call_back,                     \
-                    NULL                            \
+                    __null                          \
                 }
 
 /** \struct rtimer_st
  *  \brief  Definición de la estructura que recoge el evento completo de timer
- *  \note   La variable time se debe entender como "en el usec tal" y no como "dentro de time usec"
+ *  \note   La variable usec_time se debe entender como "en el usec tal" y no como "dentro de time usec"
  */
 struct timer_st {
     time_usec_t usec_time;                  /**< Momento (en usec) en que ocurrirá la interrupción del timer */

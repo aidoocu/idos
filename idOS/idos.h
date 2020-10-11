@@ -27,9 +27,6 @@ enum {
     INIT_ERR_INT
 };
 
-
-
-
 /** \brief  Inicializando idOS
  *  \return Estado de la inicialización
  *  \retval INIT_SUCCESS Inicialización exitosa
