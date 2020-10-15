@@ -76,10 +76,7 @@ void task_set_ready(struct task_st * task);
  */
 uint8_t task_runing(void);
 
-/** 
- * \brief Planificador gloval
- */
-void schedule();
+
 
 #endif //_SCH_H_
 

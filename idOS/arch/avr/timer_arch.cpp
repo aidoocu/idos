@@ -2,6 +2,54 @@
 
 #include "timer_arch.h"
 
+/* Cantidad de msec desde que el sistema arrancó */
+static volatile uint32_t sys_msec;
+
+
+void timer_sys_init_arch(void){
+    
+    /* Prescaler de 8 (bit 2) + Habilitar el modo CTC, (bit WGM12 (3)) pone a 0 (limpia) el temporizador (TIMER_TEMP) ante una 
+    coincidencia con OCR0A */
+    TCCR1B = TCCR1B | 10;                /**< TCCR1B == b0000 1010 */
+
+    
+    /* Incializamos el comparador 2000 - 1 (demora + 1 en volver a 0), y temporizador (cada 1ms) */
+    OCR1A = 1999;
+    TCNT1 = 0;
+
+    /* Se activa la interrupción por comparación */
+    TIMSK1 = 2;                         /**< TIMSK1 == b0000 0010 */
+
+    //TIFR1 = 0;
+
+    sys_msec = 0;
+
+    return;
+}
+/** Interrupción para contar milisegundos */
+ISR(TIMER1_COMPA_vect){
+    sys_msec ++;
+}
+
+mtime_t m_now(void){
+    
+    /* Se guarda SREG */
+    uint8_t s_reg = SREG;
+    /* Para deshabilitar las int y falseen mtime */
+    cli();
+
+    /* Se leen los mseg acumulados, timer1 dispara cada 1ms */
+    mtime_t mtime = sys_msec;
+    
+    /* Se reactivan las INT */
+    SREG = s_reg;
+    
+    return(mtime);
+}
+
+/* utime_t u_now(void){
+    
+} */
 
 void rtimer_init_arch(void){
 
@@ -16,7 +64,8 @@ void rtimer_init_arch(void){
     /* Habilitar el modo CTC, (bit WGM12) pone a 0 (limpia) el temporizador (TIMER_TEMP) ante una 
     coincidencia con OCR1A */
     //TCCR1B = TCCR1B | 8;
-    TCCR1B |= (1 << WGM12);
+    //TCCR1B |= (1 << WGM12);
+    //TCCR0A |= (1 << WGM01);
 
 
     /** \def Configurar el prescalador             CS12 CS11 CS10 */

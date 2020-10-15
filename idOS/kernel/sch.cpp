@@ -133,11 +133,3 @@ uint8_t task_runing(void){
   /* No hay tarea alguna en la cola lista para correr */
   return 0x00;
 }
-
-void schedule(){
-  /* Mientras exista una tarea en la cola */
-  while(task_runing() != 0x00){
-
-  }
-  //deep_sleep();
-}

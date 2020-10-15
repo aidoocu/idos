@@ -16,6 +16,9 @@
 #include "../arch.h"
 #include <avr/interrupt.h>
 
+typedef uint32_t utime_t;
+typedef uint32_t mtime_t;
+
 /** \def    F_CPU
  *  \brief  Reloj (CLK) de la CPU
  *  \note   el IDE puede definir está constante en c_cpp_properties.json 
@@ -94,18 +97,6 @@
 #define MAX_USEC            \
           0xFFFFUL * TIMER_PRESCALER / FM_CPU
 
-/** \def  Macro que devuelve los microsegundos desde reset 
- *  \note En este caso, como se usa el framework de Arduino, se llama a micros(). En una posible 
- *        implenetación deberá emular esta función
-*/
-//#define MICROS micros()
-
-/** \def  Macro que devuelve los milisegundos desde reset 
- *  \note En este caso, como se usa el framework de Arduino, se llama a millis(). En una posible 
- *        implenetación deberá emular esta función.
-*/
-//#define MILLIS millis()
-
 /** \def    SEI_TIMER
  *  \brief  Activa la interrupción del timer. 
  * 
@@ -128,9 +119,32 @@
 /** \def    IS_TIMER_SET 
  *  \brief  Verifica si la interrupción del Timer1 está activa (OCIE1A).
 */
-#define IS_TIMER_SET (TIMSK1 & 2)  
+#define IS_TIMER_SET (TIMSK1 & 2)
+//!!!!#define IS_TIMER_SET (TIMSK1 & _BV(OCIE1A)) //_BV devuelve el valor de bit corrido <<, esta operación supuestamente no penaliza tiempo de cpu, hay que ver
 
-/** \brief  Inicializar el Timer1 a partir de la arquitectura arduino_avr. 
+/* -------------------------- Funciones ----------------------------------- */
+
+/** \brief  Inicializamos el contador de tiempo del sistema que se utilizará en las funciones u_now() y m_now() 
+ * 
+ *          Se utiliza el Timer0 con un prescalador de 64, que significa 4usec por ciclo (resolución mínima) a 250 ciclos para 1 msec 
+*/
+void timer_sys_init_arch(void);
+
+/** \brief  Devuelve los microsegundos desde reset 
+ * 
+ *          utime_t tiene 32 bits de largo por lo que se va a resetar cada 4295 segundos, unos cada ~ 1,20 horas.
+ *          Los usec se leen como la suma del temporizador entre 2 y la cantidad de msec ((TCNT1 / 2) + m_now())
+*/
+utime_t u_now(void);
+
+/** \brief  Devuelve los milisegundos desde reset 
+ * 
+ *          utime_t tiene 32 bits de largo por lo que se va a resetar cada ~ 3 días
+ *  \note   Suponiendo que la INT de timer1 ocurra ejecutando mtime_t mtime = sys_msec la función tendrá un error máximo de 1 ms
+*/
+mtime_t m_now(void);
+
+/** \brief  Inicializar el Timer1 a partir de la arquitectura avr. 
  * 
  *          Se activa la interrupción por el ComparadorA (FOC1A) y se configura el prescalador 
  *          según TIMER_PRESCALER.

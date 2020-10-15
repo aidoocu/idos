@@ -22,11 +22,6 @@
 
 #include "../idos.h"
 
-/** \typedef    time_usec_t
- *  \brief      Guarda tiempo en usegundos
- */
-typedef unsigned long time_usec_t;
-
 /** ----------------- Definiciones de timer ------------------ */
 
 
@@ -45,9 +40,9 @@ typedef unsigned long time_usec_t;
                 }
 
 
-#define TIMER_SET(timer, usec)                      \
+#define TIMER_SET(timer, msec)                      \
             do{                                     \
-                timer.usec_time = usec /* + MICROS */;    \
+                timer.msec_time = msec + m_now();   \
                 timer.task = task;                  \
                 timer_set(&timer, usec);            \
             } while(0)
@@ -64,10 +59,10 @@ typedef unsigned long time_usec_t;
 
 /** \struct rtimer_st
  *  \brief  Definición de la estructura que recoge el evento completo de timer
- *  \note   La variable usec_time se debe entender como "en el usec tal" y no como "dentro de time usec"
+ *  \note   La variable usec_time se debe entender como "en el msec tal" y no como "dentro de time msec"
  */
 struct timer_st {
-    time_usec_t usec_time;                  /**< Momento (en usec) en que ocurrirá la interrupción del timer */
+    utime_t msec_time;                      /**< Momento (en msec) en que ocurrirá la interrupción del timer */
     struct timer_st * next;                 /**< Próximo timer en la lista */
     void (* rtimer_call)(void);             /**< Función callback para timer */
     struct task_st * task;                  /**< Puntero a la tarea que seteó el timer */
@@ -83,13 +78,14 @@ struct timer_wait_list_st {
     timer_st * end;
     };
 
-/** ----------------- Definiciones de funciones de rtimer ------------------ */
+/** ----------------- Definiciones de funciones de timer ------------------ */
 
 /** \brief  Inicializar el timer  
  * 
 */
 void timer_init(void);
 
+void timer_sys_init(void);
 
 /** \brief  Función que setea un rtimer
  * 
@@ -101,9 +97,29 @@ void timer_init(void);
  *          Si rtimer está activo, si comparará el usec_time. Si usec_time es mayor que el 
  *          activo se agrega a la lista de espera el nuevo rtimer. Si es menor, el rtimer
  *          activo se dehabilita y se agrega a la lista de espera y se activa el nuevo rtimer
+ * 
+ *  \param  !!1
+ *  \param  !!
  *  \return !!!!!!!!!!!
  */
-uint8_t timer_set(timer_st * timer, time_usec_t time_usec);
+uint8_t rtimer_set(timer_st * timer, utime_t time_usec);
 
+
+/** \brief  Función que setea un timer
+ * 
+ *          Esta función pone al timer en la lista de espera.
+ *  \param  timer un puntero al timer que debe ser seteado
+ *  \param  timme_msec cuando deberá expirar el timer, o sea, el timer expira en el msec tal 
+ *  \return !!!!!!!!!!!
+ */
+void timer_set(timer_st * timer);
+
+
+/** \brief      Función que verifica si hay un timer listo y está listo para correr. 
+ * 
+ *              Si ya hay un timer listo se le pasa un mensaje a la tarea que lo invocó.
+ * \attention   Esta función se llama dentro de una INT frecuente
+ */ 
+void timer_exec(void);
 
 #endif  //_TIMER_H_

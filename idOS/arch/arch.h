@@ -17,6 +17,7 @@
 #endif
 
 #ifdef __AVR_ATmega328P__
+#include <avr/io.h>
 #include "avr/timer_arch.h"
 #endif
 
