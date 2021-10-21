@@ -17,6 +17,7 @@
 
 /** Definiciones del sistema */
 #include "sys/timer.h"
+#include "sys/uart.h"
 
 /* ------------------------------------------------------------- */
 /** \enum   INIT_STATE 

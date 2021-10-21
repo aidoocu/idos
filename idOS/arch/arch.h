@@ -14,6 +14,7 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
+#include "arduino/uart_arch.h"
 #endif
 
 #ifdef __AVR_ATmega328P__

@@ -5,7 +5,6 @@
 int main(void){
 
     /* Inicializamos idOS */
-    pinMode(9, OUTPUT);
     idos_init();
 
     /* Arrancamos las tareas que inician al principio */
@@ -31,7 +30,10 @@ uint8_t idos_init(void){
     cSREG = SREG;
     cli();
 
-    timer_sys_init_arch();
+    /* Inicializar el UART como salida estándar de printf */
+    uart_init();
+
+    //timer_sys_init_arch();
     //timer_init();
 
     /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
