@@ -1,3 +1,9 @@
+Debe existir la forma de desabilitar los diferentes modulos extras que puede que no sean utilizados en algún momento 
+o puedan entrar en comfligto con otros por utilizar los mismos recursos, por ejemplo, habilitar el UART para comunicación
+serial usandolo como salida estándar de printf cuesta más de un valioso 10% en flash y en RAM respectivamente que si la 
+aplicación no necesitase se podría reaprovechar.
+
+
 
 /** 
 
@@ -15,3 +21,5 @@ The second type of interrupts will trigger as long as the interrupt condition is
 When the AVR exits from an interrupt, it will always return to the main program and execute one more instruction before any pending interrupt is served.
 Note that the Status Register is not automatically stored when entering an interrupt routine, nor restored when returning from an interrupt routine. This must be handled by software.
 When using the CLI instruction to disable interrupts, the interrupts will be immediately disabled. No interrupt will be executed after the CLI instruction, even if it occurs simultaneously with the CLI instruction. The following example shows how this can be used to avoid interrupts during the timed EEPROM write sequence.
+
+
