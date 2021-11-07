@@ -4,7 +4,7 @@
  *  al otro pt y luego se va a dormir. Así cada, continuamente, pt despierta al otro
  *  y se va a dormir.
  */
-#include "idOS/os/idos.h"
+#include "os/idos.h"
 
 /* Declaro dos protohilos */
 TASK(task_uno, "primera tarea");
