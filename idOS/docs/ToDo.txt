@@ -1,0 +1,5 @@
+Debe existir la forma de desabilitar los diferentes modulos extras que puede que no sean utilizados en algún momento 
+o puedan entrar en comfligto con otros por utilizar los mismos recursos, por ejemplo, habilitar el UART para comunicación
+serial usandolo como salida estándar de printf cuesta más de un valioso 10% en flash y en RAM respectivamente que si la 
+aplicación no necesitase se podría reaprovechar.
+

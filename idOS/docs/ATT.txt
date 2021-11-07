@@ -1,0 +1,2 @@
+En este documento estamos guardando notas de atención que pueden generar comportamientos no previstos 
+del sistema. Algunas se pueden arreglar, otras tendrán que ser tenidas en cuenta a la hora de programar
