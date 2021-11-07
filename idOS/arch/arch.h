@@ -14,12 +14,19 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#include "arduino/uart_arch.h"
+#include "arduino/uart_ino.h"
+#include "arduino/timer_ino.h"
 #endif
 
 #ifdef __AVR_ATmega328P__
 #include <avr/io.h>
-#include "avr/timer_arch.h"
-#endif
+#include "cpu/avr/atmega328p/sleep_arch.h"
 
-#endif //_ARCH_H_
+/* Si estamos usando el framework de arduino se tomarán de ahí las siguientes definiciones */
+#ifndef ARDUINO
+#include "cpu/avr/atmega328p/timer_arch.h"
+#endif /* ARDUINO */
+
+#endif /* __AVR_ATmega328P__ */
+
+#endif /* _ARCH_H_ */
