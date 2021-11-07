@@ -100,7 +100,7 @@ struct task_st{
             TASK_PT(task_name);                         \
             TASK_MSG(task_name);                        \
             static struct task_st task_name = {         \
-                __null,                                   \
+                __null,                                 \
                 task_strmane,                           \
                 NORMAL,                                 \
                 INACTIVE,                               \
@@ -115,9 +115,9 @@ struct task_st{
  *  \note   Esta macro debe ser llamada después de haber de haber definido todas
  *          las tareas de usuario.
   */
-#define TASKS_AUTO_START(...)                           \
-        struct task_st * const tasks_auto_start[] = {__VA_ARGS__, __null}; \
-        void task_start(void){ task_autostart(tasks_auto_start); }
+#define TASKS_AUTO_START(...)                                               \
+        struct task_st * const tasks_auto_start[] = {__VA_ARGS__, __null};  \
+        void task_start(void){ task_autostart(tasks_auto_start); }          \
 
 /** 
  * \brief   El task es un switch/case, por lo que no se recomienda utilizar esta 
