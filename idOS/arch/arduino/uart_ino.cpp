@@ -6,7 +6,7 @@
  * 
  */
 
-#include "uart_arch.h"
+#include "uart_ino.h"
 
 /** \brief  Función callback invocada por printf como salida estándar 
  *  \note   
