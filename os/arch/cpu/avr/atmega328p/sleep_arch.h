@@ -19,10 +19,16 @@
 
 #include "../../../arch.h"
 
-/* \brief   Inicializar el modo sleep */
+/** \brief   Inicializar el modo sleep */
 void sleep_init_arch(void);
 
-/* \brief   Poner a dormir el micro */
+/** \brief  Poner a dormir el micro */
 void sleep_arch(void);
+
+/** \brief  Enciende los dispositivos del micro */
+void power_enable(void);
+
+/** \brief  Apaga los dispositivos del micro exepto Timer 0 */
+void power_disable(void);
 
 #endif /* _SLEEP_ARCH_H_ */

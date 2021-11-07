@@ -13,21 +13,34 @@ void sleep_init_arch(void){
 
     /* A partir de aquí hay que hacer reconfigurable esto para test */
  
-    /* desabilitar el brown-out detection */
-    sleep_bod_disable();
-
 }
 
 void sleep_arch(void){
 
-    wdt_enable(WDTO_500MS);
+    /** Apagar todo menos el Timer 0 */
+    power_disable();
+
+    /** Habilitar el WDT para que despierte a la cpu dentro de:
+     * WDTO_15MS
+     * WDTO_30MS
+     * WDTO_60MS
+     * WDTO_120MS
+     * WDTO_250MS
+     * WDTO_500MS
+     * WDTO_1S
+     * WDTO_4S
+     * WDTO_8S
+     */
+    wdt_enable(WDTO_15MS);
     wdt_reset();
-    /* El WDT genera una interrupción y no resetea el sistema */
+    /** El WDT genera una interrupción y no resetea el sistema */
 	WDTCSR |= (1 << WDIE);
 
     cli();
     /* Set SE (sleep enable) bit */
     sleep_enable();
+    /* desabilitar el brown-out detection */
+    sleep_bod_disable();
     sei();
 
     /* Sleep */
@@ -36,30 +49,11 @@ void sleep_arch(void){
     /* Desabilitar los modos de sleep */
     sleep_disable();
 
+    /* Volver a encender todo */
+    power_enable();
+
     sei();
 }
-
-
-ISR (WDT_vect)
-{
-	// WDIE & WDIF is cleared in hardware upon entering this ISR
-	wdt_disable();
-    //printf("wdt");
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Temporary clock source variable ¿volatile?
 unsigned char clockSource = 0;
@@ -76,7 +70,6 @@ void power_enable(void){
     ADCSRA |= (1 << ADEN);
 
     power_timer1_enable();
-    power_timer0_enable();
     power_spi_enable();
     power_usart0_enable();
     power_twi_enable();    
@@ -101,8 +94,14 @@ void power_disable(void){
     power_adc_disable();
 
     power_timer1_disable();
-	power_timer0_disable();
 	power_spi_disable();
 	power_usart0_disable();
 	power_twi_disable();
+}
+
+
+ISR (WDT_vect)
+{
+	// WDIE & WDIF is cleared in hardware upon entering this ISR
+	wdt_disable();
 }

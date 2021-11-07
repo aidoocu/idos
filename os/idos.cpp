@@ -41,7 +41,7 @@ void loop(){
     }
 
     /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
-    //deep_sleep();
+    deep_sleep();
 
     /* Cuando se despierte por el TICK verifico los timers */
     timer_exec();
@@ -66,7 +66,7 @@ uint8_t idos_init(void){
     timer_sys_init();
     #endif /* ARDUINO */
 
-    //sleep_mode_init();
+    sleep_mode_init();
 
     /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
     SREG = cSREG;
