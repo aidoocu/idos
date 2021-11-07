@@ -14,133 +14,76 @@
 
 #include "timer.h"
 
-//#define _DEBUG_TIMER_
-
-/** \brief  Lista de espera de timers. Tiene un puntero al inicio y otro al final
- *          
- *          Si (.begin != __null) && (.end == __null) ilegal
- *          Si (.begin == __null) && (.end == __null) no hay ningún timer en la lista
- *          Si (.begin != __null) && (.begin == .end) hay un solo elemento en la lista
- *          Si (.begin != __null) && (.begin != .end) hay múltiples elementos en la lista
+/** 
+ * \brief   Apunta al primer timer de la lista
  */
-/////////!!!!!!!! parece no hacer falta un puntero al final de la lista de espera
-/* static volatile struct timer_wait_list_st timer_wait_list {
-    __null,
-    __null
-}; */
+static struct timer_st * timer_list = __null;
 
-/** \brief  La lista de espera es un puntero a su primer elemento
- * 
- *          La lista de espera se ordena en función del tiempo en el que debe disparar los timers que 
- *          la componen. Su primer elemento siempre es el próximo disparo
+/** 
+ * \brief   Recorre la lista de timers y siempre se queda al final
  */
-static struct timer_st * timer_wait_list = __null;
+static struct timer_st * timer_index = __null;
 
 
-/** \brief  Puntero al timer activo */
-static volatile timer_st * timer_active = __null;
-
-
-void timer_init(void){
-
-    rtimer_init_arch();
-    
-}
-
+/* Si estamos con el framework Arduino ya este inicializa el timer */
+#ifndef ARDUINO
 void timer_sys_init(void){
-
     timer_sys_init_arch();
+}
+#endif /* ARDUINO */
 
+void timer_set_sys(timer_st * timer, time_t msec, task_st * task){
+   
+    /* Inicializamos el timer */
+
+    timer->active = true;
+    timer->msec = msec;
+    timer->msec_time = msec + msec_now();    
+    timer->next = __null;
+    timer->task = task;
+
+    
+    /* Se pone el timer en la lista de timers */
+    if (timer_list == __null){
+        /* Si no ningún timer creado, hay que inicializar la lista */
+        timer_list = timer;
+        timer_index = timer;
+    } else {
+        /* Si hay un timer  */
+    timer_index->next = timer;
+    timer_index = timer;
+    }
 }
 
-uint8_t rtimer_set(timer_st * timer, utime_t time_usec) {
-    
-
-    /* Si el tiempo es mayor que el desvorde del timer */
-    /** \todo   no devolver un error y ser capaz de programar un timer mayor que MAX_USEC */
-    if(time_usec > MAX_USEC) {
-        return 1;
-    }
-
-    if(!IS_TIMER_SET){
-    
-        /* Se setea el timer el que entró como parámentro */
-        timer_active = timer;
-
-        TIMER_COMP = USEC_TO_CLK(time_usec);
-        TIMER_TEMP = 0x0000;
-
-        /* Activa la interrupción por comparación del Timer */
-        SEI_TIMER();
-    
-        return 0;
-    }
-
-    return 0;
-}
-
-void timer_set(timer_st * timer){
-
-    ////////////!!!!! hay que reevaluar todo este analisis porque el timer_wait_list puede ser modificado por la INT con resultado cagastroficos
-    /* timer_wait_list es leida y modificada por una INT frecuente, así que debe ser protegida */
-    uint8_t s_reg = SREG;
-    cli();
-
-    /* Establezco un indice temporal para recorrer la cola buscando donde va el timer, que estará ordenado
-    en base al msec. */
-    struct timer_st * timer_index = timer_wait_list;
-
-    SREG = s_reg;
-
-    /* Si no hay nigun timer en la lista de espera */
-    if (timer_index == __null){
-        /* timer es el primero de la cola */
-        timer_wait_list = timer;
-        return;
-    }
-
-
-    
-    /* Mientras exista un próximo timer en la lista de espera */
-    while (1) {
-        /* Si el primero tiene un tiempo después de timer */
-        if (timer_index->msec_time > timer->msec_time){
-            /* timer va primero entonces */
-            timer->next = timer_index;
-            timer_index = timer;
-
-            return;
-        }
-        /* Si este fuera ya el último elemento de la lista de espera */
-        if (timer_index->next == __null){
-            /* Entonces timer.msec_time ha sido mayor que todos y será el último entonces */
-            timer_index->next = timer;
-        }
-        timer_index = timer_index->next;
-    }
+void timer_reset(timer_st * timer){
+    timer->active = true;
+    timer->msec_time = timer->msec + msec_now();
 }
 
 void timer_exec(void){
 
     /* Verificar si hay algun timer esperando y si no hay, salir */
-    if (timer_wait_list == __null){
-        return; 
+    if (timer_list){
+
+        /* Ir al principio de la lista de timers */
+        timer_index = timer_list;
+        /* Recorrer la lista timers buscado el timer activo */
+        do {       
+            if (timer_index->active == true){
+                /* Si este timer está activo se verifica si su tiempo llegó */
+                if(timer_index->msec_time <= msec_now()){
+                    /* Le envío el mensaje a la tarea que setea el timer */
+                    MSG_TIMER_SEND(timer_list->task, __null);
+                    /* Se baja la bandera de active a este timer que se acaba de ejecutar */
+                    timer_index->active = false;
+                }
+            }
+            /* Cargo el próximo timer si existe */
+            if (timer_index->next){
+                timer_index = timer_index->next;
+            }
+        } while (timer_index->next != __null);
     }
 
-    /* Le envío el mensaje a la tarea que setea el timer */
-    MSG_TIMER_SEND(timer_wait_list->task, __null);
-    /* Paso al próximo elemento de la lista de espera */
-    timer_wait_list = timer_wait_list->next;
-
-}
-
-ISR(TIMER0_COMPA_vect){
-    //time_usec_t tiempo = MICROS;
-    if (timer_active->rtimer_call == __null){
-        MSG_TIMER_SEND(timer_active->task, __null);
-        CLI_TIMER();
-    } else {
-        timer_active->rtimer_call();
-        CLI_TIMER();
-    }
+    return; 
 }

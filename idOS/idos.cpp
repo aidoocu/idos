@@ -29,18 +29,24 @@ int main(void){
 void setup(){
     /* Inicializamos idOS */
     idos_init();
-
     /* Arrancamos las tareas que inician al principio */
     task_start();   
 }
+
 void loop(){
     /* Esto es básicamente el planificador */    
     /* Mientras exista una tarea en la cola será ivocado su pt */
     while(task_runing() != 0x00){
         ;
     }
+
     /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
-    //deep_sleep();   
+    //deep_sleep();
+
+    /* Cuando se despierte por el TICK verifico los timers */
+    timer_exec();
+
+    /* !!!! Aquí Arduino verifica si hay algún evento serial diponibles !!!! */
 }
 #endif
 
@@ -55,7 +61,12 @@ uint8_t idos_init(void){
     /* Inicializar el UART como salida estándar de printf */
     uart_init();
 
+    /* Si estamos con el framework Arduino ya este inicializa el timer */
+    #ifndef ARDUINO
     timer_sys_init();
+    #endif /* ARDUINO */
+
+    //sleep_mode_init();
 
     /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
     SREG = cSREG;
