@@ -1,5 +1,6 @@
 
 #include "idos.h"
+#include "config.h"
 
 /** \brief  Punto de entrada para idOS */
 
@@ -41,7 +42,9 @@ void loop(){
     }
 
     /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
+    #ifdef SLEEP_MODE
     deep_sleep();
+    #endif
 
     /* Cuando se despierte por el TICK verifico los timers */
     timer_exec();
