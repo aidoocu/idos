@@ -1,6 +1,5 @@
 
 #include "idos.h"
-#include "config.h"
 
 /** \brief  Punto de entrada para idOS */
 

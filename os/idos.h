@@ -7,6 +7,9 @@
 
 #include <stdint.h>
 
+/** Cargar configuraciones globales */
+#include "config.h"
+
 /** \brief  Dentro de arch está la verificación de la arquitectura para la cuál se compilará */
 #include "arch/arch.h"
 
