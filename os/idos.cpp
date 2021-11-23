@@ -42,7 +42,7 @@ void loop(){
     }
 
     /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
-    #ifdef SLEEP_MODE
+    #if SLEEP_MODE
     deep_sleep();
     #endif
 
@@ -64,12 +64,19 @@ uint8_t idos_init(void){
     /* Inicializar el UART como salida estándar de printf */
     uart_init();
 
+    /* Inicializar el SPI */
+    #if SPI_ARCH
+    spi_init();
+    #endif
+
     /* Si estamos con el framework Arduino ya este inicializa el timer */
     #ifndef ARDUINO
     timer_sys_init();
     #endif /* ARDUINO */
 
+    #if SLEEP_MODE
     sleep_mode_init();
+    #endif
 
     /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
     SREG = cSREG;
