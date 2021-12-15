@@ -6,13 +6,6 @@
 #define UIP_ARPHDRSIZE 42
 #define UDPBUF ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
-
-void copy_packet_udp(mem_handle_t dest, mem_address_t dest_pos, mem_handle_t src, mem_address_t src_pos, uint16_t len) {
-    
-    copy_packet_arch(dest, dest_pos, src, src_pos, len);
-
-}
-
 /* void udp_send(uip_udp_userdata_t *data) {
     
     uip_arp_out();
@@ -48,7 +41,7 @@ void uipudp_appcall(void) {
                 /* Si no se puede reservar memoria el paquete es descartado pues UDP no garantiza entrega */
                 if (data->packet_next != NOBLOCK) {
                     //discard Linklevel and IP and udp-header and any trailing bytes:
-                        copy_packet_udp(data->packet_next, 0, in_packet, UIP_UDP_PHYH_LEN, mem_block_size(data->packet_next));
+                        //copy_packet_udp(data->packet_next, 0, in_packet, UIP_UDP_PHYH_LEN, mem_block_size(data->packet_next));
 
                         #ifdef UIPETHERNET_DEBUG_UDP
                         printf("UPD, packet received \r\n");

@@ -604,75 +604,6 @@ void mempool_block_move_callback_arch(mem_address_t dest, mem_address_t src, uin
     }
 }
 
-void copy_packet_arch(mem_handle_t dest_pkt, mem_address_t dest_pos, mem_handle_t src_pkt, mem_address_t src_pos, uint16_t len) {
-    
-    mem_block_st * dest = &blocks[dest_pkt];
-    mem_block_st * src = src_pkt == UIP_RECEIVEBUFFERHANDLE ? &received_packet : &blocks[src_pkt];
-    mem_address_t start = src_pkt == UIP_RECEIVEBUFFERHANDLE && src->begin + src_pos > RXSTOP_INIT ? src->begin + src_pos-RXSTOP_INIT+RXSTART_INIT : src->begin + src_pos;
-    mempool_block_move_callback_arch(dest->begin+dest_pos, start, len);
-    // Move the RX read pointer to the start of the next received packet
-    // This frees the memory we just read out
-    set_ERXRDPT();
-
-
-}
-
-/** 
- * 
- */
-uint16_t chksum_nic_arch(uint16_t sum, uint16_t pos, uint16_t len) {
-
-    uint16_t t;
-
-    /* Habilitar el SPI para el ENC */
-    enc_spi_enable();
-
-    mem_address_t start;
-
-    if (received_packet.begin + pos > RXSTOP_INIT)
-        start = received_packet.begin + pos - RXSTOP_INIT + RXSTART_INIT;
-    else
-        start = received_packet.begin + pos;
-
-    /* Se posiciona el puntero de lectura en el principio del buffer a leer */
-    write_reg_16(ERDPT, start);        
-
-    len = len - 1;
-
-    enc_select();
-
-    /* Invocar comando de lectura de SPI */
-    SPI.transfer(ENC28J60_READ_BUF_MEM);
-
-    uint16_t i;
-    for(i = 0; i < len; i += 2) {
-
-        /* Leer datos */
-        t = SPI.transfer(0x00) << 8;
-        t += SPI.transfer(0x00);
-
-        sum += t;
-        if(sum < t)
-            sum++;            /* carry */
-    }
-
-    if(i == len) {
-        
-        t = (SPI.transfer(0x00) << 8) + 0;
-
-        sum += t;
-        if(sum < t)
-            sum++;            /* carry */
-    }
-
-    /* Desabilitar el SPI para ENC */
-    enc_deselect();
-    enc_spi_disable(); 
-
-    /* Return sum in host byte order. */
-    return sum;
-}
-
 /* Power and status */
 
 void nic_power_off(void) {
@@ -712,10 +643,17 @@ void nic_power_on() {
 
 }
 
+
+/** 
+ * 
+ */
 uint8_t nic_is_active(void) {
     return get_rev();
 }
 
+/** 
+ * 
+ */
 bool nic_link_status() {
 
     /* Habilitar el SPI para el ENC */

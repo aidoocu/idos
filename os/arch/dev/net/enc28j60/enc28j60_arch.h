@@ -116,31 +116,21 @@ bool send_packet_arch(void);
 void free_packet_arch(void);
 
 /** 
- * \brief Copiar un paquete desde dest a src dst
- * \param dest_pkt Manejador del paquete en el destino
- * \param dest_pos Posición de memoria del paquete en el destino
- * \param src_pkt Manejador del paquete que se va a copiar
- * \param src_pos Posición de memoria del paquete que se va a copiar
- * \param len Tamaño del paquete
- */
-void copy_packet_arch(mem_handle_t dest_pkt, mem_address_t dest_pos, mem_handle_t src_pkt, mem_address_t src_pos, uint16_t len);
-
-/** 
  * 
  */
 void mempool_block_move_callback_arch(mem_address_t dest, mem_address_t src, uint16_t size);
 
-/** 
- * 
- */
-uint16_t chksum_nic_arch(uint16_t sum, uint16_t pos, uint16_t len);
 
 /** 
- * 
+ *  Estado de la interface
  */
 uint8_t nic_is_active(void);
+bool nic_link_status(void);
+
+/** 
+ *  Control de encendido y apagado
+ */
 void nic_power_off(void);
 void nic_power_on(void);
-bool nic_link_status(void);
 
 #endif /* _ENC28J60_H_ */
