@@ -1,7 +1,7 @@
 #ifndef _TIMER_INO_H_
 #define _TIMER_INO_H_
 
-#include "../arch.h"
+#include <Arduino.h>
 
 /* Tipo de dato para guardar tiempo, sea en mseg o usec */
 typedef unsigned long time_t; 

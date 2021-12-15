@@ -48,6 +48,10 @@ void loop(){
     /* Cuando se despierte por el TICK verifico los timers */
     timer_exec();
 
+    #if NET_STACK
+    net_tick();
+    #endif
+
     /* !!!! Aquí Arduino verifica si hay algún evento serial diponibles !!!! */
 }
 #endif
@@ -64,8 +68,12 @@ uint8_t idos_init(void){
     uart_init();
 
     /* Inicializar el SPI */
-    #if SPI_ARCH
+    #ifdef SPI_ARCH
     spi_init();
+    #endif
+
+    #if NET_STACK
+    net_stack_init();
     #endif
 
     /* Si estamos con el framework Arduino ya este inicializa el timer */

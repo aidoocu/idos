@@ -14,7 +14,7 @@
 #define _UART_ARCH_H_
 
 
-#include "../arch.h"
+#include <Arduino.h>
 
 #define SERIAL_RATE 9600
 

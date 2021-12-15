@@ -18,10 +18,16 @@
 #include "kernel/ipc.h"
 #include "kernel/sch.h"
 
+
 /** Definiciones del sistema */
 #include "sys/timer.h"
 #include "sys/uart.h"
 #include "sys/sleep.h"
+
+
+#ifdef NET_STACK
+#include "sys/net/netstack.h"
+#endif
 
 /* ------------------------------------------------------------- */
 /** \enum   INIT_STATE 
