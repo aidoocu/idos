@@ -99,19 +99,6 @@ struct msg_st {
                 task_set_ready(msg_send_to);                \
             } while (0)
 
-/** 
- * \def     MSG_NET_SEND
- * \brief   Enviar mensaje desde la interface de red hacia una tarea
- * \param   msg_send_to Tarea a la cual se le enviará el mensaje 
- * \param   msg_data    Cuerpo del mensaje
- */
-#define MSG_NET_SEND   /*               \
-            do {                                            \
-                * msg_send_to->msg = {                      \
-                    MSG_NETWORK,                            \
-                                                    \
-                }       \
-            } */
 
 /* ---------------- Funciones callback de los mensajes ---------------- */
 

@@ -145,6 +145,27 @@ typedef uint8_t ip_address_t[4];
 #define uip_tcp_msg &uip_buf[UIP_LLH_LEN + UIP_IPTCPH_LEN]
 #define uip_udp_msg &uip_buf[UIP_LLH_LEN + UIP_IPUDPH_LEN]
 
+/** Mensajes desde net */
+enum {
+   NET_MSG_RECEIVED = 1,         /**< Mensaje recibido desde la red*/
+   NET_MSG_SENDED,               /**< Mensaje enviado a la red */
+   NET_MSG_ACK                   /**< Notificación de recepción del estremo */
+};
+
+/** 
+ * \def     MSG_NET_SEND
+ * \brief   Enviar mensaje desde la interface de red hacia una tarea
+ * \param   net_event Evento de red 
+ */
+#define ipc_msg_net(net_event)                     \
+            do {                                   \
+               * listener->task->msg = {           \
+                  MSG_NETWORK,                     \
+                  net_event,                       \
+                  uip_conn                         \
+                };                                 \
+               task_set_ready(listener->task);     \
+            } while(0)
 
 #endif /* CONF_NET */
 

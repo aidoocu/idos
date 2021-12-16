@@ -172,27 +172,18 @@ void uipclient_appcall(void) {
             /* Si efectivamente hay datos y nadie ha cerrado la conexión */
             if (uip_len && !(uip_user->state & (UIP_CLIENT_CLOSE | UIP_CLIENT_REMOTECLOSED))) {
 
-                /* Preparar el listener con el mensaje pasándole la longitud que no puede ser mayo que MAX_NET_MSG_SIZE */
+                /* Preparar el listener con el mensaje pasándole la longitud que no puede ser mayor que MAX_NET_MSG_SIZE */
                 /* !!!! hay que ver que hacer cuando el paquete es más que el buffer del listener ¡¡¡¡ */
                 if (uip_len > MAX_NET_MSG_SIZE)
                     listener->msg_len_in = MAX_NET_MSG_SIZE;
                 else
                     listener->msg_len_in = uip_len;
-                /** y el contenido de uip_buf a partir del mensaje (UIP_LLH_LEN + UIP_TCPIP_HLEN) 
-                 *  al buffer de entrada del listener */
-                for(int dt = 0; dt < (int)listener->msg_len_in; dt++) {
-                    listener->net_msg_in[dt] = uip_buf[dt + UIP_LLH_LEN + UIP_TCPIP_HLEN];
-                }
+                
+                /** y el contenido de uip_buf a partir del mensaje (UIP_LLH_LEN + UIP_TCPIP_HLEN) */
+                memcpy(listener->net_msg_in, &uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN], (int)listener->msg_len_in);
 
-                //MSG_NET_SEND
-                /* Pasarle un mensaje a la tarea */
-                listener->task->msg->msg_src = MSG_NETWORK;
-                /*  */
-                listener->task->msg->event = 0;
-                /*  */
-                listener->task->msg->data = NULL;
-
-                task_set_ready(listener->task);
+                /* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
+                ipc_msg_net(NET_MSG_RECEIVED);
 
                 goto finish_newdata;
                 
