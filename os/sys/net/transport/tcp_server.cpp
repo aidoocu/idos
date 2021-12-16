@@ -21,6 +21,7 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port, task_st * tas
 
     listener->port = port;
     listener->task = task;
+    listener->msg_len_in = listener->msg_len_out = 0;
 
     /* Este puerto está escuchando */
     listener->listening = true;

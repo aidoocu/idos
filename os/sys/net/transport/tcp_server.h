@@ -24,9 +24,9 @@
  *  \note Escrito de esta manera no es necesario verificar si el puerto está ocupado pues
  *          se crearán dos variables con el mismo nombre induciendo un error de compilación
  */
-#define tcp_server(tcp_port)                                        \
-            static struct tcp_listener_st listener_##tcp_port;      \
-            tcp_listener_begin(&listener_##tcp_port, tcp_port, task)
+#define tcp_listener(listener_name, tcp_port)                                        \
+            static struct tcp_listener_st listener_name;      \
+            tcp_listener_begin(&listener_name, tcp_port, task)
 
 
 /** \brief Detiene el servidor TCP

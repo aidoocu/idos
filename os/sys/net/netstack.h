@@ -149,13 +149,14 @@ typedef uint8_t ip_address_t[4];
 enum {
    NET_MSG_RECEIVED = 1,         /**< Mensaje recibido desde la red*/
    NET_MSG_SENDED,               /**< Mensaje enviado a la red */
-   NET_MSG_ACK                   /**< Notificación de recepción del estremo */
+   NET_MSG_ACKED                 /**< Notificación de recepción del estremo */
 };
 
 /** 
- * \def     MSG_NET_SEND
- * \brief   Enviar mensaje desde la interface de red hacia una tarea
- * \param   net_event Evento de red 
+ * \def   ipc_msg_net
+ * \brief Enviar mensaje desde la interface de red hacia una tarea
+ * \note  Esta macro solo se debe llamar dentro de net_tick() una vez que se haya identificado el tipo de la operación
+ * \param net_event Evento de red 
  */
 #define ipc_msg_net(net_event)                     \
             do {                                   \
