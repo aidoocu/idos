@@ -337,7 +337,7 @@ bool mac_init_arch(uint8_t * macaddr) {
 /** 
  * 
  */
-uint8_t receive_packet_arch(void) {
+bool receive_packet_arch(void) {
 
     uint8_t rxstat;
     uint16_t len;
@@ -393,7 +393,7 @@ uint8_t receive_packet_arch(void) {
 
             enc_spi_disable();
 
-            return UIP_RECEIVEBUFFERHANDLE;
+            return true;
         }
 
         set_ERXRDPT();
@@ -402,20 +402,20 @@ uint8_t receive_packet_arch(void) {
 
     /* No ha llegado paquete */
     enc_spi_disable();
-    return NOBLOCK;
+    return false;
 }
 
 
 /** 
  * 
  */
-uint16_t read_packet_arch (mem_handle_t handle, uint8_t * buffer, uint16_t len) {
+uint16_t read_packet_arch (uint8_t * buffer, uint16_t len) {
 
 
     /** Se ajusta len al largo del buffer que se va a leer en caso que sea más grande. En caso que el 
      * buffer llegado a ENC sea más grande la transferencia se litará al tamaño máximo de uip_len.
      */
-    if (len > received_packet.size)
+    if (len < received_packet.size)
         len = received_packet.size;
 
     #if NET_DEBUG >= 3

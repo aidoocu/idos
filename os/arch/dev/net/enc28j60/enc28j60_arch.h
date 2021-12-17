@@ -55,8 +55,8 @@
 bool mac_init_arch(uint8_t * mac);
 
 /** 
- *  \brief Tamaño del paquete 
- *  \details El paquete puede estar en un buffer en el ENC en caso de que aún 
+ *  \brief Tamaño del frame 
+ *  \details El frame puede estar en un buffer en el ENC en caso de que aún 
  *          no se hubiera leido o en un bloque de memoria si ya fue leido
  */
 mem_address_t frame_size_arch(void);
@@ -64,48 +64,47 @@ mem_address_t frame_size_arch(void);
 /** \brief Recibir el frame 
  *  \details El datasheet trata al frame como packet y así es tratado por 
  *          los drivers consultados, por lo que también utilizaremos packet
- *          o paquete. Ver el datasheet 7.2 para una completa descripción.
- *          Esta función chequea los buffers del ENC28j60 y si hay un paquete
+ *          o frame. Ver el datasheet 7.2 para una completa descripción.
+ *          Esta función chequea los buffers del ENC28j60 y si hay un frame
  *          copia su  bloque received_packet.
  *          
- *  \return UIP_RECEIVEBUFFERHANDLE (0xFF): Indica que hay un paquete en el 
+ *  \return UIP_RECEIVEBUFFERHANDLE (0xFF): Indica que hay un frame en el 
  *          buffer de la interface que es viable. La estructura received_packet
- *          contendrá la dirección del paquete en el enc (.begin) y la logitud
+ *          contendrá la dirección del frame en el enc (.begin) y la logitud
  *          (.size). La variable next_packet_ptr será actualizada con la posición
- *          del próximo paquete si hubiera.
- *          NOBLOCK (0x00): No hay paquete disponible.
+ *          del próximo frame si hubiera.
+ *          NOBLOCK (0x00): No hay frame disponible.
 */
-uint8_t receive_packet_arch(void);
+bool receive_packet_arch(void);
 
 /** 
- *  \brief Leer el paquete desde la NIC
- *  \details Traer el paquete desde la NIC y copiarlo en un buffer
- *  \param handle Manejador del paquete
- *  \param buffer Puntero al buffer donde será copiado el paquete
- *  \param len Tamaño del paquete
+ *  \brief Leer el frame desde la NIC
+ *  \details Traer el frame desde la NIC y copiarlo en un buffer
+ *  \param buffer Puntero al buffer donde será copiado el frame
+ *  \param len Tamaño del frame que efectivamente será leido
  *  \return Tamaño del buffer leido del ENC
  */
-uint16_t read_packet_arch(mem_handle_t handle, uint8_t* buffer, uint16_t len);
+uint16_t read_packet_arch(uint8_t* buffer, uint16_t len);
 
 
 /** 
- *  \brief Escribir el paquete en la NIC para que lo envie
+ *  \brief Escribir el frame en la NIC para que lo envie
  *  \details Funciona igual que la dupla recieve - read pero a la inversa 
- *  \param handle Índice del paquete
- *  \param position Posición del paquete en la NIC
- *  \param buffer Puntero al buffer donde está el paquete en RAM
- *  \param len Tamaño del paquete
+ *  \param handle Índice del frame
+ *  \param position Posición del frame en la NIC
+ *  \param buffer Puntero al buffer donde está el frame en RAM
+ *  \param len Tamaño del frame
  *  \return Tamaño del buffer enviado al ENC
  *
  */
 void write_packet_arch(uint8_t* tx_buffer, uint16_t len);
 
 /** 
- *  \brief Pedirle a ENC que envíe un paquete
+ *  \brief Pedirle a ENC que envíe un frame
  *  \details Funciona igual que la dupla recieve - read pero a la inversa
- *          donde write_packet pone el paquete en ENC y send le dice a la 
+ *          donde write_packet pone el frame en ENC y send le dice a la 
  *          NIC que lo envíe a la red
- *  \param handle Paquete que debe ser enviado
+ *  \param handle frame que debe ser enviado
  */
 bool send_packet_arch(void);
 
