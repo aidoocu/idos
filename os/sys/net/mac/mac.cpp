@@ -29,12 +29,12 @@ bool mac_init(uint8_t * mac_address) {
  */
 uint16_t block_size(mem_handle_t packet) {
 
-    if (packet != NOBLOCK) {
+/*     if (packet != NOBLOCK) {
     if (packet == UIP_RECEIVEBUFFERHANDLE)
         return frame_size_arch ();
     else
         return blocks[packet].size;  
-    }
+    } */
 
     return 0;
 
@@ -58,10 +58,6 @@ bool mac_send(void) {
 
         goto send_and_free;
     }
-
-    /* No entiendo porque se hace pero se crea un bloque de memoria del tamanno de uip_len con 
-    manipulador uip_packet */
-    //uip_packet = mem_block_alloc(uip_len + UIP_SENDBUFFER_OFFSET + UIP_SENDBUFFER_PADDING);
 
     /* Se envía paquete completo */
     if (uip_len > 0) {

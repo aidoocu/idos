@@ -27,10 +27,6 @@
 
 /* Pone el pin CS del SPI por defecto. Cambiar esta línea en caso de utilizar otro */
 #define ENC28J60_CS SS
-#define UIP_RECEIVEBUFFERHANDLE 0xFF
-
-#define UIP_SENDBUFFER_PADDING 7
-#define UIP_SENDBUFFER_OFFSET 1
 
 #define TX_COLLISION_RETRY_COUNT 3
 
@@ -43,10 +39,6 @@
 
 /** \brief Deseleccionar el ENC */
 #define enc_deselect() digitalWrite(ENC28J60_CS, HIGH)
-
-/** \brief Esperar por resultado de ENC */
-#define waitspi() while(!(SPSR&(1<<SPIF)))
-
 
 /** 
  *  \brief Inicializar el ENC 
@@ -109,8 +101,9 @@ void write_packet_arch(uint8_t* tx_buffer, uint16_t len);
 bool send_packet_arch(void);
 
 
-/** 
- * 
+/** \brief  Liberar el paquete leido
+ *  \note   Esto reutiliza o libera la memoria que fue leida antes de
+ *          llamar esta función 
  */
 void free_packet_arch(void);
 

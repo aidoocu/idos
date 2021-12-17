@@ -171,20 +171,16 @@ void write_phy(uint8_t address, uint16_t data) {
 
  }
 
-/** \brief  Mover el puntero RX read al comienzo del próximo paquete
- *  \note   Esto reutiliza o libera la memoria que fue leida antes de
- *          llamar esta función 
+/** 
+ * 
  */
-void set_ERXRDPT(void) {
-
-    write_reg_16(ERXRDPT, next_packet_ptr == RXSTART_INIT ? RXSTOP_INIT : next_packet_ptr - 1);
-
-}
-
 void free_packet_arch(void) {
 
     enc_spi_enable();
-    set_ERXRDPT();
+
+    /* Mover el puntero RX read al comienzo del próximo paquete */
+    write_reg_16(ERXRDPT, next_packet_ptr == RXSTART_INIT ? RXSTOP_INIT : next_packet_ptr - 1);
+
     enc_spi_disable();
 
 }
@@ -203,12 +199,10 @@ uint8_t read_byte(uint16_t addr){
     enc_select();
 
     /* Invocar comando de lectura de SPI */
-    SPDR = ENC28J60_READ_BUF_MEM;
-    waitspi();
+    SPI.transfer(ENC28J60_READ_BUF_MEM);
 
     /* Leer dato SPI */
-    SPDR = 0x00;
-    waitspi();
+    uint8_t c = SPI.transfer(0x00);
     
     /* Desabilitar el SPI para ENC */
     enc_deselect();
@@ -232,12 +226,10 @@ void write_byte(uint16_t addr, uint8_t data){
     enc_select();
 
     /* Invocar comando de lectura de SPI */
-    SPDR = ENC28J60_WRITE_BUF_MEM;
-    waitspi();
+    SPI.transfer(ENC28J60_WRITE_BUF_MEM);
 
     /* Escribir dato SPI */
-    SPDR = data;
-    waitspi();
+    SPI.transfer(data);
     
     /* Desabilitar el SPI para ENC */
     enc_deselect();
@@ -396,7 +388,8 @@ bool receive_packet_arch(void) {
             return true;
         }
 
-        set_ERXRDPT();
+        /* Mover el puntero RX read al comienzo del próximo paquete */
+        write_reg_16(ERXRDPT, next_packet_ptr == RXSTART_INIT ? RXSTOP_INIT : next_packet_ptr - 1);
 
     }
 
