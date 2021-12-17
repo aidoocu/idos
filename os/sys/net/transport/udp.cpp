@@ -57,7 +57,7 @@ void uipudp_appcall(void) {
             #endif
 
             uip_packet = data->packet_out;
-            uip_hdrlen = UIP_UDP_PHYH_LEN;
+            //uip_hdrlen = UIP_UDP_PHYH_LEN;
             uip_udp_send(data->out_pos - (UIP_UDP_PHYH_LEN));
         }
     }

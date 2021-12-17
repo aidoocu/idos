@@ -9,6 +9,27 @@
 
 #include "../netstack.h"
 
+/** 
+ *  Significado de las banderas uip_conn->tcpstateflags:
+ *  - UIP_CLOSED: La conexión se ha cerrado de consenso (el extremo ha respondido con un ack al cierre o simplemente
+ *              no hay conexión creada. Con esta bandera puesta no se debe llegar aquí porque esto lo chequea net_tick)
+ *  - UIP_CLOSING: La app ha cerrado la conexión pero aun no ha tenido confirmación del extremo.
+ *  - UIP_STOPPED: La app ha detenido el flujo de datos usando uip_stop() así que no se aceptará datos del extremo.
+*/
+
+
+/** 
+ *  \brief Banderas de estado del listener
+ *  \details Se utilizan para que la tarea pase información de estado al appcall
+ */
+#define LISTENER_LISTENING      0x01        /**< El listener está escuchando */
+#define LISTENER_STOP           0x02        /**< El listener no está escuchando */
+#define LISTENER_CONNECTED      0x10        /**< Hay una conexion activa en el listener */
+#define LISTENER_CLOSE          0x20        /**< El app ha detenido la conexión del listner */
+#define LISTENER_REMOTECLOSED   0x40        /**< El extremo ha cerrado la conexión del listner */
+#define LISTENER_RESTART        0x80        /**< El app reinicia la conexión del listner */
+
+
 /** \brief  El total de octetos dedicados a encabezados en la trama 
  *  \note   El mensaje comienza en uip_buf[UIP_LLH_LEN - UIP_TCPIP_HLEN - 1]
  *          y su largo es uip_len - UIP_LLH_LEN - UIP_TCPIP_HLEN
@@ -24,16 +45,22 @@
  *  \note Escrito de esta manera no es necesario verificar si el puerto está ocupado pues
  *          se crearán dos variables con el mismo nombre induciendo un error de compilación
  */
-#define tcp_listener(listener_name, tcp_port)                                        \
-            static struct tcp_listener_st listener_name;      \
+#define tcp_listener(listener_name, tcp_port)                   \
+            static struct tcp_listener_st listener_name;        \
             tcp_listener_begin(&listener_name, tcp_port, task)
 
 
 /** \brief Detiene el servidor TCP
  *  \details 
  */
-#define tcp_server_end(port)                        \
-            tcp_listener_end(&listener_##port)
+#define tcp_server_end(listener_name)                    \
+            tcp_listener_end(&listener_name)
+
+/** 
+ * \brief Detener la conexión activa que hubiera en el listener 
+ */
+#define conn_close(listener_name)            \
+    listener_name.state |= LISTENER_CLOSE
 
 /** \brief Estrucctura de un punto de escucha TCP 
  *  \details Las tareas que deseen escuchar por un puerto TCP porque sean servidores que
@@ -42,7 +69,7 @@
  */
 struct tcp_listener_st {
     uint16_t port;                              /**< Puerto TCP de escucha */
-    bool listening = false;                     /**< Estado de la escucha */        
+    uint8_t state = 0;                          /**< Banderas de estado de la escucha */        
     tcp_listener_st * next = NULL;              /**< Puntero al próximo listener o a NULL */
     task_st * task;                             /**< Puntero a la tarea que setea el listerner */
     uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer */
@@ -70,10 +97,5 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port, task_st * tas
  */
 void tcp_listener_end(tcp_listener_st * listener);
 
-/** 
- * \brief Busca conexión activa el puerto especificado
- * \param port Puerto en el que se busca la conexión activa
- */
-//uip_user_st available(uint16_t port);
 
 #endif /* _TCP_SERVER_H_ */
