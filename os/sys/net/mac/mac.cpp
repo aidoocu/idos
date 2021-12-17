@@ -101,7 +101,7 @@ bool mac_send(void) {
             //mem_block_free(uip_packet);
 
             /* Limpiar uip_packet */
-            uip_packet = NOBLOCK;
+            //uip_packet = NOBLOCK;
 
             return true;
         }
@@ -111,7 +111,7 @@ bool mac_send(void) {
         #endif
 
         /* !!! Si el paquete no se puede enviar debe pasar algo !!! */
-        uip_packet = NOBLOCK;
+
 
         return false;
     }

@@ -119,34 +119,24 @@ void net_tick(void) {
 
     /** -------------------------------- Recibir datos desde la red --------------------------------  */
 
-    /* Si el buffer de entrada la NIC está vacío... */
-    if (in_packet == NOBLOCK) {
-        /* ...se chequea la NIC en busca de un paquete */
-        in_packet = receive_packet_arch();
-    }
-
-    /* Se si ha entrado un paquete a un buffer de la NIC */
-    if (in_packet != NOBLOCK) {
-
-        #ifdef NET_DEBUGGER
-        //printf("Packet received\r\n");
-        #endif
+    /* Si ha entrado un frame a un buffer de la NIC */
+    if (receive_packet_arch()) {
         
         packet_state = UIPETHERNET_FREEPACKET;
 
-        //uip_len = block_size(in_packet);
         uip_len = frame_size_arch ();
 
+        /* Si el fame tiene efectivamente datos */
         if (uip_len > 0) {
 
-            /* Traer el paquete desde la NIC hasta el buffer de entrada de uIP */
-            read_packet_arch(in_packet, (uint8_t*)uip_buf, UIP_BUFSIZE);
+            /* Traer el frame desde la NIC hasta el buffer de entrada de uIP */
+            read_packet_arch((uint8_t*)uip_buf, UIP_BUFSIZE);
 
-            /* !!!!! Esta funcion esta contando con que el paquete es Eth !!!!!! */
-            if ( hdr_eth->type == HTONS(UIP_ETHTYPE_IP)) {
+            /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
+            if (hdr_eth->type == HTONS(UIP_ETHTYPE_IP)) {
 
-                /* ¿El paquete de entrada pasa a ser oficialmente uIP packet? */
-                uip_packet = in_packet;
+                /* ¿El frame de entrada pasa a ser oficialmente uIP packet? */
+                //uip_packet = in_packet;
 
                 #if NET_DEBUG >= 3
                 printf("IP packet from NIC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
@@ -168,7 +158,7 @@ void net_tick(void) {
                 /* Refrescar o inicializar la tabla ARP */
                 uip_arp_ipin();
 
-                /* uip procesa el paquete */
+                /* uip procesa el frame */
                 uip_input();
 
                 #if NET_DEBUG >= 3
@@ -215,14 +205,14 @@ void net_tick(void) {
                 }
             }
         }
-        if (in_packet != NOBLOCK && (packet_state & UIPETHERNET_FREEPACKET)) {
+        if (/* in_packet != NOBLOCK &&  */(packet_state & UIPETHERNET_FREEPACKET)) {
 
             #if NET_DEBUG >= 3
             printf("Freeing packet\r\n");
             #endif           
 
             free_packet_arch();
-            in_packet = NOBLOCK;
+            //in_packet = NOBLOCK;
         }
     }
 
@@ -244,7 +234,7 @@ void net_tick(void) {
              * un envío fallido (rexmit) */
             uip_periodic(conn);
 
-            /** Si hubieran datos a enviar, uip_process escribe el paquete en uip_buf
+            /** Si hubieran datos a enviar, uip_process escribe el frame en uip_buf
              * con uip_len de largo. uip_len == 0 implica que no hay nada que enviar */
             if (uip_len > 0) {
 

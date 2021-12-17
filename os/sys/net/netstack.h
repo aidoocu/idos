@@ -62,8 +62,7 @@ typedef uint8_t ip_address_t[4];
 
 #if CONF_TRANSP == TRANSP_UDP
 #include "transport/udp.h"
-#include "transport/tcp_client.h"
-#include "transport/tcp_server.h"
+#include "transport/tcp.h"
 #elif CONF_TRANSP == TRANSP_TCP
 #include "transport/tcp.h"
 #else
@@ -149,7 +148,7 @@ typedef uint8_t ip_address_t[4];
 enum {
    NET_MSG_RECEIVED = 1,         /**< Mensaje recibido desde la red*/
    NET_MSG_SENDED,               /**< Mensaje enviado a la red */
-   NET_MSG_ACKED                 /**< Notificación de recepción del estremo */
+   NET_MSG_ACKED                 /**< Notificación de recepción del extremo */
 };
 
 /** 

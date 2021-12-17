@@ -30,7 +30,7 @@ TASK_PT(task_uno){
 		/* Seteamos creamos un timer y lo seteamos a 0,5 seg */
 		timer_set(timer_a, 500);
 
-		tcp_server(80);
+		tcp_listener(http_server, 80);
 		
         while (1) {
 			toggle = !toggle;
@@ -42,17 +42,53 @@ TASK_PT(task_uno){
             /* Si el timer ha expirado, lo reseteamos */
 			if (task->msg->msg_src == MSG_TIMER)
 			    timer_reset(&timer_a);
-
+			
+			/** !!!!! solo se puede manejar una única uip_conn por listener !!!!! */
+			/** Si nos ha llegado un mensaje desde la red hay que verificar que ocurrió */
             if (task->msg->msg_src == MSG_NETWORK) {
-                printf("Net msg: len %02d -> ", (int)listener_80.msg_len_in);
-                for(int i = 0; i < (int)listener_80.msg_len_in; i++) {
-                    printf("%c", (char)listener_80.net_msg_in[i]);
-                }
+				/* Si es un mensaje recibido imprimirlo... */
+				if (task->msg->event == NET_MSG_RECEIVED) {
+					printf("Net msg: len %02d -> ", (int)http_server.msg_len_in);
+                	for(int i = 0; i < (int)http_server.msg_len_in; i++) {
+                    	printf("%c", (char)http_server.net_msg_in[i]);
+                	}
+					printf("\n\r");
 
-                uint8_t resp[] = {"respuesta"};
-                listener_80.msg_len_out = sizeof(resp) - 1;
-                memcpy(listener_80.net_msg_out, resp, sizeof(resp) - 1);
-                printf(" resp: %d\r\n", sizeof(resp));
+					/** Hay que verificar que extremo terminó de transmitir el mensaje, 
+					 * 	teniendo en cuenta que el mensaje completo puede ser más largo
+					 * 	que el buffer de entrada: ???
+					*/
+					//if (http_server.net_msg_in[http_server.msg_len_in - 1] == '\0') {
+						/* ...y responder si no hay nada en el buffer de salida */
+						if (http_server.msg_len_out == 0) {
+
+							const char resp[] = {"respuesta"};
+							http_server.msg_len_out = sizeof(resp) - 1;
+							memcpy(http_server.net_msg_out, resp, http_server.msg_len_out);
+							printf(" resp: %d\r\n", http_server.msg_len_out);
+
+						} else {
+							//Si hay algo en el buffer de salida hay que hacer algo, reitentar
+							//en alguun momento
+							;
+						}
+					//}
+				}
+				/** Si es una confirmación (ack) sacar el mensaje del buffer. */
+				if (task->msg->event == NET_MSG_ACKED) {
+					/* Verificar cual conexión ha transmitido exitosamente el mensaje */
+					//struct uip_conn * conn = (struct uip_conn * )task->msg->data;
+					/* Se libera el buffer de salida */
+					http_server.msg_len_out = 0;
+					printf("ack, buf_out free\n\r");
+					
+					/* cerrar la conexión */
+					conn_close(http_server);
+							
+				}
+
+
+
             }
 		}
 
