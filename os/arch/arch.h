@@ -37,7 +37,6 @@
 
 //#ifdef __ENC28J60__
 
-#include "dev/mem_pool.h"
 #include "dev/net/enc28j60/enc28j60_arch.h"
 
 

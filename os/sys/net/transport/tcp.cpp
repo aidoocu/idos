@@ -130,7 +130,7 @@ void uipclient_appcall(void) {
                 printf("droped\r\n");
                 #endif 
 
-                packet_state &= ~UIPETHERNET_FREEPACKET;
+                //packet_state &= ~UIPETHERNET_FREEPACKET;
                 uip_stop();
 
                 goto finish;

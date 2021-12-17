@@ -34,12 +34,12 @@
 void uipudp_appcall(void) {
     if (uip_udp_userdata_t * data = (uip_udp_userdata_t *)(uip_udp_conn->appstate)) {
         if (uip_newdata()) {
-            if (data->packet_next == NOBLOCK) {
+            if (data->packet_next == 0) {
                 uip_udp_conn->rport = UDPBUF->srcport;
                 uip_ipaddr_copy(uip_udp_conn->ripaddr, UDPBUF->srcipaddr);
-                data->packet_next = mem_block_alloc(ntohs(UDPBUF->udplen)-UIP_UDPH_LEN);
+                //data->packet_next = mem_block_alloc(ntohs(UDPBUF->udplen)-UIP_UDPH_LEN);
                 /* Si no se puede reservar memoria el paquete es descartado pues UDP no garantiza entrega */
-                if (data->packet_next != NOBLOCK) {
+                if (data->packet_next != 0) {
                     //discard Linklevel and IP and udp-header and any trailing bytes:
                         //copy_packet_udp(data->packet_next, 0, in_packet, UIP_UDP_PHYH_LEN, mem_block_size(data->packet_next));
 
@@ -56,7 +56,7 @@ void uipudp_appcall(void) {
             printf("UDP, packet to send: %d \r\n", data->packet_out);
             #endif
 
-            uip_packet = data->packet_out;
+            //uip_packet = data->packet_out;
             //uip_hdrlen = UIP_UDP_PHYH_LEN;
             uip_udp_send(data->out_pos - (UIP_UDP_PHYH_LEN));
         }

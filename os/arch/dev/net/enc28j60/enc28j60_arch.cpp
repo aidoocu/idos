@@ -8,17 +8,17 @@
 #include "enc28j60_arch.h"
 
 /*  */
-static uint16_t next_packet_ptr;
+static uint16_t next_frame_ptr;
 static uint8_t bank;
 
 /** 
  *  \brief Guarda la dirección de memoria del paquete en el ENC y su tamaño
  */
-static struct mem_block_st received_packet;
+static struct received_frame_t received_frame;
 
 /* Registros para guardar temporalmente el estado de SPI */
-uint8_t spcr_temp;
-uint8_t spsr_temp;
+//uint8_t spcr_temp;
+//uint8_t spsr_temp;
 
 /** \brief  Configurar SPI para el ENC28J60 */
 void enc_spi_enable(void) {
@@ -29,7 +29,7 @@ void enc_spi_enable(void) {
 
     /* initializar la interface SPI */
     SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-
+ 
 }
 
 /** \brief Recuperar los valores de configuración de SPI */
@@ -174,12 +174,12 @@ void write_phy(uint8_t address, uint16_t data) {
 /** 
  * 
  */
-void free_packet_arch(void) {
+void free_frame_arch(void) {
 
     enc_spi_enable();
 
     /* Mover el puntero RX read al comienzo del próximo paquete */
-    write_reg_16(ERXRDPT, next_packet_ptr == RXSTART_INIT ? RXSTOP_INIT : next_packet_ptr - 1);
+    write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
 
     enc_spi_disable();
 
@@ -208,7 +208,7 @@ uint8_t read_byte(uint16_t addr){
     enc_deselect();
     enc_spi_disable();
 
-    return(SPDR);
+    return c;
 
 }
 
@@ -237,11 +237,12 @@ void write_byte(uint16_t addr, uint8_t data){
 
 }
 
-/* -------------------- << >> -------------------- */
-
+/** 
+ * 
+ */
 uint16_t frame_size_arch(void) {
 
-    return received_packet.size;
+    return received_frame.size;
 
 }
 
@@ -258,7 +259,7 @@ bool mac_init_arch(uint8_t * macaddr) {
     delay(50);
 
     /* Inicializar la recepción y sus buffers ERXST and ERXND (ver en datasheet 6.1) */
-    next_packet_ptr = RXSTART_INIT;
+    next_frame_ptr = RXSTART_INIT;
 
     /* Rx start, pointer address and stop */
     write_reg_16(ERXST, RXSTART_INIT);
@@ -269,7 +270,7 @@ bool mac_init_arch(uint8_t * macaddr) {
     write_reg_16(ETXST, TXSTART_INIT);
     write_reg_16(ETXND, TXSTOP_INIT);
 
-    /* For broadcast packets we allow only ARP packtets */
+    /* For broadcast frames we allow only ARP packtets */
     write_reg_8(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);
     write_reg_16(EPMM0, 0x303f);
     write_reg_16(EPMCS, 0xf7f9);
@@ -282,7 +283,7 @@ bool mac_init_arch(uint8_t * macaddr) {
     write_reg_16(MAIPG, 0x0C12);
     /* set inter-frame gap (back-to-back) */
     write_reg_8(MABBIPG, 0x12);
-    /* set the maximum packet size */
+    /* set the maximum frame size */
     write_reg_16(MAMXFL, MAX_FRAMELEN);
 
     /* Config MAC address */
@@ -303,7 +304,7 @@ bool mac_init_arch(uint8_t * macaddr) {
 
     /* enable interrutps */
     write_command(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
-    /* enable packet reception */
+    /* enable frame reception */
     write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 
     enc_spi_disable();
@@ -329,7 +330,7 @@ bool mac_init_arch(uint8_t * macaddr) {
 /** 
  * 
  */
-bool receive_packet_arch(void) {
+bool receive_frame_arch(void) {
 
     uint8_t rxstat;
     uint16_t len;
@@ -339,17 +340,17 @@ bool receive_packet_arch(void) {
     /* Verificar si ha sido recibido algún paquete */
     if (read_reg(EPKTCNT) != 0) {
 
-        /* From datasheet (7.2.2): The packets are preceded by a six-byte header which
-        contains a Next Packet Pointer, in addition to a receive status vector which 
+        /* From datasheet (7.2.2): The frames are preceded by a six-byte header which
+        contains a Next frame Pointer, in addition to a receive status vector which 
         contains receive statistics, including the packe's size. */
-        uint16_t read_ptr = next_packet_ptr + 6 > RXSTOP_INIT ? next_packet_ptr + 6 - RXSTOP_INIT + RXSTART_INIT : next_packet_ptr + 6;
+        uint16_t read_ptr = next_frame_ptr + 6 > RXSTOP_INIT ? next_frame_ptr + 6 - RXSTOP_INIT + RXSTART_INIT : next_frame_ptr + 6;
         
         /* Situar el puntero de lectura al principio del paquete recibido para... */
-        write_reg_16(ERDPT, next_packet_ptr);
+        write_reg_16(ERDPT, next_frame_ptr);
 
         /* ...leer el puntero al próximo paquete */ 
-        next_packet_ptr = read_command(ENC28J60_READ_BUF_MEM, 0);
-        next_packet_ptr |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
+        next_frame_ptr = read_command(ENC28J60_READ_BUF_MEM, 0);
+        next_frame_ptr |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
 
         /* Leer la longitud del paquete */
         len = read_command(ENC28J60_READ_BUF_MEM, 0);
@@ -362,10 +363,10 @@ bool receive_packet_arch(void) {
         //rxstat |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
 
         #if NET_DEBUG >= 3
-        printf("Receive packet [%X-%X], next: %X, stat: %X, count: %d, -> ",
+        printf("Receive frame [%X-%X], next: %X, stat: %X, count: %d, -> ",
                                 read_ptr,
                                 (read_ptr + len) % (RXSTOP_INIT + 1),
-                                next_packet_ptr,
+                                next_frame_ptr,
                                 rxstat,
                                 read_reg(EPKTCNT));
         if ((rxstat & 0x80)!=0)
@@ -380,8 +381,8 @@ bool receive_packet_arch(void) {
         /* Chequear el CRC antes de devolver el buffer */
         if ((rxstat & 0x80) != 0) {
 
-            received_packet.begin = read_ptr;
-            received_packet.size = len;
+            received_frame.begin = read_ptr;
+            received_frame.size = len;
 
             enc_spi_disable();
 
@@ -389,7 +390,7 @@ bool receive_packet_arch(void) {
         }
 
         /* Mover el puntero RX read al comienzo del próximo paquete */
-        write_reg_16(ERXRDPT, next_packet_ptr == RXSTART_INIT ? RXSTOP_INIT : next_packet_ptr - 1);
+        write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
 
     }
 
@@ -402,14 +403,14 @@ bool receive_packet_arch(void) {
 /** 
  * 
  */
-uint16_t read_packet_arch (uint8_t * buffer, uint16_t len) {
+uint16_t read_frame_arch (uint8_t * buffer, uint16_t len) {
 
 
     /** Se ajusta len al largo del buffer que se va a leer en caso que sea más grande. En caso que el 
      * buffer llegado a ENC sea más grande la transferencia se litará al tamaño máximo de uip_len.
      */
-    if (len < received_packet.size)
-        len = received_packet.size;
+    if (len < received_frame.size)
+        len = received_frame.size;
 
     #if NET_DEBUG >= 3
     printf("Readed %d bytes from NIC\r\n", len);
@@ -419,10 +420,10 @@ uint16_t read_packet_arch (uint8_t * buffer, uint16_t len) {
     enc_spi_enable();
 
     /* Se posiciona el buffer que se quiere leer */
-    if (received_packet.begin > RXSTOP_INIT)
-        write_reg_16(ERDPT, received_packet.begin - RXSTOP_INIT + RXSTART_INIT);
+    if (received_frame.begin > RXSTOP_INIT)
+        write_reg_16(ERDPT, received_frame.begin - RXSTOP_INIT + RXSTART_INIT);
     else
-        write_reg_16(ERDPT, received_packet.begin);
+        write_reg_16(ERDPT, received_frame.begin);
     
     /* <<- Traer el buffer de ENC al buffer de uip <<- */
     
@@ -455,7 +456,7 @@ static uint16_t buffer_length = 0;
 /** 
  * 
  */
-void  write_packet_arch(uint8_t * buffer, uint16_t len) {
+void  write_frame_arch(uint8_t * buffer, uint16_t len) {
 
     buffer_length = len;
 
@@ -466,8 +467,8 @@ void  write_packet_arch(uint8_t * buffer, uint16_t len) {
     write_reg_16(EWRPT, TXSTART_INIT);
 
     /* Se limita len a ?? */
-    //if (len > packet->size - position) {
-    //    len = packet->size - position;
+    //if (len > frame->size - position) {
+    //    len = frame->size - position;
     //}
 
     /* ->> Escribir el buffer en el ENC ->> */
@@ -493,10 +494,9 @@ void  write_packet_arch(uint8_t * buffer, uint16_t len) {
 /** 
  * 
  */
-bool send_packet_arch(void) {
+bool send_frame_arch(void) {
 
     /* Apunto al bloque donde está el paquete y marco el pricipio y el fin */
-    //mem_block_st * packet = &blocks[handle];
     uint16_t start = TXSTART_INIT - 1;
     uint16_t end = start + buffer_length;
 
@@ -543,58 +543,6 @@ bool send_packet_arch(void) {
 
     return success;
 
-}
-
-
-void mempool_block_move_callback_arch(mem_address_t dest, mem_address_t src, uint16_t size) {
-
-    if (size == 1) {
-        write_byte(dest, read_byte(src));
-    } else {
-
-        /* Habilitar el SPI para el ENC */
-        enc_spi_enable();
-
-        /* Calcula la dirección del último byte */
-        size += src - 1;
-
-        /*  1. Appropriately program the EDMAST, EDMAND
-        and EDMADST register pairs. The EDMAST
-        registers should point to the first byte to copy
-        from, the EDMAND registers should point to the
-        last byte to copy and the EDMADST registers
-        should point to the first byte in the destination
-        range. The destination range will always be
-        linear, never wrapping at any values except from
-        8191 to 0 (the 8-Kbyte memory boundary).
-        Extreme care should be taken when
-        programming the start and end pointers to
-        prevent a never ending DMA operation which
-        would overwrite the entire 8-Kbyte buffer.
-        */
-        write_reg_16(EDMAST, src);
-        write_reg_16(EDMADST, dest);
-
-        if ((src <= RXSTOP_INIT)&& (size > RXSTOP_INIT))size -= (RXSTOP_INIT-RXSTART_INIT);
-            write_reg_16(EDMAND, size);
-
-        /*
-        2. If an interrupt at the end of the copy process is
-        desired, set EIE.DMAIE and EIE.INTIE and
-        clear EIR.DMAIF.
-
-        3. Verify that ECON1.CSUMEN is clear. */
-        write_command(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_CSUMEN);
-
-        /* 4. Start the DMA copy by setting ECON1.DMAST. */
-        write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_DMAST);
-
-        // wait until runnig DMA is completed
-        while (read_command(ENC28J60_READ_CTRL_REG, ECON1) & ECON1_DMAST);
-
-        /* Desabilitar el SPI para el ENC */
-        enc_spi_disable();
-    }
 }
 
 /* Power and status */

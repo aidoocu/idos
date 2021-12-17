@@ -16,19 +16,7 @@
 /* Encabezados de las frame */
 /* !!!! ToDo el resto de los encabezados, CSMA...... */
 
-/** 
- * 
- */
-static mem_handle_t uip_packet = NOBLOCK;
 
-/* Longitud del paquete recibido */
-//static uint8_t uip_hdrlen = 0;
-
-/* Estado del paque recibido */
-static uint8_t packet_state = 0;
-
-
-/* Conjunto de primitivas mac */
 
 
 /** \brief Inicializa la NIC 

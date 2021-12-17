@@ -84,11 +84,6 @@ typedef uint8_t ip_address_t[4];
 
 #include "ip/uip.h"
 
-/* >>> Estas configuraciones tal vez esten mejor detro de IP */
-#define UIPETHERNET_FREEPACKET 1
-#define UIPETHERNET_SENDPACKET 2
-#define UIPETHERNET_BUFFERREAD 4
-
 #define uip_ip_addr(addr, ip) do { \
                      ((u16_t *)(addr))[0] = HTONS(((ip[0]) << 8) | (ip[1])); \
                      ((u16_t *)(addr))[1] = HTONS(((ip[2]) << 8) | (ip[3])); \

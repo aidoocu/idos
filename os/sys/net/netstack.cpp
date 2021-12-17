@@ -120,33 +120,33 @@ void net_tick(void) {
     /** -------------------------------- Recibir datos desde la red --------------------------------  */
 
     /* Si ha entrado un frame a un buffer de la NIC */
-    if (receive_packet_arch()) {
+    if (receive_frame_arch()) {
         
-        packet_state = UIPETHERNET_FREEPACKET;
-
         uip_len = frame_size_arch ();
 
         /* Si el fame tiene efectivamente datos */
         if (uip_len > 0) {
 
+            bool send_success = false;
+
             /* Traer el frame desde la NIC hasta el buffer de entrada de uIP */
-            read_packet_arch((uint8_t*)uip_buf, UIP_BUFSIZE);
+            read_frame_arch((uint8_t*)uip_buf, UIP_BUFSIZE);
 
             /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
             if (hdr_eth->type == HTONS(UIP_ETHTYPE_IP)) {
 
-                /* ¿El frame de entrada pasa a ser oficialmente uIP packet? */
-                //uip_packet = in_packet;
+                /* ¿El frame de entrada pasa a ser oficialmente uIP frame? */
+                //uip_frame = in_frame;
 
                 #if NET_DEBUG >= 3
-                printf("IP packet from NIC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                printf("IP frame from NIC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
                                         hdr_eth->src.addr[0],
                                         hdr_eth->src.addr[1],
                                         hdr_eth->src.addr[2],
                                         hdr_eth->src.addr[3],
                                         hdr_eth->src.addr[4],
                                         hdr_eth->src.addr[5]);
-                printf("IP packet from host: %d.%d.%d.%d to port: %u from port: %u\r\n",
+                printf("IP frame from host: %d.%d.%d.%d to port: %u from port: %u\r\n",
                                         hdr_ip_tcp->srcipaddr[0] & 0xff,
                                         (hdr_ip_tcp->srcipaddr[0] >> 8) & 0xff,
                                         hdr_ip_tcp->srcipaddr[1] & 0xff,
@@ -178,13 +178,13 @@ void net_tick(void) {
                     uip_arp_out();
 
                     /* y se envía */
-                    mac_send();
+                    send_success = mac_send();
                 }                
 
             } else if (hdr_eth->type == HTONS(UIP_ETHTYPE_ARP)) {
 
                 #if NET_DEBUG >= 3
-                printf("ARP packet from: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                printf("ARP frame from: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
                                         hdr_eth->src.addr[0],
                                         hdr_eth->src.addr[1],
                                         hdr_eth->src.addr[2],
@@ -201,18 +201,24 @@ void net_tick(void) {
                     printf("ARP response\r\n");
                     #endif   
 
-                    mac_send();
+                    /* Enviamos el frame y si fue exitoso... */
+                    send_success = mac_send();
                 }
             }
-        }
-        if (/* in_packet != NOBLOCK &&  */(packet_state & UIPETHERNET_FREEPACKET)) {
 
-            #if NET_DEBUG >= 3
-            printf("Freeing packet\r\n");
-            #endif           
+            if (send_success) {
+                
+                #if NET_DEBUG >= 2
+                printf("Freeing frame\r\n");
+                #endif      
 
-            free_packet_arch();
-            //in_packet = NOBLOCK;
+                /* Liberamos el buffer en la NIC */
+                free_frame_arch();
+
+            } else {
+                /* !!!!!! Si el frame no se pudo enviar tiene que pasar algo!!!!! */                        
+                ;
+            }
         }
     }
 
@@ -253,6 +259,7 @@ void net_tick(void) {
                 uip_arp_out();
                 /* Enviar frame */
                 mac_send();
+                /* Aquí no será necesario limpiar el buffer de TX */
             }
         }
 /*     #if UIP_UDP
@@ -384,7 +391,7 @@ uint16_t upper_layer_chksum(uint8_t protocol) {
     }
 
     #if NET_DEBUG >= 3
-    printf("chksum uip_packet [%d - %d]: %X\r\n",
+    printf("chksum uip_frame [%d - %d]: %X\r\n",
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_header_len,
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_segment_len, 
             htons(sum));

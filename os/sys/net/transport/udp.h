@@ -11,10 +11,10 @@
 #define UIP_UDP_MAXPACKETSIZE UIP_UDP_MAXDATALEN+UIP_UDP_PHYH_LEN
 
 typedef struct {
-    mem_address_t out_pos;
-    mem_handle_t packet_next;
-    mem_handle_t packet_in;
-    mem_handle_t packet_out;
+    uint16_t out_pos;
+    uint8_t packet_next;
+    uint8_t packet_in;
+    uint8_t packet_out;
     bool send;
 } uip_udp_userdata_t;
 

@@ -41,6 +41,14 @@
 #define enc_deselect() digitalWrite(ENC28J60_CS, HIGH)
 
 /** 
+ *  \brief Guarda la dirección de memoria del paquete en el ENC y su tamaño
+ */
+struct received_frame_t {
+    uint16_t size = 0;
+    uint16_t begin = 0;
+};
+
+/** 
  *  \brief Inicializar el ENC 
  *  \param mac Dirección (máscara) MAC que deberá tener el ENC
 */
@@ -51,23 +59,23 @@ bool mac_init_arch(uint8_t * mac);
  *  \details El frame puede estar en un buffer en el ENC en caso de que aún 
  *          no se hubiera leido o en un bloque de memoria si ya fue leido
  */
-mem_address_t frame_size_arch(void);
+uint16_t frame_size_arch(void);
 
 /** \brief Recibir el frame 
- *  \details El datasheet trata al frame como packet y así es tratado por 
- *          los drivers consultados, por lo que también utilizaremos packet
+ *  \details El datasheet trata al frame como frame y así es tratado por 
+ *          los drivers consultados, por lo que también utilizaremos frame
  *          o frame. Ver el datasheet 7.2 para una completa descripción.
  *          Esta función chequea los buffers del ENC28j60 y si hay un frame
- *          copia su  bloque received_packet.
+ *          copia su  bloque received_frame.
  *          
  *  \return UIP_RECEIVEBUFFERHANDLE (0xFF): Indica que hay un frame en el 
- *          buffer de la interface que es viable. La estructura received_packet
+ *          buffer de la interface que es viable. La estructura received_frame
  *          contendrá la dirección del frame en el enc (.begin) y la logitud
- *          (.size). La variable next_packet_ptr será actualizada con la posición
+ *          (.size). La variable next_frame_ptr será actualizada con la posición
  *          del próximo frame si hubiera.
  *          NOBLOCK (0x00): No hay frame disponible.
 */
-bool receive_packet_arch(void);
+bool receive_frame_arch(void);
 
 /** 
  *  \brief Leer el frame desde la NIC
@@ -76,7 +84,7 @@ bool receive_packet_arch(void);
  *  \param len Tamaño del frame que efectivamente será leido
  *  \return Tamaño del buffer leido del ENC
  */
-uint16_t read_packet_arch(uint8_t* buffer, uint16_t len);
+uint16_t read_frame_arch(uint8_t* buffer, uint16_t len);
 
 
 /** 
@@ -89,29 +97,23 @@ uint16_t read_packet_arch(uint8_t* buffer, uint16_t len);
  *  \return Tamaño del buffer enviado al ENC
  *
  */
-void write_packet_arch(uint8_t* tx_buffer, uint16_t len);
+void write_frame_arch(uint8_t* tx_buffer, uint16_t len);
 
 /** 
  *  \brief Pedirle a ENC que envíe un frame
  *  \details Funciona igual que la dupla recieve - read pero a la inversa
- *          donde write_packet pone el frame en ENC y send le dice a la 
+ *          donde write_frame pone el frame en ENC y send le dice a la 
  *          NIC que lo envíe a la red
  *  \param handle frame que debe ser enviado
  */
-bool send_packet_arch(void);
+bool send_frame_arch(void);
 
 
 /** \brief  Liberar el paquete leido
  *  \note   Esto reutiliza o libera la memoria que fue leida antes de
  *          llamar esta función 
  */
-void free_packet_arch(void);
-
-/** 
- * 
- */
-void mempool_block_move_callback_arch(mem_address_t dest, mem_address_t src, uint16_t size);
-
+void free_frame_arch(void);
 
 /** 
  *  Estado de la interface
