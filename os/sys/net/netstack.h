@@ -41,6 +41,10 @@
 
 #include "../../idos.h"
 
+#include "netconf.h"
+
+#include "mac/mac.h"
+
 extern "C" {
    #include "ip/uip-conf.h"
    #include "ip/uip.h"
@@ -49,47 +53,22 @@ extern "C" {
 }
 
 
+#include "transport/udp.h"
+#include "transport/tcp.h"
+
+
+
 /** \brief Número IP en 4 bytes
  *  \details Diferencia a un IP formado por 4 optetos del 
  *          uIP que está formado por 2 palabras de 16 bits
  */
 typedef uint8_t ip_address_t[4];
 
-/** ---------- Transport ---------- */
-
-#ifdef CONF_TRANSP
-#include "netconf.h"
-
-#if CONF_TRANSP == TRANSP_UDP
-#include "transport/udp.h"
-#include "transport/tcp.h"
-#elif CONF_TRANSP == TRANSP_TCP
-#include "transport/tcp.h"
-#else
-#error Unknown transport layer configuration
-#endif /* CONF_TRANSP == ? */
-
-#endif /* CONF_TRANSP */
-
-/** ----------- Routing ----------- */
-
-#ifdef CONF_ROUTING
-
-
-#endif /* CONF_ROUTING */
-
-/** ------------- NET ------------- */
-
-#ifdef CONF_NET
-
-#include "ip/uip.h"
-
 #define uip_ip_addr(addr, ip) do { \
                      ((u16_t *)(addr))[0] = HTONS(((ip[0]) << 8) | (ip[1])); \
                      ((u16_t *)(addr))[1] = HTONS(((ip[2]) << 8) | (ip[3])); \
                   } while(0)
 
-//#define ip_addr_uip(a) IPAddress(a[0] & 0xFF, a[0] >> 8 , a[1] & 0xFF, a[1] >> 8) //TODO this is not IPV6 capable
 
 #define uip_seteth_addr(eaddr) do {uip_ethaddr.addr[0] = eaddr[0]; \
                               uip_ethaddr.addr[1] = eaddr[1];\
@@ -139,44 +118,6 @@ typedef uint8_t ip_address_t[4];
 #define uip_tcp_msg &uip_buf[UIP_LLH_LEN + UIP_IPTCPH_LEN]
 #define uip_udp_msg &uip_buf[UIP_LLH_LEN + UIP_IPUDPH_LEN]
 
-/** Mensajes desde net */
-enum {
-   NET_MSG_RECEIVED = 1,         /**< Mensaje recibido desde la red*/
-   NET_MSG_SENDED,               /**< Mensaje enviado a la red */
-   NET_MSG_ACKED                 /**< Notificación de recepción del extremo */
-};
-
-/** 
- * \def   ipc_msg_net
- * \brief Enviar mensaje desde la interface de red hacia una tarea
- * \note  Esta macro solo se debe llamar dentro de net_tick() una vez que se haya identificado el tipo de la operación
- * \param net_event Evento de red 
- */
-#define ipc_msg_net(net_event)                     \
-            do {                                   \
-               * listener->task->msg = {           \
-                  MSG_NETWORK,                     \
-                  net_event,                       \
-                  uip_conn                         \
-                };                                 \
-               task_set_ready(listener->task);     \
-            } while(0)
-
-#endif /* CONF_NET */
-
-
-/** ------------- MAC ------------- */
-
-#include "mac/mac.h"
-#ifdef CONF_MAC
-
-#if CONF_MAC == MAC_ETH
-#include "mac/eth/eth.h"
-#else
-#error Unknown NET configuration
-#endif /* CONF_MAC == ? */
-
-#endif /* CONF_MAC */
 
 /** \brief Inicializa la NIC e IP si está definido */
 void net_stack_init(void);
@@ -212,7 +153,7 @@ void net_stack_init(void);
  * |              |              |              |                 |              |  return ok<--|-------+      |
  * |              |              |              |   uip_process<--|--------------|-------+      |              |
  * |              |              |              |        +--------|-->appcall    |              |              |
- * |              |              |   msg_task---|-----------------|------+       |              |              |
+ * |              |              |   msg_task<--|-----------------|------+       |              |              |
  * |  listener<- -|- - - - - - - |- - - +-------|-----------------|-->renspoce   |              |              |
  * |              |              |              |                 |      +-------|--->mac_send  |              |
  * |              |              |              |                 |              |       +------|--->driver    |
@@ -223,10 +164,6 @@ void net_stack_init(void);
 
 */
 void net_tick(void);
-
-
-/* _--------------TCP---------------_ */
-
 
 
 #endif /* _NETSTACK_H_ */

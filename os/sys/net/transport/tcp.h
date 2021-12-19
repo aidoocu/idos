@@ -17,6 +17,7 @@
  *  - UIP_STOPPED: La app ha detenido el flujo de datos usando uip_stop() así que no se aceptará datos del extremo.
 */
 
+/* --------------------------------------------------------------------------------- */
 
 /** 
  *  \brief Banderas de estado del listener
@@ -37,8 +38,11 @@
 */
 #define MAX_NET_MSG_SIZE UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN
 
-/* Puertos estándar */
+/* Algunos puertos estándar */
 #define HTTP_PORT 80
+#define COAP_PORT 5683
+
+/* --------------------------------------------------------------------------------- */
 
 /** \brief Crear y arrancar el servidor TCP
  *  \details Crea la estructura del listener y llama a la función que arranca el server 
@@ -53,14 +57,42 @@
 /** \brief Detiene el servidor TCP
  *  \details 
  */
-#define tcp_server_end(listener_name)                    \
+#define tcp_server_end(listener_name)               \
             tcp_listener_end(&listener_name)
 
 /** 
  * \brief Detener la conexión activa que hubiera en el listener 
  */
-#define conn_close(listener_name)            \
+#define conn_close(listener_name)                   \
     listener_name.state |= LISTENER_CLOSE
+
+/* --------------------------------------------------------------------------------- */
+
+/** Mensajes desde net */
+enum {
+   NET_MSG_RECEIVED = 1,         /**< Mensaje recibido desde la red*/
+   NET_MSG_SENDED,               /**< Mensaje enviado a la red */
+   NET_MSG_ACKED                 /**< Notificación de recepción del extremo */
+};
+
+/** 
+ * \def   ipc_msg_net
+ * \brief Enviar mensaje desde la interface de red hacia una tarea
+ * \note  Esta macro solo se debe llamar dentro de net_tick() una vez que se haya 
+ *        identificado el tipo de la operación.
+ * \param net_event Evento de red 
+ */
+#define ipc_msg_net(net_event)                     \
+            do {                                   \
+               * listener->task->msg = {           \
+                  MSG_NETWORK,                     \
+                  net_event,                       \
+                  uip_conn                         \
+                };                                 \
+               task_set_ready(listener->task);     \
+            } while(0)
+
+/* --------------------------------------------------------------------------------- */
 
 /** \brief Estrucctura de un punto de escucha TCP 
  *  \details Las tareas que deseen escuchar por un puerto TCP porque sean servidores que
@@ -82,6 +114,8 @@ struct tcp_listener_st {
  * 
  */
 extern struct tcp_listener_st * tcp_listeners;
+
+/* --------------------------------------------------------------------------------- */
 
 /** 
  *  \brief Initializar el servidor TCP en el puerto:

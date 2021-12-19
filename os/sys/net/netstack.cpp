@@ -208,7 +208,7 @@ void net_tick(void) {
 
             if (send_success) {
                 
-                #if NET_DEBUG >= 2
+                #if NET_DEBUG >= 3
                 printf("Freeing frame\r\n");
                 #endif      
 

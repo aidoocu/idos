@@ -30,7 +30,7 @@ TASK_PT(task_uno){
 		/* Seteamos creamos un timer y lo seteamos a 0,5 seg */
 		timer_set(timer_a, 500);
 
-		tcp_listener(http_server, 80);
+		tcp_listener(coap_server, COAP_PORT);
 		
         while (1) {
 			toggle = !toggle;
@@ -48,9 +48,13 @@ TASK_PT(task_uno){
             if (task->msg->msg_src == MSG_NETWORK) {
 				/* Si es un mensaje recibido imprimirlo... */
 				if (task->msg->event == NET_MSG_RECEIVED) {
-					printf("Net msg: len %02d -> ", (int)http_server.msg_len_in);
-                	for(int i = 0; i < (int)http_server.msg_len_in; i++) {
-                    	printf("%c", (char)http_server.net_msg_in[i]);
+					printf("Net msg: len %02d -> ", (int)coap_server.msg_len_in);
+                	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
+                    	printf("%c", (char)coap_server.net_msg_in[i]);
+                	}
+					printf("\n\r");
+                	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
+                    	printf("%02X", coap_server.net_msg_in[i]);
                 	}
 					printf("\n\r");
 
@@ -58,14 +62,14 @@ TASK_PT(task_uno){
 					 * 	teniendo en cuenta que el mensaje completo puede ser más largo
 					 * 	que el buffer de entrada: ???
 					*/
-					//if (http_server.net_msg_in[http_server.msg_len_in - 1] == '\0') {
+					//if (coap_server.net_msg_in[coap_server.msg_len_in - 1] == '\0') {
 						/* ...y responder si no hay nada en el buffer de salida */
-						if (http_server.msg_len_out == 0) {
+						if (coap_server.msg_len_out == 0) {
 
 							const char resp[] = {"respuesta"};
-							http_server.msg_len_out = sizeof(resp) - 1;
-							memcpy(http_server.net_msg_out, resp, http_server.msg_len_out);
-							printf(" resp: %d\r\n", http_server.msg_len_out);
+							coap_server.msg_len_out = sizeof(resp) - 1;
+							memcpy(coap_server.net_msg_out, resp, coap_server.msg_len_out);
+							printf(" resp: %d\r\n", coap_server.msg_len_out);
 
 						} else {
 							//Si hay algo en el buffer de salida hay que hacer algo, reitentar
@@ -79,11 +83,11 @@ TASK_PT(task_uno){
 					/* Verificar cual conexión ha transmitido exitosamente el mensaje */
 					//struct uip_conn * conn = (struct uip_conn * )task->msg->data;
 					/* Se libera el buffer de salida */
-					http_server.msg_len_out = 0;
+					coap_server.msg_len_out = 0;
 					printf("ack, buf_out free\n\r");
 					
 					/* cerrar la conexión */
-					conn_close(http_server);
+					conn_close(coap_server);
 							
 				}
 

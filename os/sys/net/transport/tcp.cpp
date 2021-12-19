@@ -13,7 +13,7 @@ struct tcp_listener_st * tcp_listeners = NULL;
 void tcp_listener_begin(tcp_listener_st * listener, uint16_t port, task_st * task) {
 
     /** Crear una escucha de TCP por port 
-     * \note uip recive el puerto (y el resto) leyendo el byte alto primero, así es 
+     * \note uIP recive el puerto (y el resto) leyendo el byte alto primero, así es 
      *      necesario hacer lo mismo cuando le pasemos el puerto. Ejemplo, 80 en uint16_t
      *      es 0x0050, uip lee el frame como 0x5000, htons cambia de lugar los bytes 
     */
@@ -72,6 +72,13 @@ void uipclient_appcall(void) {
 
     } while(tcp_listeners->next != NULL);
 
+/*     do {
+        if (listener->port == uip_conn->lport) 
+            break;
+        listener = listener->next;
+    } while(listener->next != NULL); */
+
+    /* Se verifica que efectivamente exite una conn y el listener está efectivamente activo */
     if(uip_connected() /* && (listener->state & LISTENER_LISTENING) */) {
         
         /* Se ha recibido un dato nuevo. uip_len ahora contiene el largo del net_msg) */
@@ -297,7 +304,6 @@ int client_connect(ip_address_t ip_dst, uint16_t port_dst) {
             net_tick();
 
             if ((conn->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED) {
-                //data = (uip_user_st *) conn->appstate;
                 
                 #ifdef NET_DEBUGGER_
                 printf("connected, state: %d\r\n", data->state);
