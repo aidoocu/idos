@@ -56,8 +56,14 @@ void timer_set_sys(timer_st * timer, time_t msec, task_st * task){
 }
 
 void timer_reset(timer_st * timer){
+
+    /* Limpiar el mensaje */
+    timer->msg.status = MSG_NULL;
+    /* Reactivar el timer */
     timer->active = true;
+    /* Reiniciar conteo */
     timer->msec_time = timer->msec + msec_now();
+
 }
 
 void timer_exec(void){
@@ -73,7 +79,13 @@ void timer_exec(void){
                 /* Si este timer está activo se verifica si su tiempo llegó */
                 if(timer_index->msec_time <= msec_now()){
                     /* Le envío el mensaje a la tarea que setea el timer */
-                    MSG_TIMER_SEND(timer_list->task, __null);
+                    ipc_msg_timer(timer_list);
+/*                     timer_list->msg->status = MSG_AVAILABLE;
+                    timer_list->msg->msg_src = MSG_TIMER; 
+                    timer_list->msg->event = 0;
+                    timer_list->msg->data = NULL;
+                    task_set_ready(timer_list->task);  */
+                    
                     /* Se baja la bandera de active a este timer que se acaba de ejecutar */
                     timer_index->active = false;
                 }
@@ -86,4 +98,28 @@ void timer_exec(void){
     }
 
     return; 
+}
+
+/** 
+ * 
+ */
+bool timer_expired(timer_st * timer) {
+    
+    if(timer->msg.status == MSG_AVAILABLE)
+        return true;
+    return false;
+}
+
+/** 
+ * 
+ */
+bool timer_read(timer_st * timer) {
+    
+    if(timer->msg.status == MSG_AVAILABLE) {
+
+        timer->msg.status = MSG_NULL;
+        return true;
+    }
+
+    return false;  
 }

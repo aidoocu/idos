@@ -33,15 +33,20 @@ TASK_PT(task_uno){
 		tcp_listener(coap_server, COAP_PORT);
 		
         while (1) {
-			toggle = !toggle;
-			digitalWrite(2, toggle);
 
 			/* Cedemos la CPU hasta que algún evento despierte a esta tarea */
 			TASK_YIELD
 
             /* Si el timer ha expirado, lo reseteamos */
-			if (task->msg->msg_src == MSG_TIMER)
+			if (timer_expired(&timer_a)) {
+
 			    timer_reset(&timer_a);
+
+				toggle = !toggle;
+				digitalWrite(2, toggle);
+			}
+
+
 			
 			/** !!!!! solo se puede manejar una única uip_conn por listener !!!!! */
 			/** Si nos ha llegado un mensaje desde la red hay que verificar que ocurrió */
@@ -53,10 +58,10 @@ TASK_PT(task_uno){
                     	printf("%c", (char)coap_server.net_msg_in[i]);
                 	}
 					printf("\n\r");
-                	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
+/*                 	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
                     	printf("%02X", coap_server.net_msg_in[i]);
                 	}
-					printf("\n\r");
+					printf("\n\r"); */
 
 					/** Hay que verificar que extremo terminó de transmitir el mensaje, 
 					 * 	teniendo en cuenta que el mensaje completo puede ser más largo

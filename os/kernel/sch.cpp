@@ -36,9 +36,9 @@ void task_autostart(struct task_st * const task[]){
   uint8_t i;
   
   for(i = 0; task[i] != __null; i++) {
-    /* Se le envía el mensaje de inicialización a la tarea
+    /* Se le envía el mensaje (nulo) de inicialización a la tarea
     */
-    * task[i]->msg = { MSG_INIT, 0, __null };
+    * task[i]->msg = {MSG_NULL, MSG_INIT, 0, __null };
     task_set_ready(task[i]);
   }
   return;  

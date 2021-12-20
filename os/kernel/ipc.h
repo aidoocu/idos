@@ -67,14 +67,14 @@
 #include "../idos.h"
 
 /** 
- * \enum    msg_type
+ * \enum    msg_src
  * \brief   Tipo de mensaje 
- * \anchor  msg_type
+ * \anchor  msg_src
  * */
 enum {
     MSG_INIT = 0,           /**< Inicializado cuando se llama desde auto_start */
-    MSG_TASK,               /**<  Desde una tarea */
-    MSG_TIMER,              /**<  Desde un timer */ 
+    MSG_TASK,               /**< Desde una tarea */
+    MSG_TIMER,              /**< Desde un timer */ 
     MSG_UART,               /**< Desde el puerto serie */
     MSG_SPI,                /**< Desde el SPI */
     MSG_I2C,                /**< Desde I2C */
@@ -82,15 +82,28 @@ enum {
     MSG_NETWORK             /**< Desde la red. Este mensaje lo envía TCP o UDP */
 };
 
+
+/** 
+ *  \enum  status
+ *  \brief Estado del mensaje
+ */
+enum {
+    MSG_NULL = 0,           /**< No hay mensaje disponible */
+    MSG_AVAILABLE,          /**< Hay un mensaje que debe ser leido */
+    MSG_PENDING             /**< Hay un mensaje pendiente de leer */
+};
+
 /** 
  * \struct  msg_st    
  * \brief   Contenido del mensaje.
  * \note    En un mensaje que no se informe de un evento event = 0
+ * \todo La fuente no va a se necesaria, hay que quitarla
   */
 struct msg_st {
-    uint8_t msg_src;                    /**< Tipo de mensaje, ver "origen del mensaje" */
-    unsigned char event;                /**< Manipulador (handle) del evento */
-    void * data;                        /**< Payload del mensaje */
+    uint8_t status;         /**< Estado del mensaje */
+    uint8_t msg_src;        /**< Tipo de mensaje, ver "origen del mensaje" */
+    uint8_t event;          /**< Manipulador (handle) del evento */
+    void * data;            /**< Payload del mensaje */
 };
 
 
@@ -115,25 +128,7 @@ struct msg_st {
                 task_set_ready(&msg_send_to);               \
             } while (0)
 
-/**
- * \def     MSG_TMR_SEND
- * \brief   Macro para que un timer envie un mensaje a una otra tarea
- * \param   msg_send_to Tarea a la cual se le enviará el mensaje 
- * \param   msg_data    Cuerpo del mensaje
- * \note    Cada vez que se invoque a la macro el mensaje será reecrito
- * \note    Ya que enviar un mensaje a una tarea implica despertarla, si
- *          se envía un mensaje a una tarea que ya esté despierta y esperando
- *          en la cola, el mensaje se pierde.
- */
-#define MSG_TIMER_SEND(msg_send_to, msg_data)               \
-            do {                                            \
-                * msg_send_to->msg = {                      \
-                    MSG_TIMER,                              \
-                    0,                                      \
-                    msg_data                                \
-                };                                          \
-                task_set_ready(msg_send_to);                \
-            } while (0)
+
 
 
 /* ---------------- Funciones callback de los mensajes ---------------- */

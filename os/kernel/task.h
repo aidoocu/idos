@@ -85,7 +85,7 @@ struct task_st{
  *          los mensajes y eventos
  */
 #define TASK_MSG(task_name) \
-            static struct msg_st msg_from_##task_name = {0, 0, __null}
+            static struct msg_st msg_from_##task_name = {MSG_NULL, 0, 0, __null}
 
 /**
  * \brief   Primero define el prototipo de la función cuerpo del pt con la macro 
