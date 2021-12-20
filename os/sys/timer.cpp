@@ -115,11 +115,9 @@ bool timer_expired(timer_st * timer) {
  */
 bool timer_read(timer_st * timer) {
     
-    if(timer->msg.status == MSG_AVAILABLE) {
+    if(timer->msg.status == MSG_NULL)
+        return false;
 
-        timer->msg.status = MSG_NULL;
-        return true;
-    }
-
-    return false;  
+    timer->msg.status = MSG_NULL;
+    return true; 
 }
