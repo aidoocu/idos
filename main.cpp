@@ -47,12 +47,13 @@ TASK_PT(task_uno){
 			}
 
 
-			
 			/** !!!!! solo se puede manejar una única uip_conn por listener !!!!! */
 			/** Si nos ha llegado un mensaje desde la red hay que verificar que ocurrió */
-            if (task->msg->msg_src == MSG_NETWORK) {
+            if (tcp_read(&coap_server)) {
+
 				/* Si es un mensaje recibido imprimirlo... */
-				if (task->msg->event == NET_MSG_RECEIVED) {
+				if (tcp_msg(coap_server)) {
+
 					printf("Net msg: len %02d -> ", (int)coap_server.msg_len_in);
                 	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
                     	printf("%c", (char)coap_server.net_msg_in[i]);
@@ -84,7 +85,7 @@ TASK_PT(task_uno){
 					//}
 				}
 				/** Si es una confirmación (ack) sacar el mensaje del buffer. */
-				if (task->msg->event == NET_MSG_ACKED) {
+				if (tcp_ack(coap_server)) {
 					/* Verificar cual conexión ha transmitido exitosamente el mensaje */
 					//struct uip_conn * conn = (struct uip_conn * )task->msg->data;
 					/* Se libera el buffer de salida */

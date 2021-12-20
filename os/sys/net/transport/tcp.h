@@ -66,6 +66,31 @@
 #define conn_close(listener_name)                   \
     listener_name.state |= LISTENER_CLOSE
 
+
+/* --------------------------------------------------------------------------------- */
+
+/** \brief Estrucctura de un punto de escucha TCP 
+ *  \details Las tareas que deseen escuchar por un puerto TCP porque sean servidores que
+ *          o pretendan conectarse a uno externo utilizarán esta estrutura para gestionar 
+ *          la escucha. Los servidores TCP se guardan como una lista enlazada.
+ */
+struct tcp_listener_st {
+    uint16_t port;                              /**< Puerto TCP de escucha */
+    uint8_t state = 0;                          /**< Banderas de estado de la escucha */        
+    tcp_listener_st * next = NULL;              /**< Puntero al próximo listener o a NULL */
+    task_st * task;                             /**< Puntero a la tarea que setea el listerner */
+    msg_st ipc_msg;                             /**< Mensaje a la tarea que setea el listerner */
+    uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer de entrada */
+    uint16_t msg_len_out;                       /**< Tamaño del mensaje que está en el buffer de salida */
+    uint8_t net_msg_in[MAX_NET_MSG_SIZE];       /**< Buffer que contendrá el mensaje de la red */
+    uint8_t net_msg_out[MAX_NET_MSG_SIZE];      /**< Buffer que contendrá el mensaje de la red */
+};
+
+/** 
+ * 
+ */
+extern struct tcp_listener_st * tcp_listeners;
+
 /* --------------------------------------------------------------------------------- */
 
 /** Mensajes desde net */
@@ -82,9 +107,9 @@ enum {
  *        identificado el tipo de la operación.
  * \param net_event Evento de red 
  */
-#define ipc_msg_net(net_event)                      \
+#define ipc_msg_net(listener, net_event)            \
             do {                                    \
-                * listener->task->msg = {           \
+                listener->ipc_msg = {               \
                     MSG_AVAILABLE,                  \
                     MSG_NETWORK,                    \
                     net_event,                      \
@@ -93,28 +118,13 @@ enum {
                 task_set_ready(listener->task);     \
             } while(0)
 
-/* --------------------------------------------------------------------------------- */
 
-/** \brief Estrucctura de un punto de escucha TCP 
- *  \details Las tareas que deseen escuchar por un puerto TCP porque sean servidores que
- *          o pretendan conectarse a uno externo utilizarán esta estrutura para gestionar 
- *          la escucha. Los servidores TCP se guardan como una lista enlazada.
- */
-struct tcp_listener_st {
-    uint16_t port;                              /**< Puerto TCP de escucha */
-    uint8_t state = 0;                          /**< Banderas de estado de la escucha */        
-    tcp_listener_st * next = NULL;              /**< Puntero al próximo listener o a NULL */
-    task_st * task;                             /**< Puntero a la tarea que setea el listerner */
-    uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer */
-    uint16_t msg_len_out;                       /**< Tamaño del mensaje que está en el buffer */
-    uint8_t net_msg_in[MAX_NET_MSG_SIZE];       /**< Buffer que contendrá el mensaje de la red */
-    uint8_t net_msg_out[MAX_NET_MSG_SIZE];      /**< Buffer que contendrá el mensaje de la red */
-};
+/**  */
+#define tcp_event(listener) listener.ipc_msg.event
 
-/** 
- * 
- */
-extern struct tcp_listener_st * tcp_listeners;
+/**  */
+#define tcp_msg(listener) listener.ipc_msg.event == NET_MSG_RECEIVED
+#define tcp_ack(listener) listener.ipc_msg.event == NET_MSG_ACKED
 
 /* --------------------------------------------------------------------------------- */
 
@@ -132,5 +142,13 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port, task_st * tas
  */
 void tcp_listener_end(tcp_listener_st * listener);
 
+/** 
+ *  \brief Verifica si ha llegado un mensaje desde la red.
+ *  \attention Esta función modifica el mensaje del listener desactivándolo. No debería
+ *  hacer dos llamadas consecutivas de esta función a menos que sepa lo que está haciendo 
+ *  pues en caso de haber un mensaje la primera devolverá el evento mientras que la segunda
+ *  devolverá 0.
+ */
+uint8_t tcp_read(tcp_listener_st * listener);
 
 #endif /* _TCP_SERVER_H_ */

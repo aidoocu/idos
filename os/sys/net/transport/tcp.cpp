@@ -52,8 +52,19 @@ void tcp_listener_end(tcp_listener_st listener, uint16_t port) {
 
 }
 
+/** 
+ * 
+ */
+uint8_t tcp_read(tcp_listener_st * listener) {
 
-/* --------------------- Interface TCP --------------------- */
+    if (listener->ipc_msg.status == MSG_NULL)
+        return 0;
+
+    listener->ipc_msg.status = MSG_NULL;
+    return listener->ipc_msg.event;  
+}
+
+/* --------------------------------------------------------------------------------- */
 
 /** 
  *   
@@ -129,7 +140,7 @@ void uipclient_appcall(void) {
                 memcpy(listener->net_msg_in, &uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN], (int)listener->msg_len_in);
 
                 /* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
-                ipc_msg_net(NET_MSG_RECEIVED);
+                ipc_msg_net(listener, NET_MSG_RECEIVED);
 
             } else {
                 
@@ -195,7 +206,7 @@ void uipclient_appcall(void) {
             printf("uip_acked\r\n");
             #endif
 
-            ipc_msg_net(NET_MSG_ACKED);
+            ipc_msg_net(listener, NET_MSG_ACKED);
 
             goto finish;
             
