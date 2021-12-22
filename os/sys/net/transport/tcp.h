@@ -151,4 +151,9 @@ void tcp_listener_end(tcp_listener_st * listener);
  */
 uint8_t tcp_read(tcp_listener_st * listener);
 
+/** 
+ *  \brief
+ */
+bool tcp_write(struct tcp_listener_st * listener, uint8_t * buffer, uint16_t len);
+
 #endif /* _TCP_SERVER_H_ */

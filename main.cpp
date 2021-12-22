@@ -59,29 +59,25 @@ TASK_PT(task_uno){
                     	printf("%c", (char)coap_server.net_msg_in[i]);
                 	}
 					printf("\n\r");
+					coap_server.msg_len_in = 0;
 /*                 	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
                     	printf("%02X", coap_server.net_msg_in[i]);
                 	}
 					printf("\n\r"); */
 
-					/** Hay que verificar que extremo terminó de transmitir el mensaje, 
+					/** Hay que verificar que el extremo terminó de transmitir el mensaje, 
 					 * 	teniendo en cuenta que el mensaje completo puede ser más largo
 					 * 	que el buffer de entrada: ???
 					*/
 					//if (coap_server.net_msg_in[coap_server.msg_len_in - 1] == '\0') {
 						/* ...y responder si no hay nada en el buffer de salida */
-						if (coap_server.msg_len_out == 0) {
 
-							const char resp[] = {"respuesta"};
-							coap_server.msg_len_out = sizeof(resp) - 1;
-							memcpy(coap_server.net_msg_out, resp, coap_server.msg_len_out);
-							printf(" resp: %d\r\n", coap_server.msg_len_out);
+						uint8_t resp[] = {"respuesta"};
 
-						} else {
-							//Si hay algo en el buffer de salida hay que hacer algo, reitentar
-							//en alguun momento
-							;
-						}
+						printf("resp: %d\r\n", coap_server.msg_len_out);
+
+						tcp_write(&coap_server, &resp[0], sizeof(resp) - 1);
+
 					//}
 				}
 				/** Si es una confirmación (ack) sacar el mensaje del buffer. */

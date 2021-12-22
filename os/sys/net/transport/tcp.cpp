@@ -64,6 +64,29 @@ uint8_t tcp_read(tcp_listener_st * listener) {
     return listener->ipc_msg.event;  
 }
 
+
+/** 
+ * 
+ */
+bool tcp_write(struct tcp_listener_st * listener, uint8_t * buffer, uint16_t len) {
+
+	if (listener->msg_len_out == 0) {
+
+        if (len > MAX_NET_MSG_SIZE) {
+            //Aquí hay que hacer algo, picar el mensaje, denegarlo...
+            ;
+            //por ahora solo le limitaremos el tamanno pero no es correcto
+            len = MAX_NET_MSG_SIZE;
+        }
+
+        listener->msg_len_out = len;
+	    memcpy(listener->net_msg_out, buffer, len);
+        return true;
+    } 
+    /* Si algo pasa en el e */
+    return false;
+}
+
 /* --------------------------------------------------------------------------------- */
 
 /** 
@@ -182,7 +205,7 @@ void uipclient_appcall(void) {
                 #endif
 
                 /* Le informamos a la tarea del cierre de la conexión */
-                listener->state |= LISTENER_REMOTECLOSED;
+                listener->state &= 0xF0;
 
             } else {
 
@@ -206,6 +229,10 @@ void uipclient_appcall(void) {
             printf("uip_acked\r\n");
             #endif
 
+            /* Limpio el buffer de salida */
+            listener->msg_len_out = 0;
+
+            /* Notifico a la tarea */
             ipc_msg_net(listener, NET_MSG_ACKED);
 
             goto finish;
