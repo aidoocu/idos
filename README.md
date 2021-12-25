@@ -1,3 +1,4 @@
+[![BuyMeACoffe](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bernardoyla)
 # idOS
 Básicamente es un planificador de eventos que incluye un timer y pone al micro en modo de bajo consumo mientras no esté haciendo nada, pero para simplificar consideramos que es un sistema operativo. Estamos en proceso y también lo traduciremos al inglés, si le interesa, su ayuda es bienvenida.
 ## Ejemplos
