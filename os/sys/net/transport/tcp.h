@@ -4,8 +4,8 @@
  *  \date diciembre 2021
  */
 
-#ifndef _TCP_SERVER_H_
-#define _TCP_SERVER_H_
+#ifndef _TCP_H_
+#define _TCP_H_
 
 #include "../netstack.h"
 
@@ -24,7 +24,7 @@
  *  \details Se utilizan para que la tarea pase información de estado al appcall
  */
 #define LISTENER_LISTENING      0x01        /**< El listener está escuchando */
-#define LISTENER_STOP           0x02        /**< El listener no está escuchando */
+#define LISTENER_CONECTING      0x02        /**< El listener ha solicitado una conexión */
 #define LISTENER_CONNECTED      0x10        /**< Hay una conexion activa en el listener */
 #define LISTENER_CLOSE          0x20        /**< El app ha detenido la conexión del listner */
 #define LISTENER_REMOTECLOSED   0x40        /**< El extremo ha cerrado la conexión del listner */
@@ -49,9 +49,9 @@
  *  \note Escrito de esta manera no es necesario verificar si el puerto está ocupado pues
  *          se crearán dos variables con el mismo nombre induciendo un error de compilación
  */
-#define tcp_listener(listener_name, tcp_port)                   \
+#define tcp_listener(listener_name)                   \
             static struct tcp_listener_st listener_name;        \
-            tcp_listener_begin(&listener_name, tcp_port, task)
+            listener_name.task = task
 
 
 /** \brief Detiene el servidor TCP
@@ -77,7 +77,7 @@
 struct tcp_listener_st {
     uint16_t port;                              /**< Puerto TCP de escucha */
     uint8_t state = 0;                          /**< Banderas de estado de la escucha */        
-    tcp_listener_st * next = NULL;              /**< Puntero al próximo listener o a NULL */
+    tcp_listener_st * next;                     /**< Puntero al próximo listener o a NULL */
     task_st * task;                             /**< Puntero a la tarea que setea el listerner */
     msg_st ipc_msg;                             /**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer de entrada */
@@ -133,7 +133,7 @@ enum {
  *  \param listener Estructura del servidor TCP
  *  \param port Puerto en el que escucha esta aplicación
  */
-void tcp_listener_begin(tcp_listener_st * listener, uint16_t port, task_st * task);
+void tcp_listener_begin(tcp_listener_st * listener, uint16_t port);
 
 /** 
  *  \brief Detener el servidor TCP en el puerto:
@@ -156,4 +156,61 @@ uint8_t tcp_read(tcp_listener_st * listener);
  */
 bool tcp_write(struct tcp_listener_st * listener, uint8_t * buffer, uint16_t len);
 
-#endif /* _TCP_SERVER_H_ */
+/** 
+ *  \brief Esta función activa la negociación para conectar el host con un extremo TCP que 
+ *  escucha por el puerto port_dst
+ *  \note Esta función cuando sale no deja o no creada la conexión, esto es una terea de net_tick
+ *  quien gestiona la negociación que hace uIP con el extremo y envía a la app un mensaje en 
+ *  caso de éxito o no. 
+ */
+bool tcp_client_connect(tcp_listener_st * listener, uint8_t * ip_dst, uint16_t port_dst);
+
+
+
+/* ------------------------------------ según rfc0793 ------------------------------------ */
+
+// esto no estaa implementado aun, esta en concordancia con la interface definida por la rfc0793
+// se debe cambiar el listener por un numero que es el indice de la conn en uIP
+
+/** 
+ * \brief Solicita el establecimiento de una conexión
+ * \details
+ * \note Esta función cuando retorna no ha establecido la conexión, solo la ha solicitado
+ * \return Un puntero a la conexión (manipulador) que se intenta establecer.
+ * \param ip_address Host al que nos queremos conectar
+ * \param port Puerto al que nos queremos conectar
+ */
+tcp_listener_st * tcp_open(ip_address_t ip_address, uint16_t port);
+
+/** 
+ * \brief
+ * \param
+ */
+void tcp_close(tcp_listener_st * listener);
+
+/** 
+ * \brief
+ * \param listener Puntero a la conexión
+ * \param buf Buffer donde irá lo que se ha recibido
+ * \return Largo que se ha recibido
+ */
+uint16_t tcp_recv(tcp_listener_st * listener, uint8_t * buf);
+
+/** 
+ * \brief
+ * \param 
+ * \param
+ * \param
+ */
+void tcp_send(tcp_listener_st * listener, uint8_t * buf, uint16_t len);
+
+/** 
+ * \brief
+ * \param
+ * \return
+ */
+uint8_t tcp_status(tcp_listener_st * listener);
+
+/*  */
+
+#endif /* _TCP_H_ */
