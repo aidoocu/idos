@@ -62,7 +62,7 @@
 
 
 #ifndef _IPC_H_
-#define _ICP_H_
+#define _IPC_H_
 
 #include "../idos.h"
 
