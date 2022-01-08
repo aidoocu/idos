@@ -14,8 +14,8 @@ TASK(task_uno, "primera tarea");
 TASKS_AUTO_START(&task_uno)
 
 /* Conectar a: */
-/* uint8_t ip_server[] = {192, 168, 1, 1};
-uint16_t port_server = 80; */
+uint8_t ip_extremo[] = {192, 168, 1, 100};
+/* uint16_t port_server = 80; */
 
 /* Defino el comportamiento de ambos protohilo */
 
@@ -30,7 +30,12 @@ TASK_PT(task_uno){
 		/* Seteamos creamos un timer y lo seteamos a 0,5 seg */
 		timer_set(timer_a, 500);
 
-		tcp_listener(coap_server, COAP_PORT);
+		/* Se crea y se arranca el listener por el puerto 5683 */
+		tcp_listener(coap_server);
+		tcp_listener_begin(&coap_server, COAP_PORT);
+
+		tcp_listener(coap_client);
+		tcp_client_connect(&coap_client, ip_extremo, COAP_PORT);
 		
         while (1) {
 
