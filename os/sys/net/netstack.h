@@ -53,11 +53,6 @@ extern "C" {
 }
 
 
-#include "transport/udp.h"
-#include "transport/tcp.h"
-
-
-
 /** \brief Número IP en 4 bytes
  *  \details Diferencia a un IP formado por 4 optetos del 
  *          uIP que está formado por 2 palabras de 16 bits
@@ -165,5 +160,8 @@ void net_stack_init(void);
 */
 void net_tick(void);
 
+
+#include "transport/udp.h"
+#include "transport/tcp.h"
 
 #endif /* _NETSTACK_H_ */

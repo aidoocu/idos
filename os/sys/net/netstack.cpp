@@ -34,7 +34,7 @@ void net_stack_init(void) {
     }
 
     #if NET_DEBUG >= 1
-    printf("Init success :)\r\n");
+    printf("NIC init success :)\r\n");
     
     #endif
 
@@ -260,6 +260,14 @@ void net_tick(void) {
                 /* Enviar frame */
                 mac_send();
                 /* Aquí no será necesario limpiar el buffer de TX */
+
+                if (uip_conn->appstate != NULL) {
+                    tcp_listener_st * listener = (tcp_listener_st *) uip_conn->appstate;
+                    if ((listener->state & LISTENER_CONECTING) && (uip_conn->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED) {
+                        listener->state = LISTENER_LISTENING | LISTENER_CONNECTED;
+                        printf(" >> connected\r\n");
+                    }
+                }
             }
         }
 /*     #if UIP_UDP

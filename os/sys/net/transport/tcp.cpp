@@ -10,7 +10,7 @@
 /* Puntero al primer server creado */
 struct tcp_listener_st * tcp_listeners = NULL;
 
-void tcp_listener_begin(tcp_listener_st * listener, uint16_t port, task_st * task) {
+void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
 
     /** Crear una escucha de TCP por port 
      * \note uIP recive el puerto (y el resto) leyendo el byte alto primero, así es 
@@ -20,7 +20,6 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port, task_st * tas
     uip_listen((u16_t)htons(port));
 
     listener->port = port;
-    listener->task = task;
     listener->msg_len_in = listener->msg_len_out = 0;
 
     /* Este puerto está escuchando */
@@ -87,6 +86,45 @@ bool tcp_write(struct tcp_listener_st * listener, uint8_t * buffer, uint16_t len
     return false;
 }
 
+
+bool tcp_client_connect(tcp_listener_st * listener, uint8_t * ip_dst, uint16_t port_dst) {
+
+    if(!nic_is_active()) {
+
+        #if NET_DEBUG >= 3
+        printf("NIC is no active\r\n");
+        #endif
+
+        return 0;
+    }
+
+    //stop();
+
+    uip_ipaddr_t uip_dst;
+    uip_ip_addr(uip_dst, ip_dst);
+
+    #ifdef NET_DEBUGGER_
+    printf ("Try to connect to: %d.%d.%d.%d:%d\r\n", 
+                ip_dst[0],
+                ip_dst[1],
+                ip_dst[2],
+                ip_dst[3],
+                port_dst);
+    #endif
+
+    /* Creamos una estructura para la conexión y se apunta con conn */
+    struct uip_conn * conn = uip_connect(&uip_dst, htons(port_dst));
+
+    if (conn) {
+
+        listener->port = htons(uip_conn->lport);
+        listener->state = LISTENER_LISTENING | LISTENER_CONECTING;
+        uip_conn->appstate = listener;
+
+    }
+    return 0;
+}
+
 /* --------------------------------------------------------------------------------- */
 
 /** 
@@ -96,25 +134,20 @@ bool tcp_write(struct tcp_listener_st * listener, uint8_t * buffer, uint16_t len
 void uipclient_appcall(void) {
 
     uint16_t send_len = 0;
+    tcp_listener_st * listener = (tcp_listener_st * )uip_conn->appstate;
 
-    /* Creamos un puntero al principio de la lista de los listeners... */
-    tcp_listener_st * listener = tcp_listeners;
-    /* ...y buscamos en la lista de listeners quien está escuchando por el puerto */
-    do {
-        if (listener->port == uip_conn->lport) 
-            ;
-
-    } while(tcp_listeners->next != NULL);
-
-/*     do {
-        if (listener->port == uip_conn->lport) 
-            break;
-        listener = listener->next;
-    } while(listener->next != NULL); */
-
-    /* Se verifica que efectivamente exite una conn y el listener está efectivamente activo */
-    if(uip_connected() /* && (listener->state & LISTENER_LISTENING) */) {
+    /* Si es una conexión nueva y aún desasociada */
+    if(uip_connected() && listener == NULL) {
         
+        /* Cargamos al listener con el principio de la lista de los listeners... */
+        listener = tcp_listeners;
+        /* ...y buscamos en la lista de listeners quien está escuchando por el puerto */
+        do {
+            if (htons(listener->port) == uip_conn->lport) 
+                break;
+            listener = listener->next;
+        } while(listener->next != NULL);
+
         /* Se ha recibido un dato nuevo. uip_len ahora contiene el largo del net_msg) */
         #if NET_DEBUG >= 2
         printf("tcp conn -> %u\r\n", uip_len);
@@ -127,7 +160,9 @@ void uipclient_appcall(void) {
 
     if (listener->state & LISTENER_CONNECTED) {
 
+        #if NET_DEBUG >= 2
         printf("state %02X\r\n", listener->state);
+        #endif
 
         if (uip_newdata()) {
             
@@ -304,63 +339,3 @@ void uipclient_appcall(void) {
 
 }
 
-
-int client_connect(ip_address_t ip_dst, uint16_t port_dst) {
-
-    if(!nic_is_active()) {
-
-        #ifdef NET_DEBUGGER_
-        printf("NIC is no active\r\n");
-        #endif
-        return 0;
-    
-    }
-
-    //stop();
-
-    uip_ipaddr_t uip_dst;
-    uip_ip_addr(uip_dst, ip_dst);
-
-    #ifdef NET_DEBUGGER_
-    printf ("Try to connect to: %d.%d.%d.%d:%d\r\n", 
-                ip_dst[0],
-                ip_dst[1],
-                ip_dst[2],
-                ip_dst[3],
-                port_dst);
-    #endif
-
-    /* Intenta crear una estructura para la conexión y se guarda en conn */
-    struct uip_conn* conn = uip_connect(&uip_dst, htons(port_dst));
-
-    if (conn) {
-        #if UIP_CONNECT_TIMEOUT > 0
-        int32_t timeout = millis() + 1000 * UIP_CONNECT_TIMEOUT;
-        #endif
-
-        while((conn->tcpstateflags & UIP_TS_MASK) != UIP_CLOSED) {
-            net_tick();
-
-            if ((conn->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED) {
-                
-                #ifdef NET_DEBUGGER_
-                printf("connected, state: %d\r\n", data->state);
-                //printf("first packet: %d\r\n", packets_in[0]);
-                #endif
-
-                return 1;
-            }
-            #if UIP_CONNECT_TIMEOUT > 0
-            if (((int32_t)(millis() - timeout)) > 0) {
-                conn->tcpstateflags = UIP_CLOSED;
-
-                #ifdef NET_DEBUGGER_
-                printf("connection timeout\r\n");
-                #endif
-                break;
-            }
-            #endif
-        }   
-    }
-    return 0;
-}
