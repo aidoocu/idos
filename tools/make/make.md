@@ -1,0 +1,2 @@
+# Make
+No podíamos dejar a GNU Make fuera, sobre todo por la herramienta en la que se construye IdOS para correr de forma nativa. Así, este texto explica como utilizar GNU Make para incluir a IdOS en sus proyectos 

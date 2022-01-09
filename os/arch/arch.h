@@ -30,7 +30,7 @@
 #endif /* ARDUINO */
 
 #if BOARD == NATIVE
-#include "board/native.h"
+#include "board/native/native.h"
 #endif
 
 /* ---------------------------- / board ---------------------------------- */

@@ -22,6 +22,10 @@
 
 #include "../idos.h"
 
+////// TODO este typedef hay que pasarlo para aqui !!!!!
+/* Tipo de dato para guardar tiempo, sea en mseg o usec */
+//typedef unsigned long time_t; 
+
 /** 
  * \brief   Estructura del timer
  */

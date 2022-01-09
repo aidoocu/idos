@@ -25,10 +25,10 @@ ifeq ($(BOARD),native)
 endif
 
 # Incluir los textos de ayuda
-include $(IDOS)/make/help.mk
+include $(IDOS)/tools/make/help.mk
 
 # Incluir las definiciones globales
-include $(IDOS)/make/define.mk
+include $(IDOS)/tools/make/define.mk
 
 # Incluir los path globales y específicas de la plataforma
 
@@ -47,7 +47,7 @@ IDOS_SYS = $(IDOS_OS)/sys
 IDOS_NET = $(IDOS_SYS)/net
 
 # IDOS_ARCH : path relativo al código de idOS dependiente de la plataforma
-IDOS_ARCH = $(IDOS_OS)/arch
+IDOS_ARCH = $(IDOS_OS)/arch/board
 IDOS_BOARD = $(IDOS_ARCH)/$(BOARD)
 
 # Incluir el makefile específico de la plataforma

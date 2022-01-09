@@ -1,0 +1,2 @@
+# PlatformIO
+IdOS comezó y aún se maneja en parte como un proyecto en PlatformIO en VSCode (que recomendamos por se el que utilizamos). En este documento explicaremos paso a paso como desplegar, desarrollar y debuggear IdOS en PlatformIO encrustado en VSCode.

@@ -4,7 +4,6 @@
 #include "../netstack.h"
 
 //>>???
-#include <Udp.h>
 
 #define UIP_UDP_MAXDATALEN 1500
 #define UIP_UDP_PHYH_LEN UIP_LLH_LEN+UIP_IPUDPH_LEN
