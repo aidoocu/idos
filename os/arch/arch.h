@@ -11,33 +11,68 @@
 #ifndef _ARCH_H_
 #define _ARCH_H_
 
+/* --------- Compilación condicional según la plataforma (board) --------- */
 
+/** Tipos de plataformas (boards) disponibles */
+#define NATIVE 1
+#define ARDUINO_NANO 2
 
+/** Definiciones de Arduino */
 #ifdef ARDUINO
 #include <Arduino.h>
-#include "arduino/uart_ino.h"
-#include "arduino/timer_ino.h"
-#include "arduino/spi_ino.h"
+#include "board/arduino/arduino.h"
+
+/* Arduino hasta ahora es definido por el platformio así que BOARD no será definida */
+#ifdef ARDUINO_AVR_NANO
+#define BOARD ARDUINO_NANO
 #endif
+
+#endif /* ARDUINO */
+
+#if BOARD == NATIVE
+#include "board/native.h"
+#endif
+
+/* ---------------------------- / board ---------------------------------- */
+
+
+
+/* ------------- Compilación condicional según el micro (cpu) ------------ */
 
 #ifdef __AVR_ATmega328P__
 #include <avr/io.h>
 #include "cpu/avr/atmega328p/sleep_arch.h"
 
-/* Si estamos usando el framework de arduino se tomarán de ahí las siguientes definiciones */
+/* Si estamos usando el framework de arduino se tomarán de ahí las siguientes 
+definiciones */
 #ifndef ARDUINO
 #include "cpu/avr/atmega328p/timer_arch.h"
 #endif /* ARDUINO */
 
 #endif /* __AVR_ATmega328P__ */
 
-/** A partir de aquí serán incorporados los drivers de los dispositivos que se le conecten al MCU.
- *   
+
+/* ----------------------------- / cpu ----------------------------------- */
+
+
+
+/* -------- Compilación condicional según los dispositivos (dev) --------- */
+
+/** A partir de aquí serán incorporados los drivers de los dispositivos que 
+ * se le conecten a la board.  
 */
 
-//#ifdef __ENC28J60__
+/** \note En caso de que la BOARD sea NATIVE se asume que no tendrá dev  */
+#if BOARD != NATIVE
 
+#ifdef __ENC28J60__
 #include "dev/net/enc28j60/enc28j60_arch.h"
+#endif
+
+#endif /* BOARD == NATIVE */
+
+/* ----------------------------- / dev ----------------------------------- */
+
 
 
 
