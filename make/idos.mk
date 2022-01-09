@@ -88,12 +88,10 @@ SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/*.cpp}}
 
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_BOARD)/*.cpp}}
 
-${info ---> Sources: $(SOURCE_FILES)}
+${info -> Sources: $(SOURCE_FILES)}
 
 ## Objetos
 OBJECT_FILES += ${addprefix $(OBJECTDIR)/,${call oname, $(SOURCE_FILES)}}
-
-${info ---> Objets: $(OBJECT_FILES)}
 
 ## Resultado de la creación de la biblioteca
 IDOS_BOARD_LIB = $(BUILD_DIR_BOARD)/idos_$(BOARD).a
