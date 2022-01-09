@@ -17,6 +17,13 @@ else
   ${info Using board '$(BOARD)'}
 endif
 
+## Tipos de plataforma
+#define NATIVE = 0
+
+ifeq ($(BOARD),native)
+  CFLAGS += -DBOARD=1
+endif
+
 # Incluir los textos de ayuda
 include $(IDOS)/make/help.mk
 
@@ -91,6 +98,9 @@ ${info ---> Objets: $(OBJECT_FILES)}
 ## Resultado de la creación de la biblioteca
 IDOS_BOARD_LIB = $(BUILD_DIR_BOARD)/idos_$(BOARD).a
 
+# Banderas para c++
+CXXFLAGS += $(CFLAGS)
+
 
 # Obtener los archivos object
 
@@ -121,6 +131,6 @@ clean:
 %: %.c
 
 # Compilar el proyecto
-$(IDOS_PROJECT): $(OBJECT_FILES) | $(OBJECTDIR)
+$(IDOS_PROJECT): $(OBJECT_FILES)
 	@echo Making project '$@' to $(BOARD) board
 	$(CXX) $^ -o $(BUILD_DIR_BOARD)/$(IDOS_PROJECT).$(BOARD) 
