@@ -76,7 +76,7 @@
  */
 struct tcp_listener_st {
     uint16_t port;                              /**< Puerto TCP de escucha */
-    uint8_t state = 0;                          /**< Banderas de estado de la escucha */        
+    uint8_t state;                              /**< Banderas de estado de la escucha */        
     tcp_listener_st * next;                     /**< Puntero al próximo listener o a NULL */
     task_st * task;                             /**< Puntero a la tarea que setea el listerner */
     msg_st ipc_msg;                             /**< Mensaje a la tarea que setea el listerner */
