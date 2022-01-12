@@ -19,6 +19,6 @@
 #define SERIAL_RATE 9600
 
 void uart_init_arch(void);
-int serial_print(char c, FILE *);
+//int serial_print(char c, FILE *);
 
 #endif //_UART_ARCH_H_

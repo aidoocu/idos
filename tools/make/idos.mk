@@ -71,7 +71,9 @@ define oname
 ${patsubst %.c,%.o, ${patsubst %.cpp,%.o, $(1)}}
 endef
 
-SOURCE_PATH += $(IDOS_OS) $(IDOS_SYS) $(IDOS_KERNEL) $(IDOS_NET)
+SOURCE_PATH += $(IDOS_OS) $(IDOS_SYS) $(IDOS_KERNEL) 
+SOURCE_PATH += $(IDOS_NET) $(IDOS_NET)/ip $(IDOS_NET)/mac $(IDOS_NET)/transport 
+SOURCE_PATH += $(IDOS_BOARD)
 
 # Especificando para VPATH los directorios de los fuentes que será utilizados
 # como prerequisitos
@@ -84,7 +86,11 @@ SOURCE_FILES = $(IDOS_PROJECT).cpp
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_OS)/*.cpp}}
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_SYS)/*.cpp}}
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_KERNEL)/*.cpp}}
+
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/*.cpp}}
+SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/ip/*.c}}
+SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/mac/*.cpp}}
+SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/transport/*.cpp}}
 
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_BOARD)/*.cpp}}
 
@@ -111,6 +117,14 @@ $(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
 	$(TRACE_CXX)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
+## A partir de los .c
+$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	@$(CC) $(CFLAGS) -MMD -c $< -o $@
+
+%.o: %.c
+	$(TRACE_CC)
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 # .PHONY targets
 .PHONY: help clean usage

@@ -17,19 +17,22 @@
 /** 
  * \brief   Apunta al primer timer de la lista
  */
-static struct timer_st * timer_list = __null;
+static struct timer_st * timer_list = NULL;
 
 /** 
  * \brief   Recorre la lista de timers y siempre se queda al final
  */
-static struct timer_st * timer_index = __null;
+static struct timer_st * timer_index = NULL;
 
 
 /* Si estamos con el framework Arduino ya este inicializa el timer */
 #ifndef ARDUINO
+/* Si la plataforma es native usamos el timestamp del sistema */
+#if BOARD != NATIVE
 void timer_sys_init(void){
     timer_sys_init_arch();
 }
+#endif /* BOARD != NATIVE */
 #endif /* ARDUINO */
 
 void timer_set_sys(timer_st * timer, time_t msec, task_st * task){
@@ -39,12 +42,12 @@ void timer_set_sys(timer_st * timer, time_t msec, task_st * task){
     timer->active = true;
     timer->msec = msec;
     timer->msec_time = msec + msec_now();    
-    timer->next = __null;
+    timer->next = NULL;
     timer->task = task;
 
     
     /* Se pone el timer en la lista de timers */
-    if (timer_list == __null){
+    if (timer_list == NULL){
         /* Si no ningún timer creado, hay que inicializar la lista */
         timer_list = timer;
         timer_index = timer;
@@ -80,12 +83,7 @@ void timer_exec(void){
                 if(timer_index->msec_time <= msec_now()){
                     /* Le envío el mensaje a la tarea que setea el timer */
                     ipc_msg_timer(timer_list);
-/*                     timer_list->msg->status = MSG_AVAILABLE;
-                    timer_list->msg->msg_src = MSG_TIMER; 
-                    timer_list->msg->event = 0;
-                    timer_list->msg->data = NULL;
-                    task_set_ready(timer_list->task);  */
-                    
+                                        
                     /* Se baja la bandera de active a este timer que se acaba de ejecutar */
                     timer_index->active = false;
                 }
@@ -94,7 +92,7 @@ void timer_exec(void){
             if (timer_index->next){
                 timer_index = timer_index->next;
             }
-        } while (timer_index->next != __null);
+        } while (timer_index->next != NULL);
     }
 
     return; 

@@ -63,15 +63,13 @@ struct timer_st {
  *  timer.
  *  \param  timer El timer que debe pasar el mensaje a su tarea
  */
-#define ipc_msg_timer(timer)                    \
-            do {                                \
-                timer->msg = {                  \
-                    MSG_AVAILABLE,              \
-                    MSG_TIMER,                  \
-                    0,                          \
-                    __null                      \
-                };                              \
-                task_set_ready(timer->task);    \
+#define ipc_msg_timer(timer)                            \
+            do {                                        \
+                timer_list->msg.status = MSG_AVAILABLE; \
+                timer_list->msg.msg_src = MSG_TIMER;    \
+                timer_list->msg.event = 0;              \
+                timer_list->msg.data = NULL;            \
+                task_set_ready(timer->task);            \
             } while (0)
 
 /** 

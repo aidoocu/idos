@@ -107,15 +107,13 @@ enum {
  *        identificado el tipo de la operación.
  * \param net_event Evento de red 
  */
-#define ipc_msg_net(listener, net_event)            \
-            do {                                    \
-                listener->ipc_msg = {               \
-                    MSG_AVAILABLE,                  \
-                    MSG_NETWORK,                    \
-                    net_event,                      \
-                    uip_conn                        \
-                };                                  \
-                task_set_ready(listener->task);     \
+#define ipc_msg_net(listener, net_event)                    \
+            do {                                            \
+                listener->ipc_msg.status = MSG_AVAILABLE;   \
+                listener->ipc_msg.msg_src = MSG_NETWORK;    \
+                listener->ipc_msg.event = net_event;        \
+                listener->ipc_msg.data = uip_conn;          \
+                task_set_ready(listener->task);             \
             } while(0)
 
 

@@ -112,8 +112,10 @@ int main(void){
         while(task_runing() != 0x00){
             ;
         }
-        /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
-        //deep_sleep();
+
+        /* Verificar los timers */
+        timer_exec();
+
     }
     return 0;
 }

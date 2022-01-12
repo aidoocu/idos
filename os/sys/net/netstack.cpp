@@ -17,7 +17,7 @@ static unsigned long periodic_timer;
 void net_stack_init(void) {
     
     #ifdef UIP_PERIODIC_TIMER
-    periodic_timer = millis() + UIP_PERIODIC_TIMER;
+    periodic_timer = msec_now() + UIP_PERIODIC_TIMER;
     #endif
 
     /* Inicializar la interface */
@@ -225,7 +225,7 @@ void net_tick(void) {
     /** -------------------------------- Enviar datos a la red --------------------------------  */
 
     #ifdef UIP_PERIODIC_TIMER
-    unsigned long now = millis();
+    unsigned long now = msec_now();
 
     /* Si periodic_timer expiró */
     if ((long)( now - periodic_timer ) >= 0) {
