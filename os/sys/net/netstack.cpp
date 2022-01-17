@@ -133,7 +133,7 @@ void net_tick(void) {
             read_frame_arch((uint8_t*)uip_buf, UIP_BUFSIZE);
 
             /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
-            if (hdr_eth->type == HTONS(UIP_ETHTYPE_IP)) {
+            if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
 
                 /* ¿El frame de entrada pasa a ser oficialmente uIP frame? */
                 //uip_frame = in_frame;
@@ -151,8 +151,8 @@ void net_tick(void) {
                                         (hdr_ip_tcp->srcipaddr[0] >> 8) & 0xff,
                                         hdr_ip_tcp->srcipaddr[1] & 0xff,
                                         (hdr_ip_tcp->srcipaddr[1] >> 8) & 0xff,
-                                        htons(hdr_ip_tcp->destport),
-                                        htons(hdr_ip_tcp->srcport));
+                                        uip_htons(hdr_ip_tcp->destport),
+                                        uip_htons(hdr_ip_tcp->srcport));
                 #endif
                 
                 /* Refrescar o inicializar la tabla ARP */
@@ -181,7 +181,7 @@ void net_tick(void) {
                     send_success = mac_send();
                 }                
 
-            } else if (hdr_eth->type == HTONS(UIP_ETHTYPE_ARP)) {
+            } else if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_ARP)) {
 
                 #if NET_DEBUG >= 3
                 printf("ARP frame from: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
@@ -250,7 +250,7 @@ void net_tick(void) {
                         (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
                         hdr_ip_tcp->destipaddr[1] & 0xff,
                         (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
-                        htons(hdr_ip_tcp->destport), 
+                        uip_htons(hdr_ip_tcp->destport), 
                         uip_len);
                 #endif
 
@@ -336,7 +336,7 @@ uint16_t uip_ipchksum(void) {
     uint16_t sum;
 
     sum = chksum(0, &uip_buf[UIP_LLH_LEN], UIP_IPH_LEN);
-    return (sum == 0) ? 0xffff : htons(sum);
+    return (sum == 0) ? 0xffff : uip_htons(sum);
 }
 
 /** 
@@ -402,11 +402,11 @@ uint16_t upper_layer_chksum(uint8_t protocol) {
     printf("chksum uip_frame [%d - %d]: %X\r\n",
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_header_len,
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_segment_len, 
-            htons(sum));
+            uip_htons(sum));
     #endif
     
     /* 0xffff es el resultado de una comprobación exitosa de checksum */
-    return (sum == 0) ? 0xffff : htons(sum);
+    return (sum == 0) ? 0xffff : uip_htons(sum);
 }
 
 /** 
