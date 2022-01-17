@@ -38,7 +38,7 @@ time_t get_time() {
 }
 
 time_t  msec_now(){
-    clock();
+    //clock();
     return(get_time() / 1000);
 }
 

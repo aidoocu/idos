@@ -6,7 +6,8 @@
 #ifndef _NET_NATIVE_H_
 #define _NET_NATIVE_H_
 
-#include "../../arch.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 /** 
  *  \brief Inicializar la interface 

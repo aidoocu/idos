@@ -3,9 +3,12 @@
  */
 
 #include "arch_net.h"
+#include "arch_tap.h"
 
 bool mac_init_arch(uint8_t * mac){
-    return true;
+
+    return tap_init();
+
 }
 
 uint16_t frame_size_arch(void){
@@ -13,11 +16,17 @@ uint16_t frame_size_arch(void){
 }
 
 bool receive_frame_arch(void){
+    uint16_t frame_size;
+    frame_size = tap_poll();
+
+    if(frame_size > 0){
+        return true;
+    }
     return false;
 }
 
 uint16_t read_frame_arch(uint8_t* buffer, uint16_t len){
-    return 0xffff;
+    return tap_read(buffer);
 }
 
 void write_frame_arch(uint8_t* tx_buffer, uint16_t len){
@@ -27,6 +36,10 @@ void write_frame_arch(uint8_t* tx_buffer, uint16_t len){
 bool send_frame_arch(void){
     return true;
 }
+
+
+
+/* <<>> */
 
 void free_frame_arch(void){
     return;

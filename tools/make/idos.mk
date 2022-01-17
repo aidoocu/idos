@@ -17,18 +17,20 @@ else
   ${info Using board '$(BOARD)'}
 endif
 
-## Tipos de plataforma
-#define NATIVE = 0
-
-ifeq ($(BOARD),native)
-  CFLAGS += -DBOARD=1
-endif
-
 # Incluir los textos de ayuda
 include $(IDOS)/tools/make/help.mk
 
 # Incluir las definiciones globales
 include $(IDOS)/tools/make/define.mk
+
+## Tipos de plataforma
+#define NATIVE = 0
+
+ifeq ($(BOARD),native)
+  CFLAGS += -DBOARD=1
+  CFLAGS += -D$(OS_BASE)
+endif
+
 
 # Incluir los path globales y específicas de la plataforma
 
@@ -92,7 +94,8 @@ SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/ip/*.c}}
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/mac/*.cpp}}
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/transport/*.cpp}}
 
-SOURCE_FILES += ${notdir ${wildcard $(IDOS_BOARD)/*.cpp}}
+# El código dependiente del hardware será redactado en C
+SOURCE_FILES += ${notdir ${wildcard $(IDOS_BOARD)/*.c}}
 
 ${info -> Sources: $(SOURCE_FILES)}
 
