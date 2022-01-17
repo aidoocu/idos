@@ -2,7 +2,7 @@
 
 # Compiladores
 CC ?= gcc
-CXX ?= c++
+CXX ?= gcc
 ifdef LD_OVERRIDE
   LD     = $(LD_OVERRIDE)
 else

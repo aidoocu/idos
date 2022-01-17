@@ -4,7 +4,7 @@
 ## Reconociendo la arquitectura en la que que va a compilar
 ## Aquí estamos suponiendo que no es Windows
 UNAME := $(shell uname -m -s)
-OS = $(word 1, $(UNAME))
+OS_BASE = $(word 1, $(UNAME))
 OS_ARCH = $(word 2, $(UNAME))
 
 # Control de salidas de mensajes, 
