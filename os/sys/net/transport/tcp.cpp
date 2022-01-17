@@ -15,9 +15,9 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
     /** Crear una escucha de TCP por port 
      * \note uIP recive el puerto (y el resto) leyendo el byte alto primero, así es 
      *      necesario hacer lo mismo cuando le pasemos el puerto. Ejemplo, 80 en uint16_t
-     *      es 0x0050, uip lee el frame como 0x5000, htons cambia de lugar los bytes 
+     *      es 0x0050, uip lee el frame como 0x5000, uip_htons cambia de lugar los bytes 
     */
-    uip_listen((u16_t)htons(port));
+    uip_listen((u16_t)uip_htons(port));
 
     listener->port = port;
     listener->msg_len_in = listener->msg_len_out = 0;
@@ -113,11 +113,11 @@ bool tcp_client_connect(tcp_listener_st * listener, uint8_t * ip_dst, uint16_t p
     #endif
 
     /* Creamos una estructura para la conexión y se apunta con conn */
-    struct uip_conn * conn = uip_connect(&uip_dst, htons(port_dst));
+    struct uip_conn * conn = uip_connect(&uip_dst, uip_htons(port_dst));
 
     if (conn) {
 
-        listener->port = htons(uip_conn->lport);
+        listener->port = uip_htons(uip_conn->lport);
         listener->state = LISTENER_LISTENING | LISTENER_CONECTING;
         uip_conn->appstate = listener;
 
@@ -143,7 +143,7 @@ void uipclient_appcall(void) {
         listener = tcp_listeners;
         /* ...y buscamos en la lista de listeners quien está escuchando por el puerto */
         do {
-            if (htons(listener->port) == uip_conn->lport) 
+            if (uip_htons(listener->port) == uip_conn->lport) 
                 break;
             listener = listener->next;
         } while(listener->next != NULL);
