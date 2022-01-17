@@ -56,6 +56,10 @@ uint8_t idos_init(void){
     /* Si la plataforma es native no se inicializa hardware */
     #if BOARD == NATIVE
 
+    #if NET_STACK
+    net_stack_init();
+    #endif
+
     #else /* BOARD == NATIVE */
     /* La inicialización del idOS no debe ser interrumpida */
     uint8_t cSREG = inte_fall();
@@ -115,6 +119,9 @@ int main(void){
 
         /* Verificar los timers */
         timer_exec();
+
+        /* netstack */
+        net_tick();
 
     }
     return 0;

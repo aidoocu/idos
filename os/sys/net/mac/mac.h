@@ -22,13 +22,13 @@
 /** \brief Inicializa la NIC 
  * \param mac Máscara MAC, para eth, un arreglo de 6 bytes
 */
-bool mac_init(uint8_t * mac_address);
+//bool mac_init(uint8_t * mac_address);
 
 
 
 /** 
  * 
  */
-bool mac_send(void);
+//bool mac_send(void);
 
 #endif /* _MAC_H_ */

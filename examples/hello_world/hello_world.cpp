@@ -15,7 +15,14 @@ TASKS_AUTO_START(&task_uno)
 TASK_PT(task_uno){
 
   TASK_BEGIN
-    timer_set(timer_a, 1000);
+    timer_set(timer_a, 5000);
+
+    #ifdef Darwin
+      printf("Darwin ");
+    #endif
+    #ifdef Linux
+      printf("Linux ");
+    #endif  
 
     while (1)
     {

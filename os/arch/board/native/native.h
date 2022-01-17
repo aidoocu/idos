@@ -8,11 +8,6 @@
 #define _ARCH_NATIVE_H_
 
 #include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
-
-#include <stdarg.h>
-#include <stdlib.h>
 
 
 #ifdef __cplusplus

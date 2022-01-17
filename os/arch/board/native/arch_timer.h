@@ -7,8 +7,7 @@
 #ifndef _ARCH_TIMER_H_
 #define _ARCH_TIMER_H_
 
-//#include <time.h>
-#include <sys/time.h>
+#include "arch_sys.h"
 
 
 /** 

@@ -17,18 +17,18 @@
 /* ¡¡¡ ARCH !!! */
 
 /* Inicializa la interface con la MAC por defecto */
-bool mac_init(uint8_t * mac_address) {
+/* bool mac_init(uint8_t * mac_address) {
     return mac_init_arch (mac_address);
-}
+} */
 
 /* /¡¡ ARCH !!! */
 
 /** 
  * 
  */
-bool mac_send(void) {
+/* bool mac_send(void) {
 
-    /* Se verifica contenido en el frame */
+    //Se verifica contenido en el frame
     if (uip_len > 0) {
 
         #if NET_DEBUG >= 3
@@ -47,7 +47,7 @@ bool mac_send(void) {
                                 hdr_eth->dest.addr[5]);
         #endif
 
-        /* Decirle a la NIC que envíe el paquete */
+        //Decirle a la NIC que envíe el paquete
         if (send_frame_arch()) {
 
             #if NET_DEBUG >= 3
@@ -64,5 +64,5 @@ bool mac_send(void) {
 
     return false;
 
-}
+} */
 
