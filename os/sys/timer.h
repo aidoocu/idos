@@ -74,22 +74,18 @@ struct timer_st {
 
 /** 
  *  \brief Determina si el timer ha expirado o no.
- *  \note Con este macro se verifica el mensaje del timer pasivamente, no lo modifica
+ *  \note Esta función verifica el mensaje del timer pasivamente, no lo modifica
  *  \param timer El timer que se va a verificar
  *  \return true si el timer ha expirado, false si no.
  */
 bool timer_expired(timer_st * timer);
 
 /** 
- *  \brief Lee el timer para determinar si ha expirado
- *  \details Esta función hace lo mismo que timer_expired verificando que el timer ha expirado
- *  con la diferencia de que si determina que el efectivamente ha expirado, queda como "leido"
- *  por lo que el mensaje se limpia. 
- *  \note Este procedimiento modifica el mensaje desabilitandolo
- *  \param timer El timer que se va a leer
- *  \return true si el timer ha expirado, false si no.
+ *  \brief Desabilitar timer
+ *  \details El timer es una variable que persiste (y ¿es muy costoso sacarlo de la lista?)
+ *  por lo que esta función lo que hace es poner el mensaje a null y desabilitarlo. 
  */
-bool timer_read(timer_st * timer);
+void timer_disable(timer_st * timer);
 
 /* --------------------------------------------------------------------------------- */
 

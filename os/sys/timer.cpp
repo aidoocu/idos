@@ -108,14 +108,11 @@ bool timer_expired(timer_st * timer) {
     return false;
 }
 
-/** 
- * 
- */
-bool timer_read(timer_st * timer) {
-    
-    if(timer->msg.status == MSG_NULL)
-        return false;
+void timer_disable(timer_st * timer) {
 
+    /* Quitamos el último estado del mensaje */
     timer->msg.status = MSG_NULL;
-    return true; 
+    
+    /* Desactivamos el timer*/
+    timer->active = false;
 }
