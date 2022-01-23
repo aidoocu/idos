@@ -41,8 +41,8 @@ void net_stack_init(void) {
     /* Pasarle a uip la mac inicializada */
     uip_seteth_addr(mac_address);
 
-    #if NET_DEBUG >= 3
-    printf("mac address: %X:%X:%X:%X:%X:%X \r\n", 
+    #if NET_DEBUG >= 2
+    printf("mac address: %x:%x:%x:%x:%x:%x \r\n", 
                         uip_ethaddr.addr[0], 
                         uip_ethaddr.addr[1], 
                         uip_ethaddr.addr[2], 
@@ -80,7 +80,16 @@ void net_stack_init(void) {
     uip_ip_addr(uipaddr, host);
     uip_sethostaddr(uipaddr);
 
-    #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
+    
+    /* Se imprime la dirección IP configurada */
+    uip_ipaddr_t hostaddr;
+    uip_gethostaddr(&hostaddr);
+    host[0] = (uint8_t)hostaddr[0];
+    host[1] = (uint8_t)uip_htons(hostaddr[0]);
+    host[2] = (uint8_t)hostaddr[1];
+    host[3] = (uint8_t)uip_htons(hostaddr[1]);
+
     printf ("IP address: %d.%d.%d.%d \r\n", 
                         host[0],
                         host[1],
@@ -91,7 +100,7 @@ void net_stack_init(void) {
     uip_ip_addr(uipaddr, gateway);
     uip_setdraddr(uipaddr);
 
-    #if NET_DEBUG >= 3    
+    #if NET_DEBUG >= 2 
     printf ("Gateway address: %d.%d.%d.%d \r\n", 
                         gateway[0],
                         gateway[1],
@@ -102,7 +111,7 @@ void net_stack_init(void) {
     uip_ip_addr(uipaddr, subnet);
     uip_setnetmask(uipaddr);
     
-    #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
     printf ("Subnet address: %d.%d.%d.%d \r\n", 
                     subnet[0],
                     subnet[1],
@@ -125,16 +134,18 @@ void net_tick(void) {
     /* ...y si ha sido leido un frame y tiene efectivamente datos*/
     if (uip_len > 0) {
     
+/*         printf("uip_len: %d\n", uip_len);
+        for (int i=0; i<uip_len; i++){
+            printf("%02x ", uip_buf[i]);
+        }
+        printf("\n"); */
 
         bool send_success = false;
 
         /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
         if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
 
-            /* ¿El frame de entrada pasa a ser oficialmente uIP frame? */
-            //uip_frame = in_frame;
-
-            #if NET_DEBUG >= 2
+            #if NET_DEBUG >= 3
             printf("IP frame from NIC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
                                     hdr_eth->src.addr[0],
                                     hdr_eth->src.addr[1],
@@ -179,9 +190,8 @@ void net_tick(void) {
 
         } else if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_ARP)) {
 
-
-            #if NET_DEBUG >= 2
-            printf("ARP frame from: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+            #if NET_DEBUG >= 3
+            printf("ARP frame from: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
                                     hdr_eth->src.addr[0],
                                     hdr_eth->src.addr[1],
                                     hdr_eth->src.addr[2],
@@ -192,6 +202,7 @@ void net_tick(void) {
 
             /* Situar nueva info ARP en la tabla */
             uip_arp_arpin();
+
             if (uip_len > 0) {
 
                 #if NET_DEBUG >= 3
@@ -210,6 +221,7 @@ void net_tick(void) {
             #endif      
 
             /* Liberamos el buffer en la NIC */
+            ///// Esto tiene que ser parte del driver !!!!
             free_frame_arch();
 
         } else {
@@ -255,15 +267,7 @@ void net_tick(void) {
                 uip_arp_out();
                 /* Enviar frame */
                 mac_send((uint8_t * )uip_buf, uip_len);
-                /* Aquí no será necesario limpiar el buffer de TX */
-
-                if (uip_conn->appstate != NULL) {
-                    tcp_listener_st * listener = (tcp_listener_st *) uip_conn->appstate;
-                    if ((listener->state & LISTENER_CONECTING) && (uip_conn->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED) {
-                        listener->state = LISTENER_LISTENING | LISTENER_CONNECTED;
-                        printf(" >> connected\r\n");
-                    }
-                }
+            
             }
         }
 /*     #if UIP_UDP

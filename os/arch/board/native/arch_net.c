@@ -85,7 +85,7 @@ uint16_t mac_poll(uint8_t * frame, uint16_t max_len) {
         return 0;
 	}
 
-	printf("tapdev_poll: read %d bytes\n", ret);
+	//printf("tapdev_poll: read %d bytes\n", ret);
 
 	return ret;
 }
@@ -107,7 +107,7 @@ bool mac_send(uint8_t * frame, uint16_t len){
 	}
 	#endif /* DROP */
 
-	printf("tapdev_send: sending %d bytes\n", len);
+	//printf("tapdev_send: sending %d bytes\n", len);
 	ret = write(fd_tap, frame, len);
 
     /* Si no se pudo escribir en tap se retorna el fail */
@@ -118,50 +118,13 @@ bool mac_send(uint8_t * frame, uint16_t len){
     return true;
 }
 
-
-
-
-
-
-
-
-
-uint16_t frame_size_arch(void){
-    return 100;
-}
-
-bool receive_frame_arch(void){
-    return true;
-}
-
-uint16_t read_frame_arch(uint8_t* buffer, uint16_t len){
-    return 23;
-}
-
-void write_frame_arch(uint8_t* tx_buffer, uint16_t len){
-    return;
-}
-
-bool send_frame_arch(void){
-    return true;
-}
-
-
-
-
-
-
-
-
-
-
-
-/* <<>> */
-
+ /// Quitar 
 void free_frame_arch(void){
     return;
 }
 
+
+/* << estado de la interface >> */
 uint8_t nic_is_active(void){
     return 1;
 }

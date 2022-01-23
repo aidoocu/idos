@@ -46,6 +46,7 @@
 #include "mac/mac.h"
 
 extern "C" {
+   #include "ip/uipopt.h"
    #include "ip/uip-conf.h"
    #include "ip/uip.h"
    #include "ip/uip_arp.h"
