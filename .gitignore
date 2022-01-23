@@ -16,3 +16,4 @@
 
 *.native
 
+examples/hello_world/build/native/obj/hello_world.d
