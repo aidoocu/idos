@@ -42,7 +42,7 @@ TASK_PT(task_uno){
         udp_remote_addr(listener, ip_remote);
         uint16_t remote_port = udp_remote_port(listener);
         /* ... y lo imprimimos */
-        printf("from: %d.%d.%d.%d:%d ", 
+        printf("from: %d.%d.%d.%d:%d\r\n", 
               ip_remote[0], ip_remote[1], ip_remote[2], ip_remote[3], 
               remote_port);
 
