@@ -253,7 +253,7 @@ void net_tick(void) {
             if (uip_len > 0) {
 
                 #if NET_DEBUG >= 3
-                printf("App resp to: %d.%d.%d.%d:%u len: %u\r\n",
+                printf("App tcp resp to: %d.%d.%d.%d:%u len: %u\r\n",
                         hdr_ip_tcp->destipaddr[0] & 0xff,
                         (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
                         hdr_ip_tcp->destipaddr[1] & 0xff,
@@ -270,17 +270,32 @@ void net_tick(void) {
             
             }
         }
-/*     #if UIP_UDP
-        for (int i = 0; i < UIP_UDP_CONNS; i++) {
-            uip_udp_periodic(i);
+        #if UIP_UDP
+        for (int udp_conn = 0; udp_conn < UIP_UDP_CONNS; udp_conn++) {
+            uip_udp_periodic(udp_conn);
             // If the above function invocation resulted in data that
-            // should be sent out on the Enc28J60Network, the global variable
             // uip_len is set to a value > 0.
             if (uip_len > 0) {
-                EthernetUDP::_send(&uip_udp_conns[i]);
+                //EthernetUDP::_send(&uip_udp_conns[udp_conn]);
+                
+                #if NET_DEBUG >= 2
+                printf("App resp to: %d.%d.%d.%d:%u len: %u\r\n",
+                        hdr_ip_tcp->destipaddr[0] & 0xff,
+                        (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
+                        hdr_ip_tcp->destipaddr[1] & 0xff,
+                        (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
+                        uip_htons(hdr_ip_tcp->destport), 
+                        uip_len);
+                #endif
+
+                /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
+                y pone el encabezado LLH (Eth) completo */
+                uip_arp_out();
+                /* Enviar frame */
+                mac_send((uint8_t * )uip_buf, uip_len);
             }
         }
-        #endif  *//* UIP_UDP */
+        #endif  /* UIP_UDP */
     #ifdef UIP_PERIODIC_TIMER
     }
     #endif

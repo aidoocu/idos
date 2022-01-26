@@ -2,65 +2,211 @@
 
 #include "udp.h"
 
+/* Si UDP está activado */
 #if UIP_UDP
+
 #define UIP_ARPHDRSIZE 42
-#define UDPBUF ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
-/* void udp_send(uip_udp_userdata_t *data) {
-    
-    uip_arp_out();
+/////// !esto ppuede que este mal definido
+static struct udp_sender_st {
+	bool send;						/* Actúa como bandera para uipudp_appcall() y como 
+									semáforo en udp_sender() cuando la task envía un 
+									mensaje a un remoto */
+	bool response;					/* Actúa como bandera para uipudp_appcall() y como 
+									semáforo en udp_respoce() cuando la task responde un 
+									mensaje a un remoto previa pseudoconxión establecida */
+	uint16_t len;					/* Largo del mensaje */
+	uint8_t msg[MAX_UDP_MSG_SIZE];	/* Buffer para el mensaje */
+} udp_sender;
 
-    //ARP busca el header eth para determinar el IP, si no el paquete es reeplazado por arp-request
-    if (uip_len == UIP_ARPHDRSIZE) {
-        uip_packet = NOBLOCK;
-        packet_state &= ~UIPETHERNET_SENDPACKET;
+/* --------------------------------------------------------------------------------- */
 
-        #ifdef DEBUGGER
-        printf("UDP, uip_poll results in ARP-packet");
-        #endif
-    } else {
-        data->send = false;
-        data->packet_out = NOBLOCK;
-        packet_state |= UIPETHERNET_SENDPACKET;
-        
-        #ifdef UIPETHERNET_DEBUG_UDP
-        printf("UDP, uip_packet to send: %d", uip_packet);
-        #endif
-    }
-    mac_send();
-} */
-
-
+/** 
+ * 
+ */
 void uipudp_appcall(void) {
-    if (uip_udp_userdata_t * data = (uip_udp_userdata_t *)(uip_udp_conn->appstate)) {
+
+    /* Creamos un listener temporal */
+    udp_listener_st * listener = (udp_listener_st * )(uip_udp_conn->appstate);
+
+    #if NET_DEBUG >= 3
+    printf("udp appcall\n\r");
+    #endif
+
+    /** UDP no crea conexiones, así que tenemos solo dos posibilidades, o ha entrado algo, 
+        o la tarea quiere enviar algo. Para ello verificamos si la conexión que se muestrea
+        tiene un listener (una task al fin y cabo) asociada, y de ser así se procede */
+    if (listener) {
+
+        /* Si hay datos nuevos que procesar */
         if (uip_newdata()) {
-            if (data->packet_next == 0) {
-                uip_udp_conn->rport = UDPBUF->srcport;
-                uip_ipaddr_copy(uip_udp_conn->ripaddr, UDPBUF->srcipaddr);
-                //data->packet_next = mem_block_alloc(ntohs(UDPBUF->udplen)-UIP_UDPH_LEN);
-                /* Si no se puede reservar memoria el paquete es descartado pues UDP no garantiza entrega */
-                if (data->packet_next != 0) {
-                    //discard Linklevel and IP and udp-header and any trailing bytes:
-                        //copy_packet_udp(data->packet_next, 0, in_packet, UIP_UDP_PHYH_LEN, mem_block_size(data->packet_next));
 
-                        #ifdef UIPETHERNET_DEBUG_UDP
-                        printf("UPD, packet received \r\n");
-                        #endif
-                }
-            }
-        }
-        if (uip_poll() && data->send) {
+			/* uIP no llena los campos del remoto, en su defecto uip_buf carga con el frame 
+			completo, así que hay que aisla los headers */
+			uip_udp_conn->rport = udp_buf->srcport;
+			uip_ipaddr_copy(uip_udp_conn->ripaddr,udp_buf->srcipaddr);
 
-            /* set uip_slen (uip private) by calling uip_udp_send */
-            #ifdef UIPETHERNET_DEBUG_UDP
-            printf("UDP, packet to send: %d \r\n", data->packet_out);
+			/* Pasamos el largo del mensaje */
+			listener->msg_len = uip_htons(udp_buf->udplen) - UIP_UDPH_LEN;
+
+            #if NET_DEBUG >= 3
+            printf("new data ");
+            printf("from: %d.%d.%d.%d:%d ", 
+					(uint8_t)(uip_udp_conn->ripaddr[0]), 
+					(uint8_t)uip_htons(uip_udp_conn->ripaddr[0]),
+					(uint8_t)(uip_udp_conn->ripaddr[1]), 
+					(uint8_t)uip_htons(uip_udp_conn->ripaddr[1]),
+					uip_htons(uip_udp_conn->rport));
+            printf("to local port: %d -> ", uip_htons(uip_udp_conn->lport));
+			printf("len: %d\n\r", listener->msg_len);
             #endif
 
-            //uip_packet = data->packet_out;
-            //uip_hdrlen = UIP_UDP_PHYH_LEN;
-            uip_udp_send(data->out_pos - (UIP_UDP_PHYH_LEN));
-        }
-    }
+			if (listener->msg_len) {
+				/* Anunciamos a la tarea que hay un mensaje nuevo */
+				listener->status = UDP_MSG_IN;
+
+				/* y copiamos el mensaje al buffer del listener */
+				memcpy(listener->msg, 
+						&uip_buf[UIP_UDP_PHYH_LEN], 
+						(int)listener->msg_len);
+
+				/* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
+				//ipc_msg_net(listener, NET_MSG_RECEIVED);
+				/// Esto hay que hacerlo pasando un mensaje a la tarea notificando la recepción
+				task_set_ready(listener->task);
+
+			} else {
+					/* Anunciamos un mensaje vacío */
+					listener->status = UDP_MSG_NULL;
+			}
+		}
+
+		if (uip_poll() && udp_sender.response){
+
+			#if NET_DEBUG >= 2
+			printf("udp poll response\n\r");
+			#endif
+
+			uip_appdata = &udp_sender.msg[0];
+			/* set uip_slen (uip private) by calling uip_udp_send */
+			uip_udp_send(udp_sender.len);
+
+			/* bajar la bandera */
+			udp_sender.response = false;
+
+		}
+
+	} else {
+		/*  Se chequea si la task tiene algo que enviar. Note que siempre se hace poll() porque uIP 
+			no tiene la referencia de conexión activa, así que siempre deberá encuestar. El control
+			para saber si la tarea tiene algo que enviar lo tiene la variable listener.send */
+		if (uip_poll() && udp_sender.send) {
+
+			#if NET_DEBUG >= 2
+			printf("udp poll send\n\r");
+			#endif
+
+			uip_appdata = &udp_sender.msg[0];
+			/* set uip_slen (uip private) by calling uip_udp_send */
+			uip_udp_send(udp_sender.len);
+
+			/* Liberar la pseudoconexión */
+			uip_udp_remove(uip_udp_conn);
+			/* bajar la bandera */
+			udp_sender.send = false;
+		}
+	}
+
 }
+
+/** 
+ * 
+ */
+bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
+
+    /* Como el listener siempre está asociado a la pseudoconexión, no es necesario listarlo */
+
+    /* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
+    struct uip_udp_conn * udp_conn = uip_udp_new(NULL, 0);
+
+    if(udp_conn) {
+
+        /* Si la pseudoconexión la asociamos al puerto del listener... */
+        uip_udp_bind(udp_conn, uip_htons(port));
+        /* y asociamos el listener a la pseudoconexión */
+        udp_conn->appstate = listener;
+		/* y a su vez asociamos la pseudoconexión al listener */
+		listener->udp_conn = udp_conn;
+        /* Como la pseudoconexión será manejada internamente por uIP no es necesario devolver 
+        referencia a la task */
+        return true;
+    }
+    return false;
+}
+
+
+/** 
+ * 
+ */
+bool udp_recv(udp_listener_st * listener){
+	if (listener->status == UDP_MSG_IN) {
+		/* ???? Se establece el mensaje como leído */
+		listener->status = UDP_MSG_READED;
+		return true;
+	}
+	return false;
+}
+
+
+/** 
+ * 
+ */
+bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len){
+
+	if(!udp_sender.send && !udp_sender.response){	
+		/* Se convierte IP en uIP */
+		uip_ipaddr_t uip_addr;
+		uip_ip_addr(uip_addr, dst_addr);
+
+		/* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
+		struct uip_udp_conn * udp_conn = uip_udp_new(&uip_addr, uip_htons(port));
+
+		if(udp_conn){
+
+			/* Copiamos al sender el mensaje */
+			memcpy(udp_sender.msg, msg, len);
+			/* Le pasamos al sender el tamaño del mensaje */
+			udp_sender.len = len;
+
+			/* Levanto la bandera de send */
+			udp_sender.send = true;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/** 
+ * 
+ */
+bool udp_response(uint8_t * msg, uint16_t len){
+
+	if (!udp_sender.send) {
+
+		/* Copiamos al sender el mensaje */
+		memcpy(udp_sender.msg, msg, len);
+		/* Le pasamos al sender el tamaño del mensaje */
+		udp_sender.len = len;
+
+		/* Levanto la bandera de send */
+		udp_sender.response = true;
+	
+		return true;
+	}
+	return false;
+}
+
+
 
 #endif /* UIP_UDP */

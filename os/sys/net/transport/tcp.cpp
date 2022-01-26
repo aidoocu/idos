@@ -190,11 +190,11 @@ void uipclient_appcall(void) {
             printf("new data\n\r");
             #endif       
 
-			/* Preparar el listener con el mensaje pasándole la longitud que no puede ser mayor que MAX_NET_MSG_SIZE */
+			/* Preparar el listener con el mensaje pasándole la longitud que no puede ser mayor que MAX_TCP_MSG_SIZE */
 			/* !!!! hay que ver que hacer cuando el paquete es más que el buffer del listener, lo loogico seriia que 
 			el mensaje fuera descartado y solicitado reembiio ¡¡¡¡ */
-			if (uip_len > MAX_NET_MSG_SIZE)
-				listener->msg_len_in = MAX_NET_MSG_SIZE;
+			if (uip_len > MAX_TCP_MSG_SIZE)
+				listener->msg_len_in = MAX_TCP_MSG_SIZE;
 				// dropped!!!!!
 			else
 				listener->msg_len_in = uip_len;
@@ -253,7 +253,7 @@ void uipclient_appcall(void) {
             #endif
 
             /* Si hay algo en el buffer de salida del listener */
-            if (listener->msg_len_out && (listener->msg_len_out <= MAX_NET_MSG_SIZE)) {
+            if (listener->msg_len_out && (listener->msg_len_out <= MAX_TCP_MSG_SIZE)) {
 
                 /** Según la documentación de uIP:
                  * If the application wishes to send any data, this data should be
@@ -334,11 +334,11 @@ bool tcp_send(tcp_listener_st * listener, uint8_t * msg, uint16_t len) {
 
 	if (listener->msg_len_out == 0) {
 
-        if (len > MAX_NET_MSG_SIZE) {
+        if (len > MAX_TCP_MSG_SIZE) {
             //Aquí hay que hacer algo, picar el mensaje, denegarlo...
             ;
             //por ahora solo le limitaremos el tamanno pero no es correcto
-            len = MAX_NET_MSG_SIZE;
+            len = MAX_TCP_MSG_SIZE;
         }
 
         listener->msg_len_out = len;

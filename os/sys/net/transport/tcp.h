@@ -47,7 +47,7 @@
  *          y su largo es uip_len - UIP_LLH_LEN - UIP_TCPIP_HLEN
  *          y no será más largo que UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN
 */
-#define MAX_NET_MSG_SIZE UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN
+#define MAX_TCP_MSG_SIZE UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN
 
 /* --------------------------------------------------------------------------------- */
 
@@ -70,8 +70,8 @@ struct tcp_listener_st {
     msg_st ipc_msg;                             /**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer de entrada */
     uint16_t msg_len_out;                       /**< Tamaño del mensaje que está en el buffer de salida */
-    uint8_t net_msg_in[MAX_NET_MSG_SIZE];       /**< Buffer que contendrá el mensaje de la red */
-    uint8_t net_msg_out[MAX_NET_MSG_SIZE];      /**< Buffer que contendrá el mensaje de la red */
+    uint8_t net_msg_in[MAX_TCP_MSG_SIZE];       /**< Buffer que contendrá el mensaje de la red */
+    uint8_t net_msg_out[MAX_TCP_MSG_SIZE];      /**< Buffer que contendrá el mensaje de la red */
 };
 
 /** 
@@ -121,7 +121,7 @@ enum {
     NET_MSG_ACKED,          /**< Notificación de recepción del extremo */
     NET_MSG_CLOSED          /**< Notificación de recepción del extremo*/ 
 };
-
+////// Esto hay que pasarlo al netstack !!!!!!!
 /** 
  * \def   ipc_msg_net
  * \brief Enviar mensaje desde la interface de red hacia una tarea

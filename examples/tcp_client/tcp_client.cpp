@@ -19,6 +19,7 @@ TASK_PT(task_uno){
     timer_set(timer_a, 1000);
 
     static uint8_t tcp_server[] = {172, 18, 0, 1};
+    //static uint8_t tcp_server[] = {192, 168, 1, 10};
 
     tcp_listener(escucha);
 
