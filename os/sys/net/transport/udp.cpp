@@ -71,9 +71,7 @@ void uipudp_appcall(void) {
 						(int)listener->msg_len);
 
 				/* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
-				//ipc_msg_net(listener, NET_MSG_RECEIVED);
-				/// Esto hay que hacerlo pasando un mensaje a la tarea notificando la recepción
-				task_set_ready(listener->task);
+				udp_ipc(listener);
 
 			} else {
 					/* Anunciamos un mensaje vacío */

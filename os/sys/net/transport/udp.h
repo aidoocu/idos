@@ -22,12 +22,12 @@ enum {
 
 
 typedef struct {
-	struct uip_udp_conn * udp_conn;				/**< Puntero a la conexión udp */
-	uint8_t status;               			/**< Estado del mensaje */
-    task_st * task;							/**< Puntero a la tarea que setea el listerner */
-	msg_st ipc_msg;                        	/**< Mensaje a la tarea que setea el listerner */
-    uint16_t msg_len;					/**< Tamaño del mensaje que está en el buffer de entrada */
-    uint8_t msg[MAX_UDP_MSG_SIZE];	/**< Buffer que contendrá el mensaje de la red */
+	struct uip_udp_conn * udp_conn;		/**< Puntero a la conexión udp */
+	uint8_t status;						/**< Estado del mensaje */
+    task_st * task;						/**< Puntero a la tarea que setea el listerner */
+	msg_st ipc_msg;						/**< Mensaje a la tarea que setea el listerner */
+    uint16_t msg_len;					/**< Tamaño del mensaje en el buffer de entrada */
+    uint8_t msg[MAX_UDP_MSG_SIZE];		/**< Buffer que contendrá el mensaje de la red */
 } udp_listener_st;
 
 
@@ -37,7 +37,12 @@ typedef struct {
 
 /* --------------------------------------------------------------------------------- */
 
-
+/** 
+ * \brief Pasarle un mensaje (despertar) a la tarea que tiene el listener
+ * \note Todo lo que la tarea necesita está en el listener, así que el mensaje está 
+ *  vacío
+ */
+#define udp_ipc(listener) task_set_ready(listener->task)
 
 /* --------------------------------------------------------------------------------- */
 
