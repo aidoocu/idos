@@ -4,4 +4,4 @@ En este ejemplo vamos a comprobar a UDP recibiendo un mensaje, respondiendo al r
 ## Remoto
 El remoto lo hemos simulado con Node-RED. El archivo remote.json contiene los flujos de Node-RED.
 
-![flow udp en Rode-RED]([pic/flow.png])
+![flow udp en Rode-RED](pic/flow.png)
