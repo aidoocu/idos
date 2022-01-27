@@ -79,6 +79,7 @@ endef
 SOURCE_PATH += $(IDOS_OS) $(IDOS_SYS) $(IDOS_KERNEL) 
 SOURCE_PATH += $(IDOS_NET) $(IDOS_NET)/ip $(IDOS_NET)/mac $(IDOS_NET)/transport 
 SOURCE_PATH += $(IDOS_BOARD)
+# Paths de las aplicaciones (app) que sean definidas
 SOURCE_PATH += ${foreach app, $(APPS), $(IDOS_APP)/$(app)}
 
 #${info -> Paths: $(SOURCE_PATH)}
@@ -103,8 +104,11 @@ SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/transport/*.cpp}}
 # El código dependiente del hardware será redactado en C
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_BOARD)/*.c}}
 
-# Adicionamos las aplicaciones (apps)
+# Adicionamos las aplicaciones (apps) como fuentes para ser compiladas
 SOURCE_FILES += ${notdir ${foreach app, $(APPS), ${wildcard $(IDOS_APP)/$(app)/*.cpp}}}
+
+# Adicionamos las apps como #define. Se convierte el nombre a mayúsculas por convención 
+CFLAGS += ${foreach app, $(APPS), -DBUILD_${shell echo $(app) | tr a-z A-Z}}
 
 
 ${info -> Sources: $(SOURCE_FILES)}
