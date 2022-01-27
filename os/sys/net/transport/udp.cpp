@@ -81,7 +81,7 @@ void uipudp_appcall(void) {
 
 		if (uip_poll() && udp_sender.response){
 
-			#if NET_DEBUG >= 2
+			#if NET_DEBUG >= 3
 			printf("udp poll response\n\r");
 			#endif
 
@@ -100,7 +100,7 @@ void uipudp_appcall(void) {
 			para saber si la tarea tiene algo que enviar lo tiene la variable listener.send */
 		if (uip_poll() && udp_sender.send) {
 
-			#if NET_DEBUG >= 2
+			#if NET_DEBUG >= 3
 			printf("udp poll send\n\r");
 			#endif
 
