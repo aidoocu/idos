@@ -52,6 +52,9 @@ IDOS_NET = $(IDOS_SYS)/net
 IDOS_ARCH = $(IDOS_OS)/arch/board
 IDOS_BOARD = $(IDOS_ARCH)/$(BOARD)
 
+# IDOS_APP: Camino a las aplicaciones
+IDOS_APP = $(IDOS)/apps
+
 # Incluir el makefile específico de la plataforma
 include $(IDOS_BOARD)/$(BOARD).mk
 
@@ -76,6 +79,9 @@ endef
 SOURCE_PATH += $(IDOS_OS) $(IDOS_SYS) $(IDOS_KERNEL) 
 SOURCE_PATH += $(IDOS_NET) $(IDOS_NET)/ip $(IDOS_NET)/mac $(IDOS_NET)/transport 
 SOURCE_PATH += $(IDOS_BOARD)
+SOURCE_PATH += ${foreach app, $(APPS), $(IDOS_APP)/$(app)}
+
+#${info -> Paths: $(SOURCE_PATH)}
 
 # Especificando para VPATH los directorios de los fuentes que será utilizados
 # como prerequisitos
@@ -96,6 +102,10 @@ SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/transport/*.cpp}}
 
 # El código dependiente del hardware será redactado en C
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_BOARD)/*.c}}
+
+# Adicionamos las aplicaciones (apps)
+SOURCE_FILES += ${notdir ${foreach app, $(APPS), ${wildcard $(IDOS_APP)/$(app)/*.cpp}}}
+
 
 ${info -> Sources: $(SOURCE_FILES)}
 
