@@ -42,21 +42,23 @@ void uipudp_appcall(void) {
         if (uip_newdata()) {
 
 			/* uIP no llena los campos del remoto, en su defecto uip_buf carga con el frame 
-			completo, así que hay que aisla los headers */
-			uip_udp_conn->rport = udp_buf->srcport;
-			uip_ipaddr_copy(uip_udp_conn->ripaddr,udp_buf->srcipaddr);
+			completo, así que hay que aisla los headers. Aquí asignamos o actualizamos el ip 
+			y el puerto remoto en el listener */
+			listener->rport = udp_buf->srcport;
+			uip_ipaddr_copy(listener->ripaddr, udp_buf->srcipaddr);
+
 
 			/* Pasamos el largo del mensaje */
 			listener->msg_len = uip_htons(udp_buf->udplen) - UIP_UDPH_LEN;
 
             #if NET_DEBUG >= 3
-            printf("new data ");
+            printf("-> new data ");
             printf("from: %d.%d.%d.%d:%d ", 
-					(uint8_t)(uip_udp_conn->ripaddr[0]), 
-					(uint8_t)uip_htons(uip_udp_conn->ripaddr[0]),
-					(uint8_t)(uip_udp_conn->ripaddr[1]), 
-					(uint8_t)uip_htons(uip_udp_conn->ripaddr[1]),
-					uip_htons(uip_udp_conn->rport));
+					(uint8_t)(listener->ripaddr[0]), 
+					(uint8_t)uip_htons(listener->ripaddr[0]),
+					(uint8_t)(listener->ripaddr[1]), 
+					(uint8_t)uip_htons(listener->ripaddr[1]),
+					uip_htons(listener->rport));
             printf("to local port: %d -> ", uip_htons(uip_udp_conn->lport));
 			printf("len: %d\n\r", listener->msg_len);
             #endif
@@ -85,11 +87,15 @@ void uipudp_appcall(void) {
 			printf("udp poll response\n\r");
 			#endif
 
+			/* Situar puerto e IP del remoto */
+			uip_udp_conn->rport = listener->rport;
+			uip_ipaddr_copy(uip_udp_conn->ripaddr, listener->ripaddr);
+
 			uip_appdata = &udp_sender.msg[0];
 			/* set uip_slen (uip private) by calling uip_udp_send */
 			uip_udp_send(udp_sender.len);
 
-			/* bajar la bandera */
+			/* Bajar la bandera */
 			udp_sender.response = false;
 
 		}
@@ -134,7 +140,7 @@ bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
         /* y asociamos el listener a la pseudoconexión */
         udp_conn->appstate = listener;
 		/* y a su vez asociamos la pseudoconexión al listener */
-		listener->udp_conn = udp_conn;
+		//listener->udp_conn = udp_conn;
         /* Como la pseudoconexión será manejada internamente por uIP no es necesario devolver 
         referencia a la task */
         return true;

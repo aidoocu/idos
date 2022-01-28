@@ -22,8 +22,9 @@ enum {
 
 
 typedef struct {
-	struct uip_udp_conn * udp_conn;		/**< Puntero a la conexión udp */
 	uint8_t status;						/**< Estado del mensaje */
+	uip_ipaddr_t ripaddr;				/**< IP remoto desde donde hay una conexión >*/
+	uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
     task_st * task;						/**< Puntero a la tarea que setea el listerner */
 	msg_st ipc_msg;						/**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len;					/**< Tamaño del mensaje en el buffer de entrada */
@@ -106,18 +107,30 @@ bool udp_response(uint8_t * msg, uint16_t len);
  * \param listener Puntero al listerner del que vamos a extraer el ip del remoto
  * \param ipaddr Puntero al arreglo donde vamos a poner la ip del remoto
  */
-#define udp_remote_addr(listener, ip_addr)								\
-	ip_addr[0] = (uint8_t)(listener.udp_conn->ripaddr[0]);				\
-	ip_addr[1] = (uint8_t)uip_htons(listener.udp_conn->ripaddr[0]);		\
-	ip_addr[2] = (uint8_t)(listener.udp_conn->ripaddr[1]);				\
-	ip_addr[3] = (uint8_t)uip_htons(listener.udp_conn->ripaddr[1])
+#define udp_remote_addr(listener, ip_addr)						\
+	ip_addr[0] = (uint8_t)(listener.ripaddr[0]);				\
+	ip_addr[1] = (uint8_t)uip_htons(listener.ripaddr[0]);		\
+	ip_addr[2] = (uint8_t)(listener.ripaddr[1]);				\
+	ip_addr[3] = (uint8_t)uip_htons(listener.ripaddr[1])
 
 
 /** 
  * \brief Obtener el puerto de origen en el remoto
  * \param listener Puntero al listerner del que vamos a extraer el puerto
  */
-#define udp_remote_port(listener) uip_htons(listener.udp_conn->rport)
+#define udp_remote_port(listener) uip_htons(listener.rport)
+
+
+/** 
+ * 
+ */
+#define udp_remove_remote(udp_conn)		\
+		do {							\
+			udp_conn->rport = 0;		\
+			udp_conn->ripaddr[0] = 0;	\
+			udp_conn->ripaddr[1] = 0;	\
+		} while (0)
+
 
 
 #endif /* _UDP_H_ */
