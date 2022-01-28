@@ -4,13 +4,12 @@
 #include "../../../src/os/idos.h"
 #include <stdio.h>
 
-/* Declaro dos protohilos */
+/*  */
 TASK(task_uno, "primera tarea");
 
-/* Arranco el primer protohilo al inicio */
+/*  */
 TASKS_AUTO_START(&task_uno)
 
-/* Defino el comportamiento de ambos protohilo */
 
 static uint8_t udp_remote[] = {172, 18, 0, 1};
 bool toggle = false;
