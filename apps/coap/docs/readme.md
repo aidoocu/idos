@@ -1,5 +1,5 @@
 # CoAP
-CoAP o Constrained Application Protocol es un protocolo de transferencia Web para uso en ambientes restringidos. Está definido en la [https://datatracker.ietf.org/doc/html/rfc7252](RFC7252) de 2014. Está pensado para trabajar sobre UDP pues contiene un mecanismo para la confirmación de entrega.
+CoAP o Constrained Application Protocol es un protocolo de transferencia Web para uso en ambientes restringidos. Está definido en la [RFC7252](https://datatracker.ietf.org/doc/html/rfc7252) de 2014. Está pensado para trabajar sobre UDP pues contiene un mecanismo para la confirmación de entrega.
 
 A continuación se muestra el encabezado de CoAP que consta de apenas 4 bites fijos.
 
