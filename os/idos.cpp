@@ -89,6 +89,12 @@ uint8_t idos_init(void){
     inte_raise(cSREG);
 
     #endif /* BOARD == NATIVE */
+
+    /* Levantar las apps. Cada app que se adicione debe ser incluida aquí */
+    #ifdef BUILD_COAP
+    #include "../apps/coap/coap.h"
+    coap_start();
+    #endif
     
     return INIT_SUCCESS;
 }
