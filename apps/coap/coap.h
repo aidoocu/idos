@@ -6,14 +6,13 @@
 #define _COAP_H_
 
 #include "coap_const.h"
+#include "coap_resource.h"
 
 
 struct coap_hdr_st{
     uint8_t ver_t_tkl;      /* Version, type and Token len */
     uint8_t code;           /* Respose code */
     uint16_t msg_id;        /* Menssage ID */
-    uint8_t * payload;      /* Message payload */
-    uint16_t payload_len;   /* Message payload length */
 };
 
 /** 
@@ -22,6 +21,13 @@ struct coap_hdr_st{
  *  \param buf Buffer donde está el mensaje CoAP
  */
 #define coap_hdr(hdr, buf) coap_hdr_st * hdr = (struct coap_hdr_st *)&buf
+
+struct coap_payload_st {
+    uint8_t * rcvd;                     /* Message payload */
+    uint16_t rcvd_len;                  /* Message payload length */    
+    uint8_t send[MAX_UDP_MSG_SIZE];   /* Message payload */
+    uint16_t send_len;                  /* Message payload length */
+};
 
 /* --------------------------------------------------------------------------------- */
 

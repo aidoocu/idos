@@ -6,6 +6,19 @@
 #include "../../os/idos.h"
 #include "coap.h"
 
+
+/** 
+ *  \brief Puntero a lista de recursos 
+ */
+static struct coap_resource_st * coap_resources;
+
+/** 
+ *  \brief Recurso que fue solicitado por el extremo
+ */
+static struct coap_resource_st * resource_demanded;
+
+static struct coap_payload_st coap_payload;
+
 /* Definimos la tarea de CoAP */
 TASK(coap_task, "CoAP engine");
 
@@ -84,8 +97,6 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
     return true;
 }
 
-static uint8_t coap_send_payload[MAX_UDP_MSG_SIZE];
-static uint16_t coap_send_len;
 
 void coap_response(uint8_t type, uint8_t code, udp_listener_st * listener, coap_hdr_st * rcvd_hdr){
 
@@ -132,19 +143,22 @@ void coap_response(uint8_t type, uint8_t code, udp_listener_st * listener, coap_
     /* ------------------------------------------- options ----------------------------------------- */
 
     /* Comenzamos a tomar la posición para avanzar en las opciones y en el payload si hubiera */
-    cp = COAP_HEADER_LEN + coap_token_len(rcvd_hdr);
 
-    /* ??? Final de options */
-    //coap_send_buf[cp] = 0x11;
-    //coap_send_buf[cp ++] = 0x00;
+
+
 
     /* ------------------------------------------- payload ----------------------------------------- */
 
-    /* Principio de payload */
-    coap_send_buf[cp ++] = 0xFF;
+    /* Si hay un payload que enviar */
+    if(coap_payload.send_len){
 
-    for(uint8_t i = 0; i < coap_send_len; i++) {
-        coap_send_buf[cp ++] = coap_send_payload[i];
+        /* Principio de payload */
+        coap_send_buf[cp ++] = 0xFF;
+
+        for(uint8_t i = 0; i < coap_payload.send_len; i++) {
+            coap_send_buf[cp ++] = coap_payload.send[i];
+        }
+    
     }
 
 
@@ -163,6 +177,38 @@ send_coap_message:
 
 /* --------------------------------------------------------------------------------- */
 
+/** 
+ * 
+ */
+void coap_resource_activate(coap_resource_st * resource){
+    
+    /* Si la lista está vacía... */
+    if(coap_resources == NULL){
+        
+        /* ...asignamos el primer recurso */
+        coap_resources = resource;
+        resource->next = NULL;
+        
+        /* y nada más que hacer */
+        return;
+
+    }
+
+    /* Indice... */
+    struct coap_resource_st * resource_index = coap_resources;
+
+    /* ...para buscar el final de lista */
+    while (resource_index->next != NULL){
+        resource_index = resource_index->next;
+    }
+    /* Una vez encontrado el último lo ponemos en la lista */
+    resource_index->next = resource;
+
+}
+
+
+/* --------------------------------------------------------------------------------- */
+
 
 TASK_PT(coap_task){
 
@@ -170,7 +216,11 @@ TASK_PT(coap_task){
 
     /* Definimos el listener de CoAP */
     udp_listener(coap_listener);
-    udp_listener_begin(&coap_listener, COAP_DEFAULT_PORT); 
+    udp_listener_begin(&coap_listener, COAP_DEFAULT_PORT);
+
+    /* Creamos el recurso .well-known de descubrimiento */
+    coap_resource_create(discover, ".well-known", NULL);
+    coap_resource_activate(&discover);
 
     #if NET_DEBUG >= 2
     printf(":: CoAP listening!!\n\r");
@@ -180,6 +230,11 @@ TASK_PT(coap_task){
         
         TASK_YIELD
         
+        /* En cada ciclo inicializamos todas las variables */
+        coap_payload.send_len = 0;
+        coap_payload.rcvd_len = 0;
+        resource_demanded = NULL;
+
         /* Si se ha recibido algo */
         if(udp_recv(&coap_listener)){
 
@@ -192,9 +247,11 @@ TASK_PT(coap_task){
             /* obtenemos el ip y el puerto del remoto que envió el mensaje... */
             ip_address_t ip_remote;
             udp_remote_addr(coap_listener, ip_remote);
-            uint16_t remote_port = udp_remote_port(coap_listener);
+            //uint16_t remote_port = udp_remote_port(coap_listener);
 
             /* -------------------------- debug ------------------------ */
+
+            #if NET_DEBUG >= 3
             // ... y lo imprimimos
             printf(":: CoAP msg from: %d.%d.%d.%d:%d\r\n", 
                 ip_remote[0], ip_remote[1], ip_remote[2], ip_remote[3], 
@@ -202,14 +259,13 @@ TASK_PT(coap_task){
 
             //imprimimos el mensaje
             printf("msg len: %d\n", coap_listener.msg_len);
+
             for (int i = 0; i < coap_listener.msg_len; i++){
-            printf("%02x ", coap_listener.msg[i]);
+                printf("%02x ", coap_listener.msg[i]);
             }
             printf("\n");
-            for (int i = 0; i < coap_listener.msg_len; i++){
-            printf(" %c ", coap_listener.msg[i]);
-            }
-            printf("\n");
+
+            #endif 
 
             /* -------------------------- header ----------------------- */
 
@@ -236,19 +292,18 @@ TASK_PT(coap_task){
                 /* ...es confirmable se trata de un CoAP ping */
                 if(coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
                     /* Responder con un mensaje rst vacío (pong) */
-                    coap_send_len = 0;
+                    coap_payload.send_len = 0;
                     coap_response(COAP_TYPE_RST, EMPTY_MSG_0_00, &coap_listener, coap_rcvd_hdr);
+                
+                    /* Terminar */
+                    goto end_coap_process;
                 }
-
-                /* Terminar */
-                goto end_coap_process;
             }
 
             /* -------------------------- options ----------------------- */
 
             /* Primera posición después del header */
             cp += coap_token_len(coap_rcvd_hdr);
-
 
 
             /* Verificamos si hay opciones. Si este byte es 0xFF... */
@@ -281,19 +336,102 @@ TASK_PT(coap_task){
 
                 /* Uri-Path - 11 */
                 if(option_delta == COAP_OPTION_URI_PATH){
+
+                    #if NET_DEBUG >= 3
                     printf("URI: ");
                     for(int i=1; i <= (coap_listener.msg[cp] & 0x0F); i++){
                         printf("%c", coap_listener.msg[cp + i]);
                     }
                     printf("\n");
-                }
-                /* Accept - 12 */
-                else if(option_delta == COAP_OPTION_ACCEPT){
-                    printf("Accept: ");
-                    for(int i=1; i == (coap_listener.msg[cp] & 0x0F); i++){
-                        printf("%d", coap_listener.msg[cp + i]);
+                    #endif
+
+                    /* Buscamos si el recurso existe. Debería existir al menos un recurso activo
+                    que es .well-known */
+
+                    coap_resource_st * resource_parent = NULL;
+                    /* Si hay algo aquí es un padre, y hay que determinar si este recurso es su hijo */
+                    if(resource_demanded){
+                        resource_parent = resource_demanded;
                     }
-                    printf("\n");
+
+                    resource_demanded = coap_resources;
+
+                    /* Si  */
+                    while(resource_demanded != NULL) {
+                        if((!memcmp(resource_demanded->uri, 
+                                &coap_listener.msg[cp + 1], 
+                                (coap_listener.msg[cp]) & 0x0F))
+                                && (resource_demanded->parent == resource_parent)){
+
+                            break;
+                        }
+                        
+                        resource_demanded = resource_demanded->next;
+                    }
+                    
+                    /* Si el recurso solicitado no existe */
+                    if(resource_demanded == NULL){
+
+                        #if NET_DEBUG >= 2
+                        printf("CoAP error: Resource -");
+                        for(int i = 1; i <= (coap_listener.msg[cp] & 0x0F); i++ )
+                            printf("%c", coap_listener.msg[cp + i]);
+                        printf("- not found\n\r");
+                        #endif
+
+
+                        /* notificamos y... */
+                        coap_response(COAP_TYPE_RST, NOT_FOUND_4_04, &coap_listener, coap_rcvd_hdr);
+                        /* terminamos */
+                        goto end_coap_process;
+                    }
+
+                }
+
+                /* Content-Format - 12 */
+                else if (option_delta == COAP_OPTION_CONTENT_FORMAT){
+                    
+                    #if NET_DEBUG >= 3
+                    printf("Content-Format\n");
+                    #endif
+
+                    /* Como el objetivo de idOS son dispositivo muy restrigido, por ahora solo aceptaremos
+                    texto plano en tipos MIME. Para ello hay que verificar que esta opción sea len = 0 */
+                    if(coap_listener.msg[++ cp] != 0){
+                        
+                        #if NET_DEBUG >= 2
+                        printf("CoAP error: Unsupported Content-Format\n\r");
+                        #endif
+
+                        coap_response(COAP_TYPE_RST, UNSUPPORTED_MEDIA_TYPE_4_15, &coap_listener, coap_rcvd_hdr);
+
+                        /* Nada más que hacer aquí... */
+                        goto end_coap_process;                        
+                    }
+
+                }
+
+                /* Accept - 17 */
+                else if(option_delta == COAP_OPTION_ACCEPT){
+                    
+                    #if NET_DEBUG >= 2
+                    printf("Accept:\n");
+                    #endif
+
+                    /* Como el objetivo de idOS son dispositivo muy restrigido, por ahora solo enviaremos
+                    texto plano en tipos MIME. Para ello hay que verificar que esta opción sea len = 0 */
+                    if((coap_listener.msg[cp] & 0x0F) != 0){
+                        
+                        #if NET_DEBUG >= 2
+                        printf("CoAP error: Unsupported media type\n\r");
+                        #endif
+
+                        coap_response(COAP_TYPE_RST, UNSUPPORTED_MEDIA_TYPE_4_15, &coap_listener, coap_rcvd_hdr);
+
+                        /* Nada más que hacer aquí... */
+                        goto end_coap_process;                        
+                    }
+
                 }
                 /* Block2 - 23 */
                 else if(option_delta == COAP_OPTION_BLOCK2){
@@ -306,8 +444,14 @@ TASK_PT(coap_task){
                 /* Si no ha macheado ninguna de las opciones, pues o no es correcta o 
                 no la tenemos implementada, así que... */
                 else {
+
                     /* respondemos con un bad option */
                     coap_response(COAP_TYPE_RST, BAD_OPTION_4_02, &coap_listener, coap_rcvd_hdr);
+
+                    #if NET_DEBUG >= 2
+                    printf("CoAP error: Bad option\n\r");
+                    #endif
+
                     /* Nada más que hacer aquí... */
                     goto end_coap_process;
                 }
@@ -325,8 +469,6 @@ TASK_PT(coap_task){
                 /* Abanzamos al próximo bloque a procesar */
                 cp ++;
 
-                //printf("%02x\n", coap_listener.msg[cp]);
-
             /* Repetimos esta operación siempre que exita una opción. El final de las opciones será o
             el marcador de payload. */
             } while (coap_listener.msg[cp] != COAP_PAYLOAD_MARK);
@@ -336,13 +478,15 @@ TASK_PT(coap_task){
 
             coap_payload_proccess:
 
-            /* Avanzo a la primera posición del payload y lo guardo */
-            coap_rcvd_hdr->payload = &coap_listener.msg[cp ++];
+            cp ++;
+            /* Avanzo a la primera posición del payload y lo apunto */
+            coap_payload.rcvd = &coap_listener.msg[cp];
+
             /* así como su largo */
-            coap_rcvd_hdr->payload_len = 0;
+            coap_payload.rcvd_len = 0;
             while(cp < coap_listener.msg_len){
-                cp++;
-                coap_rcvd_hdr->payload_len ++;
+                cp ++;
+                coap_payload.rcvd_len ++;
             }
 
             printf("payload\n");
@@ -353,22 +497,34 @@ TASK_PT(coap_task){
             end_hdr_process:
             
 
-            /* GET */
-            if(coap_rcvd_hdr->code == COAP_GET){
-                
-                if(coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
-                    coap_send_payload[0] = 'u';
-                    coap_send_payload[1] = 'r';
-                    coap_send_payload[2] = 'r';
-                    coap_send_payload[3] = 'a';
-                    coap_send_len = 4;
+            /* Si hay un recurso */
+            if(resource_demanded) {
 
-                    coap_response(COAP_TYPE_ACK, CONTENT_2_05, &coap_listener, coap_rcvd_hdr);
+                printf("resource: %s\n", resource_demanded->uri);
+
+                /* GET */
+                if(coap_rcvd_hdr->code == COAP_GET){
+                    
+                    if(coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
+
+                        coap_payload.send[0] = 'u';
+                        coap_payload.send[1] = 'r';
+                        coap_payload.send[2] = 't';
+                        coap_payload.send[3] = 'a';
+                        coap_payload.send_len = 4;
+
+                        coap_response(COAP_TYPE_ACK, CONTENT_2_05, &coap_listener, coap_rcvd_hdr);
+                    }
                 }
+
+                
+
             }
 
+
+
             end_coap_process:
-            printf("CoAP: process\n\r");
+            printf("--------------> CoAP: process\n\r");
         }
     }
 

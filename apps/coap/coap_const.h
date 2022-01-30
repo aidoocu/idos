@@ -1,5 +1,6 @@
 /** 
- * 
+ * \details Una parte de las definiciones ha sido optenida de la implementación de CoAP para
+ * Contki 
  */
 
 #ifndef _COAP_CONST_H_
@@ -95,6 +96,8 @@ enum {
 	COAP_OPTION_PROXY_SCHEME = 39,  	/* 1-255 B */
 	COAP_OPTION_SIZE1 = 60,       		/* 0-4 B */
 };
+	
+
 
 #define COAP_PAYLOAD_MARK 0xFF
 

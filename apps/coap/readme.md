@@ -70,7 +70,7 @@ El campo Option Delta incluye el número de opción desplazado. El número de op
                 C=Critical, U=Unsafe, N=NoCacheKey, R=Repeatable
 
 
-Para calcular el Option Delta entonces involicramos el número de opción más el desplazamiento. Veamos un ejemplo.
+Para calcular el Option Delta entonces involucramos el número de opción más el desplazamiento. Veamos un ejemplo.
 Analicemos el mensaje siguiente. Tenga en cuenta que el mensaje está en hex, y en la explicación los vemos en dec.
 
         48 01 73 41 a4 8c 18 67 09 19 39 66 b5 68 65 6c 6c 6f 11 00
