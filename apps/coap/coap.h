@@ -5,9 +5,6 @@
 #ifndef _COAP_H_
 #define _COAP_H_
 
-#include "coap_const.h"
-#include "coap_resource.h"
-
 
 struct coap_hdr_st{
     uint8_t ver_t_tkl;      /* Version, type and Token len */
@@ -61,5 +58,14 @@ struct coap_payload_st {
  * \brief arranca el engine de coap
  */
 void coap_start(void);
+
+
+/*  */
+#define coap_respond(type, code)      \
+    coap_response(type, code, &coap_listener, coap_rcvd_hdr);
+
+
+#include "coap_const.h"
+#include "coap_resource.h"
 
 #endif /* _COAP_H_ */

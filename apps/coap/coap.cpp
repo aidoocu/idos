@@ -276,7 +276,7 @@ TASK_PT(coap_task){
             if(!coap_hdr_check(&coap_listener, coap_rcvd_hdr)){
 
                 /* Mensaje malformado, responder con 4_00 */
-                coap_response(COAP_TYPE_RST, BAD_REQUEST_4_00, &coap_listener, coap_rcvd_hdr);
+                coap_respond(COAP_TYPE_RST, BAD_REQUEST_4_00);
 
                 #if NET_DEBUG >= 2
                 printf("CoAP error: malformed header\n\r");
@@ -293,7 +293,7 @@ TASK_PT(coap_task){
                 if(coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
                     /* Responder con un mensaje rst vacío (pong) */
                     coap_payload.send_len = 0;
-                    coap_response(COAP_TYPE_RST, EMPTY_MSG_0_00, &coap_listener, coap_rcvd_hdr);
+                    coap_respond(COAP_TYPE_RST, EMPTY_MSG_0_00);
                 
                     /* Terminar */
                     goto end_coap_process;
@@ -319,7 +319,7 @@ TASK_PT(coap_task){
                     || ((coap_listener.msg[cp] & 0xF0) == 0xF0)){
 
                     /* Una F en Option Delta u Option Length es un error de formato */
-                    coap_response(COAP_TYPE_RST, BAD_REQUEST_4_00, &coap_listener, coap_rcvd_hdr);
+                    coap_respond(COAP_TYPE_RST, BAD_REQUEST_4_00);
 
                     #if NET_DEBUG >= 2
                     printf("CoAP error: Malformed Options\n\r");
@@ -358,7 +358,7 @@ TASK_PT(coap_task){
 
                     /* Si  */
                     while(resource_demanded != NULL) {
-                        if((!memcmp(resource_demanded->uri, 
+                        if((!memcmp(resource_demanded->uri_path, 
                                 &coap_listener.msg[cp + 1], 
                                 (coap_listener.msg[cp]) & 0x0F))
                                 && (resource_demanded->parent == resource_parent)){
@@ -373,15 +373,15 @@ TASK_PT(coap_task){
                     if(resource_demanded == NULL){
 
                         #if NET_DEBUG >= 2
-                        printf("CoAP error: Resource -");
+                        printf("CoAP error: Resource \"");
                         for(int i = 1; i <= (coap_listener.msg[cp] & 0x0F); i++ )
                             printf("%c", coap_listener.msg[cp + i]);
-                        printf("- not found\n\r");
+                        printf("\" not found\n\r");
                         #endif
 
 
                         /* notificamos y... */
-                        coap_response(COAP_TYPE_RST, NOT_FOUND_4_04, &coap_listener, coap_rcvd_hdr);
+                        coap_respond(COAP_TYPE_RST, NOT_FOUND_4_04);
                         /* terminamos */
                         goto end_coap_process;
                     }
@@ -403,7 +403,7 @@ TASK_PT(coap_task){
                         printf("CoAP error: Unsupported Content-Format\n\r");
                         #endif
 
-                        coap_response(COAP_TYPE_RST, UNSUPPORTED_MEDIA_TYPE_4_15, &coap_listener, coap_rcvd_hdr);
+                        coap_respond(COAP_TYPE_RST, UNSUPPORTED_MEDIA_TYPE_4_15);
 
                         /* Nada más que hacer aquí... */
                         goto end_coap_process;                        
@@ -426,7 +426,7 @@ TASK_PT(coap_task){
                         printf("CoAP error: Unsupported media type\n\r");
                         #endif
 
-                        coap_response(COAP_TYPE_RST, UNSUPPORTED_MEDIA_TYPE_4_15, &coap_listener, coap_rcvd_hdr);
+                        coap_respond(COAP_TYPE_RST, UNSUPPORTED_MEDIA_TYPE_4_15);
 
                         /* Nada más que hacer aquí... */
                         goto end_coap_process;                        
@@ -446,7 +446,7 @@ TASK_PT(coap_task){
                 else {
 
                     /* respondemos con un bad option */
-                    coap_response(COAP_TYPE_RST, BAD_OPTION_4_02, &coap_listener, coap_rcvd_hdr);
+                    coap_respond(COAP_TYPE_RST, BAD_OPTION_4_02);
 
                     #if NET_DEBUG >= 2
                     printf("CoAP error: Bad option\n\r");
@@ -500,31 +500,48 @@ TASK_PT(coap_task){
             /* Si hay un recurso */
             if(resource_demanded) {
 
-                printf("resource: %s\n", resource_demanded->uri);
+                printf("resource demanded: %s\n", resource_demanded->uri_path);
 
                 /* GET */
-                if(coap_rcvd_hdr->code == COAP_GET){
+                if(coap_rcvd_hdr->code == COAP_GET && resource_demanded->get != NULL){
                     
+                    
+                    printf("Call GET\n");
+
+                    /* coap_payload.send[0] = 'u';
+                    coap_payload.send[1] = 'r';
+                    coap_payload.send[2] = 't';
+                    coap_payload.send[3] = 'a';
+                    coap_payload.send_len = 4; */
+
+                    //coap_get(&coap_payload);
+                    resource_demanded->get(&coap_payload);
+
+                    /* Si es con conexión, se envía en una respuesta */
                     if(coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
-
-                        coap_payload.send[0] = 'u';
-                        coap_payload.send[1] = 'r';
-                        coap_payload.send[2] = 't';
-                        coap_payload.send[3] = 'a';
-                        coap_payload.send_len = 4;
-
-                        coap_response(COAP_TYPE_ACK, CONTENT_2_05, &coap_listener, coap_rcvd_hdr);
+                        coap_respond(COAP_TYPE_ACK, CONTENT_2_05);
+                    } else {
+                      /* Si no puede ser NON o un RST, entonces se envía en otro mensaje (otro ID) */  
+                      //...
                     }
-                }
 
-                
+                    /* Terminanos */
+                    goto end_coap_process;
+                } 
+
+                /* Si llega aquí es que el método no está implementado para este recurso */
+                coap_respond(COAP_TYPE_RST, METHOD_NOT_ALLOWED_4_05);
+
+                #if NET_DEBUG >= 2
+                printf("CoAP error: Method not allowed\n\r");
+                #endif
 
             }
 
 
 
             end_coap_process:
-            printf("--------------> CoAP: process\n\r");
+            printf("   < ------------------ >\n\r");
         }
     }
 
