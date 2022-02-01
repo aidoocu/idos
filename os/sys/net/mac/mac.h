@@ -10,7 +10,6 @@
 #ifndef _MAC_H_
 #define _MAC_H_
 
-#include "../netstack.h"
 
 
 /* Encabezados de las frame */

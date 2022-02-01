@@ -1,8 +1,6 @@
 #ifndef _UDP_H_
 #define _UDP_H_
 
-#include "../netstack.h"
-
 //>>???
 
 /* Tamaño total de todos lo headers de UDP (LLH + IPH + UDPH) */

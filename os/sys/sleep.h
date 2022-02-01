@@ -1,7 +1,6 @@
 #ifndef _SLEEP_H_
 #define _SLEEP_H_
 
-#include "../idos.h"
 
 void deep_sleep(void);
 

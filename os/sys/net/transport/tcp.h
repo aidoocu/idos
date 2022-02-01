@@ -7,7 +7,7 @@
 #ifndef _TCP_H_
 #define _TCP_H_
 
-#include "../netstack.h"
+//#include "../netstack.h"
 
 /** 
  *  Significado de las banderas uip_conn->tcpstateflags:

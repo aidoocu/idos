@@ -39,7 +39,7 @@
 #ifndef _NETSTACK_H_
 #define _NETSTACK_H_
 
-#include "../../idos.h"
+
 
 #include "netconf.h"
 

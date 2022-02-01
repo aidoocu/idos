@@ -29,6 +29,9 @@
 #include "sys/net/netstack.h"
 #endif
 
+/* Apps */
+#include "../apps/apps.h"
+
 /* ------------------------------------------------------------- */
 /** \enum   INIT_STATE 
  *  \brief  Estado de inicialización de idOS

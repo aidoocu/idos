@@ -12,6 +12,7 @@
  *          función callback asociada al timer.
  */
 
+#include "../idos.h"
 #include "timer.h"
 
 /** 

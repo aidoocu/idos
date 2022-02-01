@@ -1,5 +1,5 @@
 
-
+#include "../../../idos.h"
 #include "udp.h"
 
 /* Si UDP está activado */

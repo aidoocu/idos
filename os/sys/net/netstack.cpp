@@ -1,5 +1,5 @@
 
-
+#include "../../idos.h"
 #include "netstack.h"
 
 

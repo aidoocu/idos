@@ -3,8 +3,6 @@
 #include "../../../src/os/idos.h"
 #include <stdio.h>
 
-/* Incluir el coap */
-#include "../../apps/coap/coap.h"
 
 /*  */
 TASK(task_uno, "primera tarea");
@@ -18,6 +16,10 @@ bool toggle_luz_sala = false;
 bool toggle_luz_cuarto = true;
 
 /* defiendo los callbacks de los recursos coap */
+
+/*  ---------- Sala ---------- */
+
+/* GET */
 static void luz_sala_get(coap_payload_st * payload) {
   
   printf("Luz sala!!!\n");
@@ -35,7 +37,13 @@ static void luz_sala_get(coap_payload_st * payload) {
   }
 
 }
+static void luz_sala_post(void * data){
+  return;
+}
 
+/*  ---------- Sala ---------- */
+
+/* GET */
 static void luz_cuarto_get(coap_payload_st * payload) {
   
   printf("Luz cuarto!!!\n");
@@ -72,6 +80,7 @@ TASK_PT(task_uno){
     coap_resource_create(luz_sala, "luz", &sala);
     coap_resource_activate(&luz_sala);
     luz_sala.get = * luz_sala_get;
+    luz_sala.post = * luz_sala_post;
 
     coap_resource_create(luz_cuarto, "luz", &cuarto);
     coap_resource_activate(&luz_cuarto);

@@ -5,6 +5,7 @@
  *  \date diciembre 2021
  */
 
+#include "../../../idos.h"
 #include "tcp.h"
 
 /* Puntero al primer server creado */

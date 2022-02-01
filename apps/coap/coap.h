@@ -5,6 +5,7 @@
 #ifndef _COAP_H_
 #define _COAP_H_
 
+#include "../../os/idos.h"
 
 struct coap_hdr_st{
     uint8_t ver_t_tkl;      /* Version, type and Token len */
@@ -22,7 +23,7 @@ struct coap_hdr_st{
 struct coap_payload_st {
     uint8_t * rcvd;                     /* Message payload */
     uint16_t rcvd_len;                  /* Message payload length */    
-    uint8_t send[MAX_UDP_MSG_SIZE];   /* Message payload */
+    uint8_t send[MAX_UDP_MSG_SIZE];     /* Message payload */
     uint16_t send_len;                  /* Message payload length */
 };
 
