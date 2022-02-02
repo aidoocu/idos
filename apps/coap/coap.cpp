@@ -166,7 +166,7 @@ send_coap_message:
 
     udp_response(coap_send_buf, cp);
 
-    #if NET_DEBUG >= 2
+    #if NET_DEBUG >= 3
     printf("Response: ");
     for (int i = 0; i < cp; i++){
         printf("%02x ", coap_send_buf[i]);
@@ -247,11 +247,11 @@ TASK_PT(coap_task){
             /* obtenemos el ip y el puerto del remoto que envió el mensaje... */
             ip_address_t ip_remote;
             udp_remote_addr(coap_listener, ip_remote);
-            //uint16_t remote_port = udp_remote_port(coap_listener);
+            uint16_t remote_port = udp_remote_port(coap_listener);
 
             /* -------------------------- debug ------------------------ */
 
-            #if NET_DEBUG >= 3
+            #if NET_DEBUG >= 2
             // ... y lo imprimimos
             printf(":: CoAP msg from: %d.%d.%d.%d:%d\r\n", 
                 ip_remote[0], ip_remote[1], ip_remote[2], ip_remote[3], 
@@ -371,7 +371,7 @@ TASK_PT(coap_task){
                     
                     /* Si el recurso solicitado no existe */
                     if(resource_demanded == NULL){
-
+                        
                         #if NET_DEBUG >= 2
                         printf("CoAP error: Resource \"");
                         for(int i = 1; i <= (coap_listener.msg[cp] & 0x0F); i++ )
@@ -379,9 +379,20 @@ TASK_PT(coap_task){
                         printf("\" not found\n\r");
                         #endif
 
-
-                        /* notificamos y... */
-                        coap_respond(COAP_TYPE_RST, NOT_FOUND_4_04);
+                        /* Si el método es GET respondemos con not found */
+                        if(coap_rcvd_hdr->code == COAP_GET){
+                            /* notificamos y... */
+                            coap_respond(COAP_TYPE_RST, NOT_FOUND_4_04);
+                        } else if((coap_rcvd_hdr->code == COAP_POST) || 
+                                    (coap_rcvd_hdr->code == COAP_DELETE)){
+                            /* Si no, es otra operación no implementada (post o 
+                            delete)... */
+                            coap_respond(COAP_TYPE_RST, METHOD_NOT_ALLOWED_4_05); 
+                        } else {
+                             /* ... o es un put donde el recurso no existe, pero
+                             crear un recurso no está permitido por política */
+                            coap_respond(COAP_TYPE_RST, FORBIDDEN_4_03);                            
+                        }
                         /* terminamos */
                         goto end_coap_process;
                     }
@@ -397,7 +408,7 @@ TASK_PT(coap_task){
 
                     /* Como el objetivo de idOS son dispositivo muy restrigido, por ahora solo aceptaremos
                     texto plano en tipos MIME. Para ello hay que verificar que esta opción sea len = 0 */
-                    if(coap_listener.msg[++ cp] != 0){
+                    if((coap_listener.msg[cp] & 0x0F) != 0){
                         
                         #if NET_DEBUG >= 2
                         printf("CoAP error: Unsupported Content-Format\n\r");
