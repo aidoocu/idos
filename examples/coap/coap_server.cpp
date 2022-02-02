@@ -37,7 +37,7 @@ static void luz_sala_get(coap_payload_st * payload) {
   }
 
 }
-static void luz_sala_post(void * data){
+static void luz_sala_put(void * data){
   return;
 }
 
@@ -80,7 +80,7 @@ TASK_PT(task_uno){
     coap_resource_create(luz_sala, "luz", &sala);
     coap_resource_activate(&luz_sala);
     luz_sala.get = * luz_sala_get;
-    luz_sala.post = * luz_sala_post;
+    luz_sala.put = * luz_sala_put;
 
     coap_resource_create(luz_cuarto, "luz", &cuarto);
     coap_resource_activate(&luz_cuarto);
