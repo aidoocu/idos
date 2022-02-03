@@ -408,7 +408,8 @@ TASK_PT(coap_task){
 
                     /* Como el objetivo de idOS son dispositivo muy restrigido, por ahora solo aceptaremos
                     texto plano en tipos MIME. Para ello hay que verificar que esta opción sea len = 0 */
-                    if((coap_listener.msg[cp] & 0x0F) != 0){
+                    if((coap_listener.msg[cp] & 0x0F) != 0 && 
+                        (coap_listener.msg[++ cp] != 0)){
                         
                         #if NET_DEBUG >= 2
                         printf("CoAP error: Unsupported Content-Format\n\r");
@@ -431,7 +432,8 @@ TASK_PT(coap_task){
 
                     /* Como el objetivo de idOS son dispositivo muy restrigido, por ahora solo enviaremos
                     texto plano en tipos MIME. Para ello hay que verificar que esta opción sea len = 0 */
-                    if((coap_listener.msg[cp] & 0x0F) != 0){
+                    if((coap_listener.msg[cp] & 0x0F) != 0 && 
+                        (coap_listener.msg[++ cp] != 0)){
                         
                         #if NET_DEBUG >= 2
                         printf("CoAP error: Unsupported media type\n\r");
@@ -513,34 +515,68 @@ TASK_PT(coap_task){
 
                 printf("resource demanded: %s\n", resource_demanded->uri_path);
 
+                /** \attention Esta forma de implementar el get/put hace recaer en el callback
+                 * la seguridad de la operación. Note que cualquier solicitud de PUT será
+                 * enviada al callback, así que es su responsabilidad de asegurar la 
+                 * legitimidad de la solicitud.
+                 */
+                /** \todo Verificar si es necesario pasar más información a los callbacks
+                 * acerca del origen del mensaje y la licitud de la solicitud.
+                 */
+
                 /* GET */
                 if(coap_rcvd_hdr->code == COAP_GET && resource_demanded->get != NULL){
                     
-                    
                     printf("Call GET\n");
 
-                    /* coap_payload.send[0] = 'u';
-                    coap_payload.send[1] = 'r';
-                    coap_payload.send[2] = 't';
-                    coap_payload.send[3] = 'a';
-                    coap_payload.send_len = 4; */
+                    /** \todo Aquí falta el mecanismo para atender a los recursos que son
+                    separados, o sea, este get no tiene la respuesta, así que la enviará
+                    en otro mensaje (con el mismo token?) */
 
-                    //coap_get(&coap_payload);
-                    resource_demanded->get(&coap_payload);
+                    /* Se llama al callbak GET del recurso */
+                    uint8_t get = resource_demanded->get(&coap_payload);
 
                     /* Si es con conexión, se envía en una respuesta */
-                    if(coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
+                    if(get && coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
                         coap_respond(COAP_TYPE_ACK, CONTENT_2_05);
                     } else {
-                      /* Si no puede ser NON o un RST, entonces se envía en otro mensaje (otro ID) */  
-                      //...
+                        /* Si no puede ser NON o un RST, get devolver 0 por un acceso 
+                        denegado, porque el recurso... y..., 
+                        entonces ... ToDo... */  
+                        //...
                     }
 
                     /* Terminanos */
                     goto end_coap_process;
-                } 
+                }
 
-                /* Si llega aquí es que el método no está implementado para este recurso */
+                /* PUT */
+                if (coap_rcvd_hdr->code == COAP_PUT && resource_demanded->put != NULL){
+                    
+                    printf("Call PUT\n");
+
+                    /* Se llama al callback PUT de recurso */
+                    uint8_t put = resource_demanded->put(&coap_payload);
+
+                    if(put && coap_type(coap_rcvd_hdr) == COAP_TYPE_CON){
+                        coap_respond(COAP_TYPE_ACK, CHANGED_2_04);
+                    } else if(!put){
+                        
+                        /* Si no puede ser NON o un RST, put devolver 0 por un acceso 
+                        denegado, porque el recurso...y..., 
+                        entonces ... ToDo... */  
+                        //...
+                        coap_respond(COAP_TYPE_ACK, BAD_REQUEST_4_00);
+                    }
+
+                    /* Terminanos */
+                    goto end_coap_process;
+
+                }
+                
+
+                /* Si llega aquí es que el método no está implementado para este recurso. 
+                No están implementado para idOS como política (por ahora) ni post ni delete */
                 coap_respond(COAP_TYPE_RST, METHOD_NOT_ALLOWED_4_05);
 
                 #if NET_DEBUG >= 2

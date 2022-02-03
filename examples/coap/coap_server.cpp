@@ -12,17 +12,17 @@ TASKS_AUTO_START(&task_uno)
 
 
 /*  */
-bool toggle_luz_sala = false;
-bool toggle_luz_cuarto = true;
+static bool toggle_luz_sala = false;
+static bool toggle_luz_cuarto = true;
 
 /* defiendo los callbacks de los recursos coap */
 
 /*  ---------- Sala ---------- */
 
 /* GET */
-static void luz_sala_get(coap_payload_st * payload) {
+static uint8_t luz_sala_get(coap_payload_st * payload) {
   
-  printf("Luz sala!!!\n");
+  printf("Luz sala GET!!!\n");
 
   /* Los dos estados de la luz */
   char on[] = {"ON_SALA"};
@@ -36,15 +36,42 @@ static void luz_sala_get(coap_payload_st * payload) {
     payload->send_len = sizeof(off);
   }
 
+  return 1;
+
 }
-static void luz_sala_put(void * data){
-  return;
+static uint8_t luz_sala_put(coap_payload_st * payload){
+
+  printf("Luz sala PUT!!!\n");
+
+  /* Verificar que el payload trae el largo correcto */
+  if(payload->rcvd_len > 9){
+    return 0;
+  }
+
+  printf("len %d - %s\n", payload->rcvd_len, payload->rcvd);
+
+  char on[] = {"ON_SALA"};
+  char off[] = {"OFF_SALA"};
+
+  /* Si el payload contien ON_SALA, enciendo la sala */
+  if(!memcmp(payload->rcvd, on, payload->rcvd_len)){
+    toggle_luz_sala = true;
+    printf("ON\r\n");
+  }
+
+  /* Si el payload contien OFF_SALA, apago la sala */
+  if(!memcmp(payload->rcvd, off, payload->rcvd_len)){
+    toggle_luz_sala = false;
+    printf("OFF\r\n");
+  }
+
+  return 1;
 }
 
 /*  ---------- Sala ---------- */
 
 /* GET */
-static void luz_cuarto_get(coap_payload_st * payload) {
+static uint8_t luz_cuarto_get(coap_payload_st * payload) {
   
   printf("Luz cuarto!!!\n");
 
@@ -59,6 +86,8 @@ static void luz_cuarto_get(coap_payload_st * payload) {
     memcpy(payload->send, off, sizeof(off));
     payload->send_len = sizeof(off);
   }
+
+  return 1;
 
 }
 

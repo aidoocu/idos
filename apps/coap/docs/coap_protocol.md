@@ -88,3 +88,20 @@ Analicemos el mensaje siguiente. Tenga en cuenta que el mensaje está en hex, y 
         11 : 1 (option number = b(delta) + 1(option delta) = 12(dec))
              option number = 12 (c hex) significa que la opción es tipo Content-Format, uint (len 1)
         00 : option (text/plain)
+
+## Metodos
+CoAP contempla los métodos básicos de http GET, POST, PUT y DELETE. No obstante idOS está pensado para dispositivo muy restringidos en los cuales los recursos se crean como una estructura al arranque del programa y viven en memoria todo el tiempo. En este sentido no debería tener sentido (y lo asumiremos así) que un extremo solicite crear o eliminar un recurso, por lo que no implementaremos POST y DELETE. No obstante dejamos comentada en la estructura del recurso los callbacks para estos métodos, usted es libre de implementarlos.
+### GET
+El método GET recupera una representación de la información que actualmente corresponde al recurso identificado por el URI de la solicitud. Si la solicitud incluye una opción Accept, ésta indica el formato de contenido preferido para la respuesta. IdOS solo acepta **text/plain** por ahora. 
+Si la solicitud incluye una opción  ETag Option, el método GET solicita que se valide el ETag y que la representación se transfiera sólo si la validación falla.  
+Si GET tiene éxito (aunque la RFC7252 no obliga) idOS responde con 2.05 (Content) o 2.03 (Valid). 
+El método GET es seguro e idempotente.
+### PUT
+El método PUT solicita que el recurso identificado por la solicitud
+sea actualizado o creado con la representación adjunta. IdOS no incluye la creación de nuevos recursos. Si la semántica de la petición implica un crear un recurso idOS responderá con 4.03 (Forbidden).
+El formato de representación de formato de representación se especifica por el tipo de medio y la codificación indicados en la opción Content-Format, si se proporciona. IdOS solo acepta **text/plain** por ahora.
+Si existe un recurso en el URI de la solicitud, la representación adjunta debería considerarse una versión modificada de ese recurso, y un código de respuesta 2.04 (Changed) es devuelto. 
+Si no existe ningún recurso, según la RFC se debería poder crear uno nuevo con ese URI, sin embargo idOS no lo implementa, así que responderá con 4.03 (Forbidden).
+PUT no es seguro pero es idempotente.
+### POST y DELETE
+Estos métodos no está desarrollados para idOS hasta ahora por las razones ya plantadas. No obstante usted es libre de implementarlos.

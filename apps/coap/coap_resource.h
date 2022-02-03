@@ -16,10 +16,10 @@ struct coap_resource_st {
     coap_resource_st * next;        /* Próximo recurso en la lista de 
                                     recursos activos */
     /* call backs por cada método */
-    void (* get)(coap_payload_st *);     /* Payload */
-    void (* post)(void *);
-    void (* put)(void *);
-    void (* delt)(void *);
+    uint8_t (* get)(coap_payload_st *);     /* Payload */
+    /* void (* post)(void *); */
+    uint8_t (* put)(coap_payload_st *);
+    /* void (* delt)(void *); */
 };
 
 /** 
@@ -35,8 +35,6 @@ struct coap_resource_st {
         NULL,                                   \
         NULL,                                   \
         NULL,                                   \
-        NULL,                                   \
-        NULL                                    \
     }                                                  
 
 
