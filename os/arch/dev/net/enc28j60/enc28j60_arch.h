@@ -48,18 +48,6 @@ struct received_frame_t {
     uint16_t begin = 0;
 };
 
-/** 
- *  \brief Inicializar el ENC 
- *  \param mac Dirección (máscara) MAC que deberá tener el ENC
-*/
-bool mac_init_arch(uint8_t * mac);
-
-/** 
- *  \brief Tamaño del frame 
- *  \details El frame puede estar en un buffer en el ENC en caso de que aún 
- *          no se hubiera leido o en un bloque de memoria si ya fue leido
- */
-uint16_t frame_size_arch(void);
 
 /** \brief Recibir el frame 
  *  \details El datasheet trata al frame como frame y así es tratado por 
@@ -114,6 +102,29 @@ bool send_frame_arch(void);
  *          llamar esta función 
  */
 void free_frame_arch(void);
+
+
+/* ------------------------------- arch block -------------------------------- */
+
+/** 
+ *  \brief Inicializar el ENC 
+ *  \param mac Dirección (máscara) MAC que deberá tener el ENC
+*/
+bool mac_init(uint8_t * mac);
+
+/** 
+ *  \brief Poll a la NIC para ver si ha llegado algo
+ *  \param frame    Buffer donde será copiada la frame de haber recibido una
+ *  \param max_len  Maximum length of the buffer
+ */
+uint16_t mac_poll(uint8_t * frame, uint16_t max_len);
+
+
+/** 
+ * \brief Enviar a la MAC en frame que será puesto en la red
+ */
+bool mac_send(uint8_t * frame, uint16_t len);
+
 
 /** 
  *  Estado de la interface

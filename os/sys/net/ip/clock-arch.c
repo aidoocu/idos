@@ -21,10 +21,12 @@
 /////// No es correcto, hay que hacerlo maas global
 #ifdef ARDUINO
 #include <Arduino.h>
+#include "../../../arch/board/arduino/timer_ino.h"
 #else
-#include "clock-arch.h"
 #include "../../../arch/board/native/arch_timer.h"
 #endif
+
+#include "clock-arch.h"
 
 clock_time_t
 clock_time(void)

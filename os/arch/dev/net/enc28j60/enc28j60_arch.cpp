@@ -240,96 +240,6 @@ void write_byte(uint16_t addr, uint8_t data){
 /** 
  * 
  */
-uint16_t frame_size_arch(void) {
-
-    return received_frame.size;
-
-}
-
-/** \brief  Inicializar el ENC28J60 
- *  \note   Lo primero debería ser configurar el SPI pero este 
- *          debió haber sido inicializado por el sistema. 
-*/
-bool mac_init_arch(uint8_t * macaddr) {
-
-    enc_spi_enable();
-
-    /* Reseteamos el sistema. Le damos un tiempo */
-    write_command(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
-    delay(50);
-
-    /* Inicializar la recepción y sus buffers ERXST and ERXND (ver en datasheet 6.1) */
-    next_frame_ptr = RXSTART_INIT;
-
-    /* Rx start, pointer address and stop */
-    write_reg_16(ERXST, RXSTART_INIT);
-    write_reg_16(ERXRDPT, RXSTART_INIT);
-    write_reg_16(ERXND, RXSTOP_INIT);
-
-    /* Tx start and stop pointers */
-    write_reg_16(ETXST, TXSTART_INIT);
-    write_reg_16(ETXND, TXSTOP_INIT);
-
-    /* For broadcast frames we allow only ARP packtets */
-    write_reg_8(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);
-    write_reg_16(EPMM0, 0x303f);
-    write_reg_16(EPMCS, 0xf7f9);
-
-    /* enable MAC receive */
-    write_reg_8(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS);
-    /* enable automatic padding to 60bytes and CRC operations */
-    write_command(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
-    /* set inter-frame gap (non-back-to-back) */
-    write_reg_16(MAIPG, 0x0C12);
-    /* set inter-frame gap (back-to-back) */
-    write_reg_8(MABBIPG, 0x12);
-    /* set the maximum frame size */
-    write_reg_16(MAMXFL, MAX_FRAMELEN);
-
-    /* Config MAC address */
-    write_reg_8(MAADR5, macaddr[0]);
-    write_reg_8(MAADR4, macaddr[1]);
-    write_reg_8(MAADR3, macaddr[2]);
-    write_reg_8(MAADR2, macaddr[3]);
-    write_reg_8(MAADR1, macaddr[4]);
-    write_reg_8(MAADR0, macaddr[5]);
-
-    /* no loopback of transmitted frames */
-    write_phy(PHCON2, PHCON2_HDLDIS);
-
-    set_bank(ECON1);
-    
-    /* Configure leds, LED_A=Link, LED_B=activity */
-    write_phy(PHLCON, 0x476);
-
-    /* enable interrutps */
-    write_command(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
-    /* enable frame reception */
-    write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
-
-    enc_spi_disable();
-
-
-    uint8_t eth_rev = get_rev();
-
-
-    if (eth_rev) {
-        
-        #if NET_DEBUG >= 3
-        printf("NIC ENC28J60 -> EtheRev: %d - ", eth_rev);
-        #endif
-        
-        return true;
-
-    }
-
-    return false;
-
-}
-
-/** 
- * 
- */
 bool receive_frame_arch(void) {
 
     uint8_t rxstat;
@@ -362,7 +272,7 @@ bool receive_frame_arch(void) {
         rxstat = read_command(ENC28J60_READ_BUF_MEM, 0);
         //rxstat |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
 
-        #if NET_DEBUG >= 3
+        #if NET_DEBUG >= 2
         printf("Receive frame [%X-%X], next: %X, stat: %X, count: %d, -> ",
                                 read_ptr,
                                 (read_ptr + len) % (RXSTOP_INIT + 1),
@@ -407,12 +317,12 @@ uint16_t read_frame_arch (uint8_t * buffer, uint16_t len) {
 
 
     /** Se ajusta len al largo del buffer que se va a leer en caso que sea más grande. En caso que el 
-     * buffer llegado a ENC sea más grande la transferencia se litará al tamaño máximo de uip_len.
+     * buffer llegado a ENC sea más grande la transferencia se limitará al tamaño máximo de uip_len.
      */
     if (len < received_frame.size)
         len = received_frame.size;
 
-    #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
     printf("Readed %d bytes from NIC\r\n", len);
     #endif
 
@@ -545,7 +455,119 @@ bool send_frame_arch(void) {
 
 }
 
-/* Power and status */
+
+/* ------------------------------- mac_init() -------------------------------- */
+
+/** \brief  Inicializar el ENC28J60 
+ *  \note   Lo primero debería ser configurar el SPI pero este 
+ *          debió haber sido inicializado por el sistema. 
+*/
+bool mac_init(uint8_t * macaddr) {
+
+    printf("ini mac_init\n");
+
+    enc_spi_enable();
+
+    /* Reseteamos el sistema. Le damos un tiempo */
+    write_command(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
+    delay(50);
+
+    /* Inicializar la recepción y sus buffers ERXST and ERXND (ver en datasheet 6.1) */
+    next_frame_ptr = RXSTART_INIT;
+
+    /* Rx start, pointer address and stop */
+    write_reg_16(ERXST, RXSTART_INIT);
+    write_reg_16(ERXRDPT, RXSTART_INIT);
+    write_reg_16(ERXND, RXSTOP_INIT);
+
+    /* Tx start and stop pointers */
+    write_reg_16(ETXST, TXSTART_INIT);
+    write_reg_16(ETXND, TXSTOP_INIT);
+
+    /* For broadcast frames we allow only ARP packtets */
+    write_reg_8(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);
+    write_reg_16(EPMM0, 0x303f);
+    write_reg_16(EPMCS, 0xf7f9);
+
+    /* enable MAC receive */
+    write_reg_8(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS);
+    /* enable automatic padding to 60bytes and CRC operations */
+    write_command(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
+    /* set inter-frame gap (non-back-to-back) */
+    write_reg_16(MAIPG, 0x0C12);
+    /* set inter-frame gap (back-to-back) */
+    write_reg_8(MABBIPG, 0x12);
+    /* set the maximum frame size */
+    write_reg_16(MAMXFL, MAX_FRAMELEN);
+
+    /* Config MAC address */
+    write_reg_8(MAADR5, macaddr[0]);
+    write_reg_8(MAADR4, macaddr[1]);
+    write_reg_8(MAADR3, macaddr[2]);
+    write_reg_8(MAADR2, macaddr[3]);
+    write_reg_8(MAADR1, macaddr[4]);
+    write_reg_8(MAADR0, macaddr[5]);
+
+    /* no loopback of transmitted frames */
+    write_phy(PHCON2, PHCON2_HDLDIS);
+
+    set_bank(ECON1);
+    
+    /* Configure leds, LED_A=Link, LED_B=activity */
+    write_phy(PHLCON, 0x476);
+
+    /* enable interrutps */
+    write_command(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
+    /* enable frame reception */
+    write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
+
+    enc_spi_disable();
+
+
+    uint8_t eth_rev = get_rev();
+
+
+    if (eth_rev) {
+        
+        #if NET_DEBUG >= 2
+        printf("NIC ENC28J60 -> EtheRev: %d - ", eth_rev);
+        #endif
+        
+        return true;
+
+    }
+
+    return false;
+
+}
+
+/*----------------------------- tap_poll() ----------------------------------*/
+
+uint16_t mac_poll(uint8_t * frame, uint16_t max_len) {
+
+    /* Si hay un frame viable */
+    if(receive_frame_arch()){
+        read_frame_arch(frame, max_len);
+    }
+
+    return received_frame.size;
+
+}
+
+/* ------------------------------ mac_send() --------------------------------- */
+
+bool mac_send(uint8_t * frame, uint16_t len){
+
+    write_frame_arch(frame, len);
+
+    if(send_frame_arch()){
+        return true;
+    } 
+    return false;
+}
+
+
+/* --------------------------- power and status ------------------------------ */
 
 void nic_power_off(void) {
 

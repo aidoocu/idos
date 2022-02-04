@@ -1,108 +1,133 @@
 
-/** 
- * *
- */
+/* Incluir idOS ++ */
 #include "os/idos.h"
 
-/* Estado del LED */
-static bool toggle = 0;
 
-/* Declaro dos protohilos */
+/*  */
 TASK(task_uno, "primera tarea");
 
-/* Arranco el primer protohilo al inicio */
+/*  */
 TASKS_AUTO_START(&task_uno)
 
-/* Conectar a: */
-uint8_t ip_extremo[] = {192, 168, 1, 100};
-/* uint16_t port_server = 80; */
 
-/* Defino el comportamiento de ambos protohilo */
+/*  */
+static bool toggle_luz_sala = false;
+static bool toggle_luz_cuarto = true;
+
+/* defiendo los callbacks de los recursos coap */
+
+/*  ---------- Sala ---------- */
+
+/* GET */
+static uint8_t luz_sala_get(coap_payload_st * payload) {
+  
+  printf("Luz sala GET!!!\n");
+
+  /* Los dos estados de la luz */
+  char on[] = {"ON_SALA"};
+  char off[] = {"OFF_SALA"};
+
+  if(toggle_luz_sala){
+    payload->send_len = sizeof(on);
+    memcpy(payload->send, on, sizeof(on));
+  } else {
+    memcpy(payload->send, off, sizeof(off));
+    payload->send_len = sizeof(off);
+  }
+
+  return 1;
+
+}
+static uint8_t luz_sala_put(coap_payload_st * payload){
+
+  printf("Luz sala PUT!!!\n");
+
+  /* Verificar que el payload trae el largo correcto */
+  if(payload->rcvd_len > 9){
+    return 0;
+  }
+
+  printf("len %d - %s\n", payload->rcvd_len, payload->rcvd);
+
+  char on[] = {"ON_SALA"};
+  char off[] = {"OFF_SALA"};
+
+  /* Si el payload contien ON_SALA, enciendo la sala */
+  if(!memcmp(payload->rcvd, on, payload->rcvd_len)){
+    toggle_luz_sala = true;
+    printf("ON\r\n");
+  }
+
+  /* Si el payload contien OFF_SALA, apago la sala */
+  if(!memcmp(payload->rcvd, off, payload->rcvd_len)){
+    toggle_luz_sala = false;
+    printf("OFF\r\n");
+  }
+
+  return 1;
+}
+
+/*  ---------- Sala ---------- */
+
+/* GET */
+static uint8_t luz_cuarto_get(coap_payload_st * payload) {
+  
+  printf("Luz cuarto!!!\n");
+
+  /* Los dos estados de la luz */
+  char on[] = {"ON_CUARTO"};
+  char off[] = {"OFF_CUARTO"};
+
+  if(toggle_luz_cuarto){
+    payload->send_len = sizeof(on);
+    memcpy(payload->send, on, sizeof(on));
+  } else {
+    memcpy(payload->send, off, sizeof(off));
+    payload->send_len = sizeof(off);
+  }
+
+  return 1;
+
+}
+
 
 TASK_PT(task_uno){
 
-	/* Comienza la tarea, no debe haber nada escrito antes */
-	TASK_BEGIN
+  TASK_BEGIN
+    //timer_set(timer_a, 5000);
 
-		/* Seteo led de placa arduino */
-		pinMode(2, OUTPUT);
+    udp_listener(listener);
+    udp_listener_begin(&listener, COAP_PORT);
 
-		/* Seteamos creamos un timer y lo seteamos a 0,5 seg */
-		timer_set(timer_a, 500);
+    coap_resource_create(sala, "sala", NULL);
+    coap_resource_activate(&sala);
 
-		/* Se crea y se arranca el listener por el puerto 5683 */
-		tcp_listener(coap_server);
-		tcp_listener_begin(&coap_server, COAP_PORT);
+    coap_resource_create(cuarto, "cuarto", NULL);
+    coap_resource_activate(&cuarto);
 
-		tcp_listener(coap_client);
-		tcp_client_connect(&coap_client, ip_extremo, COAP_PORT);
-		
-        while (1) {
+    coap_resource_create(luz_sala, "luz", &sala);
+    coap_resource_activate(&luz_sala);
+    luz_sala.get = * luz_sala_get;
+    luz_sala.put = * luz_sala_put;
 
-			/* Cedemos la CPU hasta que algún evento despierte a esta tarea */
-			TASK_YIELD
+    coap_resource_create(luz_cuarto, "luz", &cuarto);
+    coap_resource_activate(&luz_cuarto);
+    luz_cuarto.get = * luz_cuarto_get;
 
-            /* Si el timer ha expirado, lo reseteamos */
-			if (timer_expired(&timer_a)) {
+    while (1)
+    {
 
-			    timer_reset(&timer_a);
-
-				toggle = !toggle;
-				digitalWrite(2, toggle);
-			}
+      //printf("%s\n", pepe.name);
+      TASK_YIELD
 
 
-			/** !!!!! solo se puede manejar una única uip_conn por listener !!!!! */
-			/** Si nos ha llegado un mensaje desde la red hay que verificar que ocurrió */
-            if (tcp_read(&coap_server)) {
+      /* Si el timer ha expirado, lo reseteamos */
+/* 			if (timer_expired(&timer_a)) {
+        printf("hello world\n");
+			  timer_reset(&timer_a);
+			}  */
 
-				/* Si es un mensaje recibido imprimirlo... */
-				if (tcp_msg(coap_server)) {
-
-					printf("Net msg: len %02d -> ", (int)coap_server.msg_len_in);
-                	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
-                    	printf("%c", (char)coap_server.net_msg_in[i]);
-                	}
-					printf("\n\r");
-					coap_server.msg_len_in = 0;
-/*                 	for(int i = 0; i < (int)coap_server.msg_len_in; i++) {
-                    	printf("%02X", coap_server.net_msg_in[i]);
-                	}
-					printf("\n\r"); */
-
-					/** Hay que verificar que el extremo terminó de transmitir el mensaje, 
-					 * 	teniendo en cuenta que el mensaje completo puede ser más largo
-					 * 	que el buffer de entrada: ???
-					*/
-					//if (coap_server.net_msg_in[coap_server.msg_len_in - 1] == '\0') {
-						/* ...y responder si no hay nada en el buffer de salida */
-
-						uint8_t resp[] = {"respuesta"};
-
-						printf("resp: %d\r\n", coap_server.msg_len_out);
-
-						tcp_write(&coap_server, &resp[0], sizeof(resp) - 1);
-
-					//}
-				}
-				/** Si es una confirmación (ack) sacar el mensaje del buffer. */
-				if (tcp_ack(coap_server)) {
-					/* Verificar cual conexión ha transmitido exitosamente el mensaje */
-					//struct uip_conn * conn = (struct uip_conn * )task->msg->data;
-					/* Se libera el buffer de salida */
-					coap_server.msg_len_out = 0;
-					printf("ack, buf_out free\n\r");
-					
-					/* cerrar la conexión */
-					conn_close(coap_server);
-							
-				}
-
-
-
-            }
-		}
-
-	/* Finalizamos la tarea, no debe habe nada escrito después */
-	TASK_END
+    }
+    
+  TASK_END
 }

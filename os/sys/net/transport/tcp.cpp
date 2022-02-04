@@ -81,7 +81,7 @@ void uipclient_appcall(void) {
 
 
 				/* ¡¡¡¡ hay que ver por cual puerto escucha el conn ??? y pasarlo a listener ??? */
-				#if NET_DEBUG >= 2
+				#if NET_DEBUG >= 3 
 				printf("Connecting as client\r\n");
 				#endif
 
@@ -98,8 +98,8 @@ void uipclient_appcall(void) {
 				listener = listener->next;
 			} while(listener->next != NULL);
 
-			#if NET_DEBUG >= 2
-			printf("income tcp connection");
+			#if NET_DEBUG >= 3
+		printf("income tcp connection");
 			#endif
 
 			/* entonces ya estamos conectados como servidores */
@@ -125,8 +125,8 @@ void uipclient_appcall(void) {
 		/* El app indica detener la conexión */
 		if (listener->state == LISTENER_STOP) {
                 
-			#if NET_DEBUG >= 2
-			printf("stop connection\r\n");
+			#if NET_DEBUG >= 3
+		printf("stop connection\r\n");
 			#endif
 
 			uip_stop();
@@ -141,8 +141,8 @@ void uipclient_appcall(void) {
 			/* Si efectivamente la conexión está detenida */
 			if (uip_stopped(uip_conn)) {
 
-				#if NET_DEBUG >= 2
-				printf("Conn restart\r\n");
+				#if NET_DEBUG >= 3
+			printf("Conn restart\r\n");
 				#endif
 
 				listener->state = LISTENER_CONNECTING;
@@ -157,8 +157,8 @@ void uipclient_appcall(void) {
         /* La tarea pide cerrar la conexión */
         if (listener->state == LISTENER_DISCONNECT) {
             
-            #if NET_DEBUG >= 2
-            printf("app close connection: ");
+            #if NET_DEBUG >= 3
+         printf("app close connection: ");
             #endif
 
 			/* liberamos el lisneter */
@@ -167,8 +167,8 @@ void uipclient_appcall(void) {
 			/* cerramos la conexión */
 			uip_close();
 
-			#if NET_DEBUG >= 2
-			printf("close\r\n");
+			#if NET_DEBUG >= 3
+		printf("close\r\n");
 			#endif
 
 			return;        
@@ -187,8 +187,8 @@ void uipclient_appcall(void) {
             printf("\r\n");
             #endif
 
-            #if NET_DEBUG >= 2
-            printf("new data\n\r");
+            #if NET_DEBUG >= 3
+         printf("new data\n\r");
             #endif       
 
 			/* Preparar el listener con el mensaje pasándole la longitud que no puede ser mayor que MAX_TCP_MSG_SIZE */
@@ -212,8 +212,8 @@ void uipclient_appcall(void) {
         /* La conexión ha sido cerrada por el cliente o ha sido timeout */
         if (uip_closed() || uip_timedout()) {
             
-            #if NET_DEBUG >= 2
-            printf("client closed: ");
+            #if NET_DEBUG >= 3
+         printf("client closed: ");
             #endif
 
 			/* Le informamos a la tarea del cierre de la conexión */
@@ -229,8 +229,8 @@ void uipclient_appcall(void) {
         /* El extremo notifica la llegada del datagrama */
         if (uip_acked()) {
 
-            #if NET_DEBUG >= 2
-            printf("uip_acked\r\n");
+            #if NET_DEBUG >= 3
+         printf("uip_acked\r\n");
             #endif
 
             /* Limpio el buffer de salida */
@@ -246,8 +246,8 @@ void uipclient_appcall(void) {
         /* Aquí uIP espera encontrar datos nuevos a enviar o retransmitir según sea el caso */
         if (uip_poll() || uip_rexmit()) {
         
-            #if NET_DEBUG >= 2
-            if(uip_poll()) 
+            #if NET_DEBUG >= 3
+         if(uip_poll()) 
                 printf("poll\r\n");
             else
                 printf("rexmit\r\n");

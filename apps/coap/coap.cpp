@@ -43,7 +43,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
     /* verificar que efectivamente es un paquete CoAP con versión válida */
     if(coap_version(coap_hdr) != COAP_VERSION){
         
-        #if NET_DEBUG >= 2
+        #if NET_DEBUG >= 3
         printf("Version error\n\r");
         #endif
 
@@ -53,7 +53,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
     /* Verificar si el tamaño del token es válido */
     if(coap_token_len(coap_hdr) > COAP_MAX_TOKEN_LEN){
         
-        #if NET_DEBUG >= 2
+        #if NET_DEBUG >= 3
         printf("error token len\n\r");
         #endif
 
@@ -65,7 +65,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
     /* El msg no puede ser menor que el header de CoAP + token lenth */
     if((coap_hdr_len) > listener->msg_len){
 
-        #if NET_DEBUG >= 2
+        #if NET_DEBUG >= 3
         printf("error msg to short\n\r");
         #endif
 
@@ -74,7 +74,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
 
     if(((coap_hdr_len) == listener->msg_len) && (coap_hdr->code != EMPTY_MSG_0_00)) {
 
-        #if NET_DEBUG >= 2
+        #if NET_DEBUG >= 3
         printf("msg has not options or payload, but code is not an empty msg \n\r");
         #endif
 
@@ -83,7 +83,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
 
     if(((coap_hdr_len) != listener->msg_len) && (coap_hdr->code == EMPTY_MSG_0_00)) {
 
-        #if NET_DEBUG >= 2
+        #if NET_DEBUG >= 3
         printf("has a empty code, but the msg is bigger than header\n\r");
         #endif
 
@@ -260,7 +260,7 @@ TASK_PT(coap_task){
             //imprimimos el mensaje
             printf("msg len: %d\n", coap_listener.msg_len);
 
-            for (int i = 0; i < coap_listener.msg_len; i++){
+            for (uint8_t i = 0; i < coap_listener.msg_len; i++){
                 printf("%02x ", coap_listener.msg[i]);
             }
             printf("\n");
@@ -278,7 +278,7 @@ TASK_PT(coap_task){
                 /* Mensaje malformado, responder con 4_00 */
                 coap_respond(COAP_TYPE_RST, BAD_REQUEST_4_00);
 
-                #if NET_DEBUG >= 2
+                #if NET_DEBUG >= 3
                 printf("CoAP error: malformed header\n\r");
                 #endif
 
@@ -321,7 +321,7 @@ TASK_PT(coap_task){
                     /* Una F en Option Delta u Option Length es un error de formato */
                     coap_respond(COAP_TYPE_RST, BAD_REQUEST_4_00);
 
-                    #if NET_DEBUG >= 2
+                    #if NET_DEBUG >= 3
                     printf("CoAP error: Malformed Options\n\r");
                     #endif
 
@@ -372,7 +372,7 @@ TASK_PT(coap_task){
                     /* Si el recurso solicitado no existe */
                     if(resource_demanded == NULL){
                         
-                        #if NET_DEBUG >= 2
+                        #if NET_DEBUG >= 3
                         printf("CoAP error: Resource \"");
                         for(int i = 1; i <= (coap_listener.msg[cp] & 0x0F); i++ )
                             printf("%c", coap_listener.msg[cp + i]);
@@ -411,7 +411,7 @@ TASK_PT(coap_task){
                     if((coap_listener.msg[cp] & 0x0F) != 0 && 
                         (coap_listener.msg[++ cp] != 0)){
                         
-                        #if NET_DEBUG >= 2
+                        #if NET_DEBUG >= 3
                         printf("CoAP error: Unsupported Content-Format\n\r");
                         #endif
 
@@ -426,7 +426,7 @@ TASK_PT(coap_task){
                 /* Accept - 17 */
                 else if(option_delta == COAP_OPTION_ACCEPT){
                     
-                    #if NET_DEBUG >= 2
+                    #if NET_DEBUG >= 3
                     printf("Accept:\n");
                     #endif
 
@@ -435,7 +435,7 @@ TASK_PT(coap_task){
                     if((coap_listener.msg[cp] & 0x0F) != 0 && 
                         (coap_listener.msg[++ cp] != 0)){
                         
-                        #if NET_DEBUG >= 2
+                        #if NET_DEBUG >= 3
                         printf("CoAP error: Unsupported media type\n\r");
                         #endif
 
@@ -461,7 +461,7 @@ TASK_PT(coap_task){
                     /* respondemos con un bad option */
                     coap_respond(COAP_TYPE_RST, BAD_OPTION_4_02);
 
-                    #if NET_DEBUG >= 2
+                    #if NET_DEBUG >= 3
                     printf("CoAP error: Bad option\n\r");
                     #endif
 
@@ -579,7 +579,7 @@ TASK_PT(coap_task){
                 No están implementado para idOS como política (por ahora) ni post ni delete */
                 coap_respond(COAP_TYPE_RST, METHOD_NOT_ALLOWED_4_05);
 
-                #if NET_DEBUG >= 2
+                #if NET_DEBUG >= 3
                 printf("CoAP error: Method not allowed\n\r");
                 #endif
 
