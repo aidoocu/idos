@@ -72,7 +72,7 @@ bool receive_frame_arch(void);
  *  \param len Tamaño del frame que efectivamente será leido
  *  \return Tamaño del buffer leido del ENC
  */
-uint16_t read_frame_arch(uint8_t* buffer, uint16_t len);
+uint16_t read_frame_arch(uint8_t* buffer, uint16_t max_len);
 
 
 /** 

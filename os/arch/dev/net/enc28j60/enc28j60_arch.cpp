@@ -272,7 +272,7 @@ bool receive_frame_arch(void) {
         rxstat = read_command(ENC28J60_READ_BUF_MEM, 0);
         //rxstat |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
 
-        #if NET_DEBUG >= 2
+        #if NET_DEBUG >= 3
         printf("Receive frame [%X-%X], next: %X, stat: %X, count: %d, -> ",
                                 read_ptr,
                                 (read_ptr + len) % (RXSTOP_INIT + 1),
@@ -313,16 +313,17 @@ bool receive_frame_arch(void) {
 /** 
  * 
  */
-uint16_t read_frame_arch (uint8_t * buffer, uint16_t len) {
+uint16_t read_frame_arch (uint8_t * buffer, uint16_t max_len) {
 
+    uint16_t len = received_frame.size;
 
     /** Se ajusta len al largo del buffer que se va a leer en caso que sea más grande. En caso que el 
      * buffer llegado a ENC sea más grande la transferencia se limitará al tamaño máximo de uip_len.
      */
-    if (len < received_frame.size)
-        len = received_frame.size;
+    if (UIP_BUFSIZE < len)
+        len = UIP_BUFSIZE;
 
-    #if NET_DEBUG >= 2
+    #if NET_DEBUG >= 3
     printf("Readed %d bytes from NIC\r\n", len);
     #endif
 
@@ -529,7 +530,7 @@ bool mac_init(uint8_t * macaddr) {
 
     if (eth_rev) {
         
-        #if NET_DEBUG >= 2
+        #if NET_DEBUG >= 3
         printf("NIC ENC28J60 -> EtheRev: %d - ", eth_rev);
         #endif
         
