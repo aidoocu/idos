@@ -49,61 +49,6 @@ struct received_frame_t {
 };
 
 
-/** \brief Recibir el frame 
- *  \details El datasheet trata al frame como frame y así es tratado por 
- *          los drivers consultados, por lo que también utilizaremos frame
- *          o frame. Ver el datasheet 7.2 para una completa descripción.
- *          Esta función chequea los buffers del ENC28j60 y si hay un frame
- *          copia su  bloque received_frame.
- *          
- *  \return UIP_RECEIVEBUFFERHANDLE (0xFF): Indica que hay un frame en el 
- *          buffer de la interface que es viable. La estructura received_frame
- *          contendrá la dirección del frame en el enc (.begin) y la logitud
- *          (.size). La variable next_frame_ptr será actualizada con la posición
- *          del próximo frame si hubiera.
- *          NOBLOCK (0x00): No hay frame disponible.
-*/
-bool receive_frame_arch(void);
-
-/** 
- *  \brief Leer el frame desde la NIC
- *  \details Traer el frame desde la NIC y copiarlo en un buffer
- *  \param buffer Puntero al buffer donde será copiado el frame
- *  \param len Tamaño del frame que efectivamente será leido
- *  \return Tamaño del buffer leido del ENC
- */
-uint16_t read_frame_arch(uint8_t* buffer, uint16_t max_len);
-
-
-/** 
- *  \brief Escribir el frame en la NIC para que lo envie
- *  \details Funciona igual que la dupla recieve - read pero a la inversa 
- *  \param handle Índice del frame
- *  \param position Posición del frame en la NIC
- *  \param buffer Puntero al buffer donde está el frame en RAM
- *  \param len Tamaño del frame
- *  \return Tamaño del buffer enviado al ENC
- *
- */
-void write_frame_arch(uint8_t* tx_buffer, uint16_t len);
-
-/** 
- *  \brief Pedirle a ENC que envíe un frame
- *  \details Funciona igual que la dupla recieve - read pero a la inversa
- *          donde write_frame pone el frame en ENC y send le dice a la 
- *          NIC que lo envíe a la red
- *  \param handle frame que debe ser enviado
- */
-bool send_frame_arch(void);
-
-
-/** \brief  Liberar el paquete leido
- *  \note   Esto reutiliza o libera la memoria que fue leida antes de
- *          llamar esta función 
- */
-void free_frame_arch(void);
-
-
 /* ------------------------------- arch block -------------------------------- */
 
 /** 
@@ -117,11 +62,15 @@ bool mac_init(uint8_t * mac);
  *  \param frame    Buffer donde será copiada la frame de haber recibido una
  *  \param max_len  Maximum length of the buffer
  */
-uint16_t mac_poll(uint8_t * frame, uint16_t max_len);
+uint16_t mac_poll(uint8_t * frame);
 
 
 /** 
- * \brief Enviar a la MAC en frame que será puesto en la red
+ *  \brief Escribir el frame en la NIC para que lo envie
+ *  \details Funciona igual que la dupla recieve - read pero a la inversa 
+ *  \param buffer Puntero al buffer donde está el frame en RAM
+ *  \param len Tamaño del frame
+ *  \return Tamaño del buffer enviado al ENC
  */
 bool mac_send(uint8_t * frame, uint16_t len);
 

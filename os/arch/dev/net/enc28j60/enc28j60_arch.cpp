@@ -237,9 +237,20 @@ void write_byte(uint16_t addr, uint8_t data){
 
 }
 
-/** 
- * 
- */
+/** \brief Recibir el frame 
+ *  \details El datasheet trata al frame como frame y así es tratado por 
+ *          los drivers consultados, por lo que también utilizaremos frame
+ *          o frame. Ver el datasheet 7.2 para una completa descripción.
+ *          Esta función chequea los buffers del ENC28j60 y si hay un frame
+ *          copia su  bloque received_frame.
+ *          
+ *  \return UIP_RECEIVEBUFFERHANDLE (0xFF): Indica que hay un frame en el 
+ *          buffer de la interface que es viable. La estructura received_frame
+ *          contendrá la dirección del frame en el enc (.begin) y la logitud
+ *          (.size). La variable next_frame_ptr será actualizada con la posición
+ *          del próximo frame si hubiera.
+ *          NOBLOCK (0x00): No hay frame disponible.
+*/
 bool receive_frame_arch(void) {
 
     uint8_t rxstat;
@@ -311,9 +322,13 @@ bool receive_frame_arch(void) {
 
 
 /** 
- * 
+ *  \brief Leer el frame desde la NIC
+ *  \details Traer el frame desde la NIC y copiarlo en un buffer
+ *  \param buffer Puntero al buffer donde será copiado el frame
+ *  \param len Tamaño del frame que efectivamente será leido
+ *  \return Tamaño del buffer leido del ENC
  */
-uint16_t read_frame_arch (uint8_t * buffer, uint16_t max_len) {
+uint16_t read_frame_arch (uint8_t * buffer) {
 
     uint16_t len = received_frame.size;
 
@@ -355,105 +370,7 @@ uint16_t read_frame_arch (uint8_t * buffer, uint16_t max_len) {
     enc_deselect();
     enc_spi_disable();
 
-    return len;
-}
-
-/* (revisar esto para optimizar) 
-    esta variable recoge el tamanno del buffer que ha sido enviado al enc 
-    para que sea enviado a la red por send 
-*/
-static uint16_t buffer_length = 0;
-
-/** 
- * 
- */
-void  write_frame_arch(uint8_t * buffer, uint16_t len) {
-
-    buffer_length = len;
-
-    /* Habilitar el SPI para el ENC */
-    enc_spi_enable();
-
-    /* Situamos la posición donde vamos a escribir el frame */
-    write_reg_16(EWRPT, TXSTART_INIT);
-
-    /* Se limita len a ?? */
-    //if (len > frame->size - position) {
-    //    len = frame->size - position;
-    //}
-
-    /* ->> Escribir el buffer en el ENC ->> */
-
-    enc_select();
-
-    /* Invocar comando de escritura de SPI */
-    SPI.transfer(ENC28J60_WRITE_BUF_MEM);
-
-    while(len) {
-        len --;
-        /* Escribir el dato */
-        SPI.transfer(* buffer);
-        buffer ++;
-    }
-
-    /* Desabilitar el SPI para ENC */
-    enc_deselect();
-    enc_spi_disable(); 
-
-}
-
-/** 
- * 
- */
-bool send_frame_arch(void) {
-
-    /* Apunto al bloque donde está el paquete y marco el pricipio y el fin */
-    uint16_t start = TXSTART_INIT - 1;
-    uint16_t end = start + buffer_length;
-
-    /* Habilitar el SPI para el ENC */
-    enc_spi_enable();
-
-    /* ?? write control-byte (if not 0 anyway) */
-    write_byte(start, 0);
-
-    /* Comenzamos la transmisión. Se sitúan los punteros de inicio y fin */
-    write_reg_16(ETXST, start);
-    write_reg_16(ETXND, end);
-
-    bool success = false;
-
-    /* Intentar al menos TX_COLLISION_RETRY_COUNT veces en caso de colision 
-        ver Rev. B7 Silicon Errata issues 12 and 13 */
-    for (uint8_t retry = 0; retry < TX_COLLISION_RETRY_COUNT; retry++){
-
-        // Reset the transmit logic problem. Errata 12
-        write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
-        write_command(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
-        write_command(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF | EIR_TXIF);
-
-        // send the contents of the transmit buffer onto the network
-        write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
-
-        // wait for transmission to complete or fail
-        uint8_t eir;
-        while (((eir = read_reg(EIR)) & (EIR_TXIF | EIR_TXERIF)) == 0);
-        write_command(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRTS);
-        success = ((eir & EIR_TXERIF) == 0);
-        if (success)
-            break; // usual exit of the for(retry) loop
-
-        // Errata 13 detection
-        uint8_t tsv4 = read_byte(end + 4);
-        if (!(tsv4 & 0b00100000)) // is it "late collision" indicated in bit 29 of TSV?
-            break; // other fail, not the Errata 13 situation
-
-    }
-
-    enc_spi_disable();
-
-    return success;
-
+    return received_frame.size;
 }
 
 
@@ -464,8 +381,6 @@ bool send_frame_arch(void) {
  *          debió haber sido inicializado por el sistema. 
 */
 bool mac_init(uint8_t * macaddr) {
-
-    printf("ini mac_init\n");
 
     enc_spi_enable();
 
@@ -542,29 +457,108 @@ bool mac_init(uint8_t * macaddr) {
 
 }
 
-/*----------------------------- tap_poll() ----------------------------------*/
+/*----------------------------- mac_poll() ----------------------------------*/
 
-uint16_t mac_poll(uint8_t * frame, uint16_t max_len) {
+uint16_t mac_poll(uint8_t * frame) {
 
     /* Si hay un frame viable */
     if(receive_frame_arch()){
-        read_frame_arch(frame, max_len);
+
+        /* Leemos el bloque en el enc */
+        uint16_t len = read_frame_arch(frame);
+        /* Liberamos el bloque leido en el enc */
+        free_frame_arch();
+
+        return len;
+    
     }
 
-    return received_frame.size;
+    /* Si no se ha recibido nada se retorna 0 */
+    return 0;
 
 }
 
 /* ------------------------------ mac_send() --------------------------------- */
 
-bool mac_send(uint8_t * frame, uint16_t len){
+bool  mac_send(uint8_t * buffer, uint16_t len) {
 
-    write_frame_arch(frame, len);
+    /* Habilitar el SPI para el ENC */
+    enc_spi_enable();
 
-    if(send_frame_arch()){
-        return true;
-    } 
-    return false;
+    /* Situamos la posición donde vamos a escribir el frame */
+    write_reg_16(EWRPT, TXSTART_INIT);
+
+    /* Se limita len a ?? */
+    //if (len > frame->size - position) {
+    //    len = frame->size - position;
+    //}
+
+    /* ->> Escribir el buffer en el ENC ->> */
+
+    enc_select();
+
+    /* Invocar comando de escritura de SPI */
+    SPI.transfer(ENC28J60_WRITE_BUF_MEM);
+
+    /* Apunto al bloque donde está el paquete y marco el pricipio y el fin */
+    uint16_t start = TXSTART_INIT - 1;
+    uint16_t end = start + len;
+
+    while(len) {
+        len --;
+        /* Escribir el dato */
+        SPI.transfer(* buffer);
+        buffer ++;
+    }
+
+    /* Desabilitar el SPI para ENC */
+    enc_deselect();
+
+    /* ---------------------- Enviar ---------------------- */
+
+    /* Habilitar el SPI para el ENC */
+    enc_spi_enable();
+
+    /* ?? write control-byte (if not 0 anyway) */
+    write_byte(start, 0);
+
+    /* Comenzamos la transmisión. Se sitúan los punteros de inicio y fin */
+    write_reg_16(ETXST, start);
+    write_reg_16(ETXND, end);
+
+    bool success = false;
+
+    /* Intentar al menos TX_COLLISION_RETRY_COUNT veces en caso de colision 
+        ver Rev. B7 Silicon Errata issues 12 and 13 */
+    for (uint8_t retry = 0; retry < TX_COLLISION_RETRY_COUNT; retry++){
+
+        // Reset the transmit logic problem. Errata 12
+        write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
+        write_command(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
+        write_command(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF | EIR_TXIF);
+
+        // send the contents of the transmit buffer onto the network
+        write_command(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
+
+        // wait for transmission to complete or fail
+        uint8_t eir;
+        while (((eir = read_reg(EIR)) & (EIR_TXIF | EIR_TXERIF)) == 0);
+        write_command(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRTS);
+        success = ((eir & EIR_TXERIF) == 0);
+        if (success)
+            break; // usual exit of the for(retry) loop
+
+        // Errata 13 detection
+        uint8_t tsv4 = read_byte(end + 4);
+        if (!(tsv4 & 0b00100000)) // is it "late collision" indicated in bit 29 of TSV?
+            break; // other fail, not the Errata 13 situation
+
+    }
+
+    enc_spi_disable();
+
+    return success;
+
 }
 
 
