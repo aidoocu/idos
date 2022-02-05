@@ -11,35 +11,18 @@
 static uint16_t next_frame_ptr;
 static uint8_t bank;
 
-/** 
- *  \brief Guarda la dirección de memoria del paquete en el ENC y su tamaño
- */
-static struct received_frame_t received_frame;
-
-/* Registros para guardar temporalmente el estado de SPI */
-//uint8_t spcr_temp;
-//uint8_t spsr_temp;
 
 /** \brief  Configurar SPI para el ENC28J60 */
 void enc_spi_enable(void) {
-
-    /* Guardo el estado de SPCR */
-    //spcr_temp = SPCR;
-    //spsr_temp = SPSR;
-
     /* initializar la interface SPI */
     SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
- 
 }
 
 /** \brief Recuperar los valores de configuración de SPI */
 void enc_spi_disable(void) {
-
-    /* Recupero los registros */
-    //SPCR = spcr_temp;
-    //SPSR = spsr_temp;
+    /* Liberar la interface para que otro dispositivo pueda 
+    utilizarla */
     SPI.endTransaction();
-
 }
 
 /**  \note SPI Instruction Set
@@ -172,20 +155,6 @@ void write_phy(uint8_t address, uint16_t data) {
  }
 
 /** 
- * 
- */
-void free_frame_arch(void) {
-
-    enc_spi_enable();
-
-    /* Mover el puntero RX read al comienzo del próximo paquete */
-    write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
-
-    enc_spi_disable();
-
-}
-
-/** 
  *  Leer un único byte
  */
 uint8_t read_byte(uint16_t addr){
@@ -235,142 +204,6 @@ void write_byte(uint16_t addr, uint8_t data){
     enc_deselect();
     enc_spi_disable();
 
-}
-
-/** \brief Recibir el frame 
- *  \details El datasheet trata al frame como frame y así es tratado por 
- *          los drivers consultados, por lo que también utilizaremos frame
- *          o frame. Ver el datasheet 7.2 para una completa descripción.
- *          Esta función chequea los buffers del ENC28j60 y si hay un frame
- *          copia su  bloque received_frame.
- *          
- *  \return UIP_RECEIVEBUFFERHANDLE (0xFF): Indica que hay un frame en el 
- *          buffer de la interface que es viable. La estructura received_frame
- *          contendrá la dirección del frame en el enc (.begin) y la logitud
- *          (.size). La variable next_frame_ptr será actualizada con la posición
- *          del próximo frame si hubiera.
- *          NOBLOCK (0x00): No hay frame disponible.
-*/
-bool receive_frame_arch(void) {
-
-    uint8_t rxstat;
-    uint16_t len;
-
-    enc_spi_enable();
-
-    /* Verificar si ha sido recibido algún paquete */
-    if (read_reg(EPKTCNT) != 0) {
-
-        /* From datasheet (7.2.2): The frames are preceded by a six-byte header which
-        contains a Next frame Pointer, in addition to a receive status vector which 
-        contains receive statistics, including the packe's size. */
-        uint16_t read_ptr = next_frame_ptr + 6 > RXSTOP_INIT ? next_frame_ptr + 6 - RXSTOP_INIT + RXSTART_INIT : next_frame_ptr + 6;
-        
-        /* Situar el puntero de lectura al principio del paquete recibido para... */
-        write_reg_16(ERDPT, next_frame_ptr);
-
-        /* ...leer el puntero al próximo paquete */ 
-        next_frame_ptr = read_command(ENC28J60_READ_BUF_MEM, 0);
-        next_frame_ptr |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
-
-        /* Leer la longitud del paquete */
-        len = read_command(ENC28J60_READ_BUF_MEM, 0);
-        len |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
-        /* Quitar el CRC */
-        len -= 4;
-
-        /* Leer el vector receive status (ver tabla 7.3) */
-        rxstat = read_command(ENC28J60_READ_BUF_MEM, 0);
-        //rxstat |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
-
-        #if NET_DEBUG >= 3
-        printf("Receive frame [%X-%X], next: %X, stat: %X, count: %d, -> ",
-                                read_ptr,
-                                (read_ptr + len) % (RXSTOP_INIT + 1),
-                                next_frame_ptr,
-                                rxstat,
-                                read_reg(EPKTCNT));
-        if ((rxstat & 0x80)!=0)
-            printf("OK\r\n");
-        else
-            printf("Failed\r\n");
-        #endif
-
-        /* Decrementar el contador de paquetes indicando que ya se ha leido */
-        write_command(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
-
-        /* Chequear el CRC antes de devolver el buffer */
-        if ((rxstat & 0x80) != 0) {
-
-            received_frame.begin = read_ptr;
-            received_frame.size = len;
-
-            enc_spi_disable();
-
-            return true;
-        }
-
-        /* Mover el puntero RX read al comienzo del próximo paquete */
-        write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
-
-    }
-
-    /* No ha llegado paquete */
-    enc_spi_disable();
-    return false;
-}
-
-
-/** 
- *  \brief Leer el frame desde la NIC
- *  \details Traer el frame desde la NIC y copiarlo en un buffer
- *  \param buffer Puntero al buffer donde será copiado el frame
- *  \param len Tamaño del frame que efectivamente será leido
- *  \return Tamaño del buffer leido del ENC
- */
-uint16_t read_frame_arch (uint8_t * buffer) {
-
-    uint16_t len = received_frame.size;
-
-    /** Se ajusta len al largo del buffer que se va a leer en caso que sea más grande. En caso que el 
-     * buffer llegado a ENC sea más grande la transferencia se limitará al tamaño máximo de uip_len.
-     */
-    if (UIP_BUFSIZE < len)
-        len = UIP_BUFSIZE;
-
-    #if NET_DEBUG >= 3
-    printf("Readed %d bytes from NIC\r\n", len);
-    #endif
-
-    /* Habilitar el SPI para el ENC */
-    enc_spi_enable();
-
-    /* Se posiciona el buffer que se quiere leer */
-    if (received_frame.begin > RXSTOP_INIT)
-        write_reg_16(ERDPT, received_frame.begin - RXSTOP_INIT + RXSTART_INIT);
-    else
-        write_reg_16(ERDPT, received_frame.begin);
-    
-    /* <<- Traer el buffer de ENC al buffer de uip <<- */
-    
-    /* Seleccionar el ENC en SPI */
-    enc_select();
-
-    /* Invocar comando de lectura de SPI */
-    SPI.transfer(ENC28J60_READ_BUF_MEM);
-
-    while(len) {
-        len --;
-        /* Leer dato SPI */
-        * buffer = SPI.transfer(0x00);
-        buffer ++;
-    }
-    
-    /* Desabilitar el SPI para ENC */
-    enc_deselect();
-    enc_spi_disable();
-
-    return received_frame.size;
 }
 
 
@@ -461,22 +294,105 @@ bool mac_init(uint8_t * macaddr) {
 
 uint16_t mac_poll(uint8_t * frame) {
 
-    /* Si hay un frame viable */
-    if(receive_frame_arch()){
+    uint8_t rxstat;
+    uint16_t len;
 
-        /* Leemos el bloque en el enc */
-        uint16_t len = read_frame_arch(frame);
-        /* Liberamos el bloque leido en el enc */
-        free_frame_arch();
+    enc_spi_enable();
 
-        return len;
-    
+    /* Verificar si ha sido recibido algún paquete */
+    if (read_reg(EPKTCNT) != 0) {
+
+        /* From datasheet (7.2.2): The frames are preceded by a six-byte header which
+        contains a Next frame Pointer, in addition to a receive status vector which 
+        contains receive statistics, including the packe's size. */
+        uint16_t read_ptr = next_frame_ptr + 6 > RXSTOP_INIT ? next_frame_ptr + 6 - RXSTOP_INIT + RXSTART_INIT : next_frame_ptr + 6;
+        
+        /* Situar el puntero de lectura al principio del paquete recibido para... */
+        write_reg_16(ERDPT, next_frame_ptr);
+
+        /* ...leer el puntero al próximo paquete */ 
+        next_frame_ptr = read_command(ENC28J60_READ_BUF_MEM, 0);
+        next_frame_ptr |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
+
+        /* Leer la longitud del paquete */
+        len = read_command(ENC28J60_READ_BUF_MEM, 0);
+        len |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
+        /* Quitar el CRC */
+        len -= 4;
+
+        /* Leer el vector receive status (ver tabla 7.3) */
+        rxstat = read_command(ENC28J60_READ_BUF_MEM, 0);
+        //rxstat |= read_command(ENC28J60_READ_BUF_MEM, 0) << 8;
+
+        #if NET_DEBUG >= 3
+        printf("Receive frame [%X-%X], next: %X, stat: %X, count: %d, -> ",
+                                read_ptr,
+                                (read_ptr + len) % (RXSTOP_INIT + 1),
+                                next_frame_ptr,
+                                rxstat,
+                                read_reg(EPKTCNT));
+        if ((rxstat & 0x80)!=0)
+            printf("OK\r\n");
+        else
+            printf("Failed\r\n");
+        #endif
+
+        /* Decrementar el contador de paquetes indicando que ya se ha leido */
+        write_command(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
+
+        /* Chequear el CRC antes de devolver el buffer */
+        if ((rxstat & 0x80) != 0) {
+
+            if (UIP_BUFSIZE < len)
+                len = UIP_BUFSIZE;
+
+            #if NET_DEBUG >= 3
+            printf("Readed %d bytes from NIC\r\n", len);
+            #endif
+
+            /* ---------------------- Leer ---------------------- */
+
+            /* Se posiciona el buffer que se quiere leer */
+            if (read_ptr > RXSTOP_INIT)
+                write_reg_16(ERDPT, read_ptr - RXSTOP_INIT + RXSTART_INIT);
+            else
+                write_reg_16(ERDPT, read_ptr);
+            
+            /* <<- Traer el buffer de ENC al buffer de uip <<- */
+            
+            /* Seleccionar el ENC en SPI */
+            enc_select();
+
+            /* Invocar comando de lectura de SPI */
+            SPI.transfer(ENC28J60_READ_BUF_MEM);
+
+            uint16_t rlen = len;
+
+            while(rlen) {
+                rlen --;
+                /* Leer dato SPI */
+                * frame = SPI.transfer(0x00);
+                frame ++;
+            }
+            
+            /* Desabilitar el SPI para ENC */
+            enc_deselect();
+
+            /* Mover el puntero RX read al comienzo del próximo paquete para liberar 
+            el paquete leido en el buffer de la ENC (free packet) */
+            write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
+
+            enc_spi_disable();
+
+            return len;
+        }
     }
 
-    /* Si no se ha recibido nada se retorna 0 */
+    /* No ha llegado paquete */
+    enc_spi_disable();
     return 0;
-
 }
+
 
 /* ------------------------------ mac_send() --------------------------------- */
 

@@ -40,14 +40,6 @@
 /** \brief Deseleccionar el ENC */
 #define enc_deselect() digitalWrite(ENC28J60_CS, HIGH)
 
-/** 
- *  \brief Guarda la dirección de memoria del paquete en el ENC y su tamaño
- */
-struct received_frame_t {
-    uint16_t size = 0;
-    uint16_t begin = 0;
-};
-
 
 /* ------------------------------- arch block -------------------------------- */
 
@@ -58,9 +50,11 @@ struct received_frame_t {
 bool mac_init(uint8_t * mac);
 
 /** 
- *  \brief Poll a la NIC para ver si ha llegado algo
+ *  \brief  Poll a la ENC para ver si ha llegado algo
+ *  \details El datasheet trata al frame como packet y así es tratado por 
+ *          los drivers consultados. No obstante aquí le llamaremos frame.
+ *          Ver el datasheet 7.2 para una completa descripción.
  *  \param frame    Buffer donde será copiada la frame de haber recibido una
- *  \param max_len  Maximum length of the buffer
  */
 uint16_t mac_poll(uint8_t * frame);
 
