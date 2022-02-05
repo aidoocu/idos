@@ -34,7 +34,7 @@ void coap_start(void){
  */
 bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
 
-    #if NET_DEBUG >= 2
+    #if NET_DEBUG >= 3
     printf("checking coap integrity -> ");
     #endif
 
@@ -90,7 +90,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
         return false;
     }
 
-    #if NET_DEBUG >= 2
+    #if NET_DEBUG >= 3
     printf("CoAP ok...\n\r");
     #endif
 
@@ -222,7 +222,7 @@ TASK_PT(coap_task){
     coap_resource_create(discover, ".well-known", NULL);
     coap_resource_activate(&discover);
 
-    #if NET_DEBUG >= 2
+    #if NET_DEBUG >= 3
     printf(":: CoAP listening!!\n\r");
     #endif
 
