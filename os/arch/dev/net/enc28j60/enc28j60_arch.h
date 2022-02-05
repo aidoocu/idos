@@ -54,7 +54,8 @@ bool mac_init(uint8_t * mac);
  *  \details El datasheet trata al frame como packet y así es tratado por 
  *          los drivers consultados. No obstante aquí le llamaremos frame.
  *          Ver el datasheet 7.2 para una completa descripción.
- *  \param frame    Buffer donde será copiada la frame de haber recibido una
+ *  \param frame    Buffer donde será copiada la frame, de haber recibido una.
+ *  \return Tamaño de la frame recibida. 0 si no se ha recibido nada.
  */
 uint16_t mac_poll(uint8_t * frame);
 
