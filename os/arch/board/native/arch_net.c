@@ -1,7 +1,7 @@
 /** 
  * 
  */
-
+#include "../../../idos.h"
 #include "arch_net.h"
 
 /* subnet, ¡¡¡¡¡ esto debe ser configurable !!!! */
@@ -43,7 +43,7 @@ bool mac_init(uint8_t * mac){
 
 /*----------------------------- tap_poll() ----------------------------------*/
 
-uint16_t mac_poll(uint8_t * frame, uint16_t max_len) {
+uint16_t mac_poll(uint8_t * frame) {
 	int ret;
 
 	/* Limite de tiempo antes de que termine la espera de 
@@ -78,7 +78,7 @@ uint16_t mac_poll(uint8_t * frame, uint16_t max_len) {
 	
 	/* Si hay algo que leer, se lee */
     // hay que analizar aqui la limitacion que puede tener esto
-	ret = read(fd_tap, frame, max_len);
+	ret = read(fd_tap, frame, UIP_BUFSIZE);
 
 	if(ret == -1) {
 		perror("tapdev_poll: read");

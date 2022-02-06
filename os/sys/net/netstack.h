@@ -45,14 +45,19 @@
 
 #include "mac/mac.h"
 
+#ifdef __cplusplus
 extern "C" {
+#endif
+
    #include "ip/uipopt.h"
    #include "ip/uip-conf.h"
    #include "ip/uip.h"
    #include "ip/uip_arp.h"
    #include "ip/uip_timer.h"
+   
+#ifdef __cplusplus
 }
-
+#endif
 
 /** \brief Número IP en 4 bytes
  *  \details Diferencia a un IP formado por 4 optetos del 

@@ -34,7 +34,7 @@ bool mac_init(uint8_t * mac);
  *  \param frame    Buffer donde será copiada la frame de haber recibido una
  *  \param max_len  Maximum length of the buffer
  */
-uint16_t mac_poll(uint8_t * frame, uint16_t max_len);
+uint16_t mac_poll(uint8_t * frame);
 
 
 /** 
