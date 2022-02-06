@@ -137,7 +137,7 @@ struct msg_st {
  * \brief   Esta función se llama cuando una tarea le quiere mandar un msg
  * \param   task
  * */
-void send_smg(task_st * task_dst, msg_st * msg);
+void send_smg(struct task_st * task_dst, struct msg_st * msg);
 
 #endif //_ICP_H_
 

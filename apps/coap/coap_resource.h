@@ -12,13 +12,13 @@
 
 struct coap_resource_st {
     const char * uri_path;          /* Opción Uri-Path */
-    coap_resource_st * parent;      /* Recurso padre (si tiene) */
-    coap_resource_st * next;        /* Próximo recurso en la lista de 
+    struct coap_resource_st * parent;      /* Recurso padre (si tiene) */
+    struct coap_resource_st * next;        /* Próximo recurso en la lista de 
                                     recursos activos */
     /* call backs por cada método */
-    uint8_t (* get)(coap_payload_st *);     /* Payload */
+    uint8_t (* get)(struct coap_payload_st *);     /* Payload */
     /* void (* post)(void *); */
-    uint8_t (* put)(coap_payload_st *);
+    uint8_t (* put)(struct coap_payload_st *);
     /* void (* delt)(void *); */
 };
 
@@ -41,7 +41,7 @@ struct coap_resource_st {
 /** 
  * \brief Poner el recurso en la lista de recursos activos
 */
-void coap_resource_activate(coap_resource_st * resource);
+void coap_resource_activate(struct coap_resource_st * resource);
 
 //#define coap_send(msg) 
 

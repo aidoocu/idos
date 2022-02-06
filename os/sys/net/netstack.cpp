@@ -129,18 +129,10 @@ void net_tick(void) {
     /** -------------------------------- Recibir datos desde la red --------------------------------  */
 
     /* Hacemos un poll a la interface... */
-    uip_len = mac_poll((uint8_t * )uip_buf, UIP_BUFSIZE);
+    uip_len = mac_poll((uint8_t * )uip_buf);
 
-    /* ...y si ha sido leido un frame y tiene efectivamente datos*/
+    /* ...y si ha sido leido un frame y tiene efectivamente datos */
     if (uip_len > 0) {
-    
-/*         printf("uip_len: %d\n", uip_len);
-        for (int i=0; i<uip_len; i++){
-            printf("%02x ", uip_buf[i]);
-        }
-        printf("\n"); */
-
-        bool send_success = false;
 
         /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
         if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
@@ -185,7 +177,7 @@ void net_tick(void) {
                 uip_arp_out();
 
                 /* y se envía */
-                send_success = mac_send((uint8_t * )uip_buf, uip_len);
+                mac_send((uint8_t * )uip_buf, uip_len);
             }                
 
         } else if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_ARP)) {
@@ -209,24 +201,9 @@ void net_tick(void) {
                 printf("ARP response\r\n");
                 #endif   
 
-                /* Enviamos el frame y si fue exitoso... */
-                send_success = mac_send((uint8_t * )uip_buf, uip_len);
+                /* Enviamos el frame */
+                mac_send((uint8_t * )uip_buf, uip_len);
             }
-        }
-
-        if (send_success) {
-            
-            #if NET_DEBUG >= 3
-            printf("Freeing frame\r\n");
-            #endif      
-
-            /* Liberamos el buffer en la NIC */
-            ///// Esto tiene que ser parte del driver !!!!
-            free_frame_arch();
-
-        } else {
-            /* !!!!!! Si el frame no se pudo enviar tiene que pasar algo!!!!! */                        
-            ;
         }
     }
 

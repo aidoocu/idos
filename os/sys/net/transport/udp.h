@@ -19,15 +19,15 @@ enum {
 }; 
 
 
-typedef struct {
+struct udp_listener_st {
 	uint8_t status;						/**< Estado del mensaje */
 	uip_ipaddr_t ripaddr;				/**< IP remoto desde donde hay una conexión >*/
 	uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
-    task_st * task;						/**< Puntero a la tarea que setea el listerner */
-	msg_st ipc_msg;						/**< Mensaje a la tarea que setea el listerner */
+	struct task_st * task;				/**< Puntero a la tarea que setea el listerner */
+	struct msg_st ipc_msg;				/**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len;					/**< Tamaño del mensaje en el buffer de entrada */
     uint8_t msg[MAX_UDP_MSG_SIZE];		/**< Buffer que contendrá el mensaje de la red */
-} udp_listener_st;
+};
 
 
 #define udp_listener(listener)                  \
@@ -53,12 +53,12 @@ typedef struct {
  *  A esta conexión que no es real le llamaremos aquí pseudoconexión UDP o simplemente
  *  pseudoconexión.
  */
-bool udp_listener_begin(udp_listener_st * listener, uint16_t port);
+bool udp_listener_begin(struct udp_listener_st * listener, uint16_t port);
 
 /** 
  * \brief Verifica si se ha recivido algo desde UDP
  */
-bool udp_recv(udp_listener_st * listener);
+bool udp_recv(struct udp_listener_st * listener);
 
 /** 
  * 	\brief Enviar un mensaje por udp

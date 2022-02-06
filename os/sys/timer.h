@@ -78,14 +78,14 @@ struct timer_st {
  *  \param timer El timer que se va a verificar
  *  \return true si el timer ha expirado, false si no.
  */
-bool timer_expired(timer_st * timer);
+bool timer_expired(struct timer_st * timer);
 
 /** 
  *  \brief Desabilitar timer
  *  \details El timer es una variable que persiste (y ¿es muy costoso sacarlo de la lista?)
  *  por lo que esta función lo que hace es poner el mensaje a null y desabilitarlo. 
  */
-void timer_disable(timer_st * timer);
+void timer_disable(struct timer_st * timer);
 
 /* --------------------------------------------------------------------------------- */
 
@@ -102,10 +102,10 @@ void timer_sys_init(void);
  *  \param  msec        Dentro de cuantos milisegundo el timer debe disparar
  *  \param  task        La tarea que setea el timer
 */
-void timer_set_sys(timer_st * timer, time_t time, task_st * task);
+void timer_set_sys(struct timer_st * timer, time_t time, struct task_st * task);
 
 /** \brief   Resetear el timer */
-void timer_reset(timer_st * timer);
+void timer_reset(struct timer_st * timer);
 
 /** \brief      Función que verifica si hay un timer activo y está listo para correr. 
  * 

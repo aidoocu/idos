@@ -65,9 +65,9 @@
 struct tcp_listener_st {
     uint16_t port;                              /**< Puerto TCP de escucha */
     uint8_t state;                              /**< Banderas de estado de la escucha */        
-    tcp_listener_st * next;                     /**< Puntero al próximo listener o a NULL */
-    task_st * task;                             /**< Puntero a la tarea que setea el listerner */
-    msg_st ipc_msg;                             /**< Mensaje a la tarea que setea el listerner */
+    struct tcp_listener_st * next;                     /**< Puntero al próximo listener o a NULL */
+    struct task_st * task;                             /**< Puntero a la tarea que setea el listerner */
+    struct msg_st ipc_msg;                             /**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer de entrada */
     uint16_t msg_len_out;                       /**< Tamaño del mensaje que está en el buffer de salida */
     uint8_t net_msg_in[MAX_TCP_MSG_SIZE];       /**< Buffer que contendrá el mensaje de la red */
@@ -102,14 +102,14 @@ extern struct tcp_listener_st * tcp_listeners;
  *  \param listener Estructura del servidor TCP
  *  \param port Puerto en el que escucha esta aplicación
  */
-void tcp_listener_begin(tcp_listener_st * listener, uint16_t port);
+void tcp_listener_begin(struct tcp_listener_st * listener, uint16_t port);
 
 /** 
  *  \brief Detener el servidor TCP en el puerto:
  *  \param listener Estructura del servidor TCP
  *  \param port Puerto en el que escucha esta aplicación
  */
-void tcp_listener_end(tcp_listener_st * listener);
+void tcp_listener_end(struct tcp_listener_st * listener);
 
 /* --------------------------------------------------------------------------------- */
 
@@ -171,7 +171,7 @@ enum {
  * \param listener listener que será verificado
  * \return Estado de la conexión, true si la conexión activa, false si no 
  */
-bool tcp_connected(tcp_listener_st * listener);
+bool tcp_connected(struct tcp_listener_st * listener);
 
 /* ---------------------------------- según rfc0793 -------------------------------- */
 
@@ -188,7 +188,7 @@ bool tcp_connected(tcp_listener_st * listener);
  * \param port Puerto al que nos queremos conectar
  * \return Si se ha podido solicitar la conexión o no.
  */
-bool tcp_open(tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port);
+bool tcp_open(struct tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port);
 
 /** 
  * \brief
@@ -213,7 +213,7 @@ bool tcp_open(tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port);
  * \param listener Puntero a la conexión
  * \return Largo que se ha recibido. Será 0 si no se ha recibido nada
  */
-uint16_t tcp_recv(tcp_listener_st * listener);
+uint16_t tcp_recv(struct tcp_listener_st * listener);
 
 /** 
  * \brief
@@ -222,7 +222,7 @@ uint16_t tcp_recv(tcp_listener_st * listener);
  * \param
  * \return 
  */
-bool tcp_send(tcp_listener_st * listener, uint8_t * msg, uint16_t len);
+bool tcp_send(struct tcp_listener_st * listener, uint8_t * msg, uint16_t len);
 
 
 
