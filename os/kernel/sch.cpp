@@ -9,7 +9,7 @@
  * \brief Implementación de la cola de proridad normal. 
  * \note  La cola se inicializa vacía 
  */
-static struct sch_st sch_normal{
+static struct sch_st sch_normal = {
   __null,
   __null
 };
@@ -19,7 +19,7 @@ static struct sch_st sch_normal{
  * \brief Implementación de la cola de proridad prioritaria. 
  * \note  La cola se inicializa vacía 
  */
-static struct sch_st sch_preem{
+static struct sch_st sch_preem = {
   __null,
   __null
 };
@@ -33,15 +33,23 @@ static struct sch_st sch_preem{
 
 void task_autostart(struct task_st * const task[]){
 
-  uint8_t i;
+  	uint8_t i;
   
-  for(i = 0; task[i] != __null; i++) {
-    /* Se le envía el mensaje (nulo) de inicialización a la tarea
-    */
-    * task[i]->msg = {MSG_NULL, MSG_INIT, 0, __null };
-    task_set_ready(task[i]);
-  }
-  return;  
+  	for(i = 0; task[i] != __null; i++) {
+		/* Se le envía el mensaje (nulo) de inicialización a la tarea
+		*/
+		//Este es el original
+		//* task[i]->msg = {MSG_NULL, MSG_INIT, 0, __null };
+
+		//Este es el sustituto para native
+		task[i]->msg->status = MSG_NULL;
+		task[i]->msg->msg_src = MSG_INIT;
+		task[i]->msg->event = 0;
+		task[i]->msg->data = NULL;
+
+		task_set_ready(task[i]);
+  	}
+  	return;  
 }
 
 

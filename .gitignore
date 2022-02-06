@@ -1,0 +1,19 @@
+
+.vscode/configurationCache.log
+.vscode/*.json
+.vscode/*.log
+
+.DS_Store
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+*.native
+
+examples/hello_world/build/native/obj/hello_world.d

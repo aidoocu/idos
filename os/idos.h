@@ -29,6 +29,9 @@
 #include "sys/net/netstack.h"
 #endif
 
+/* Apps */
+#include "../apps/apps.h"
+
 /* ------------------------------------------------------------- */
 /** \enum   INIT_STATE 
  *  \brief  Estado de inicialización de idOS
@@ -39,11 +42,6 @@ enum {
     INIT_ERR_INT
 };
 
-/** \brief  Inicializando idOS
- *  \return Estado de la inicialización
- *  \retval INIT_SUCCESS Inicialización exitosa
- * ........
- */
-uint8_t idos_init(void);
+
 
 #endif //_IDOS_H_

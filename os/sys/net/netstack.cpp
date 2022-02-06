@@ -1,5 +1,5 @@
 
-
+#include "../../idos.h"
 #include "netstack.h"
 
 
@@ -17,7 +17,7 @@ static unsigned long periodic_timer;
 void net_stack_init(void) {
     
     #ifdef UIP_PERIODIC_TIMER
-    periodic_timer = millis() + UIP_PERIODIC_TIMER;
+    periodic_timer = msec_now() + UIP_PERIODIC_TIMER;
     #endif
 
     /* Inicializar la interface */
@@ -42,7 +42,7 @@ void net_stack_init(void) {
     uip_seteth_addr(mac_address);
 
     #if NET_DEBUG >= 3
-    printf("mac address: %X:%X:%X:%X:%X:%X \r\n", 
+    printf("mac address: %x:%x:%x:%x:%x:%x \r\n", 
                         uip_ethaddr.addr[0], 
                         uip_ethaddr.addr[1], 
                         uip_ethaddr.addr[2], 
@@ -81,6 +81,15 @@ void net_stack_init(void) {
     uip_sethostaddr(uipaddr);
 
     #if NET_DEBUG >= 3
+    
+    /* Se imprime la dirección IP configurada */
+    uip_ipaddr_t hostaddr;
+    uip_gethostaddr(&hostaddr);
+    host[0] = (uint8_t)hostaddr[0];
+    host[1] = (uint8_t)uip_htons(hostaddr[0]);
+    host[2] = (uint8_t)hostaddr[1];
+    host[3] = (uint8_t)uip_htons(hostaddr[1]);
+
     printf ("IP address: %d.%d.%d.%d \r\n", 
                         host[0],
                         host[1],
@@ -91,7 +100,7 @@ void net_stack_init(void) {
     uip_ip_addr(uipaddr, gateway);
     uip_setdraddr(uipaddr);
 
-    #if NET_DEBUG >= 3    
+    #if NET_DEBUG >= 3 
     printf ("Gateway address: %d.%d.%d.%d \r\n", 
                         gateway[0],
                         gateway[1],
@@ -119,105 +128,81 @@ void net_tick(void) {
 
     /** -------------------------------- Recibir datos desde la red --------------------------------  */
 
-    /* Si ha entrado un frame a un buffer de la NIC */
-    if (receive_frame_arch()) {
-        
-        uip_len = frame_size_arch ();
+    /* Hacemos un poll a la interface... */
+    uip_len = mac_poll((uint8_t * )uip_buf);
 
-        /* Si el fame tiene efectivamente datos */
-        if (uip_len > 0) {
+    /* ...y si ha sido leido un frame y tiene efectivamente datos */
+    if (uip_len > 0) {
 
-            bool send_success = false;
+        /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
+        if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
 
-            /* Traer el frame desde la NIC hasta el buffer de entrada de uIP */
-            read_frame_arch((uint8_t*)uip_buf, UIP_BUFSIZE);
+            #if NET_DEBUG >= 3
+            printf("IP frame from NIC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                                    hdr_eth->src.addr[0],
+                                    hdr_eth->src.addr[1],
+                                    hdr_eth->src.addr[2],
+                                    hdr_eth->src.addr[3],
+                                    hdr_eth->src.addr[4],
+                                    hdr_eth->src.addr[5]);
+            printf("IP frame from host: %d.%d.%d.%d to port: %u from port: %u\r\n",
+                                    hdr_ip_tcp->srcipaddr[0] & 0xff,
+                                    (hdr_ip_tcp->srcipaddr[0] >> 8) & 0xff,
+                                    hdr_ip_tcp->srcipaddr[1] & 0xff,
+                                    (hdr_ip_tcp->srcipaddr[1] >> 8) & 0xff,
+                                    uip_htons(hdr_ip_tcp->destport),
+                                    uip_htons(hdr_ip_tcp->srcport));
+            #endif
+            
+            /* Refrescar o inicializar la tabla ARP */
+            uip_arp_ipin();
 
-            /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
-            if (hdr_eth->type == HTONS(UIP_ETHTYPE_IP)) {
+            /* uip procesa el frame */
+            uip_input();
 
-                /* ¿El frame de entrada pasa a ser oficialmente uIP frame? */
-                //uip_frame = in_frame;
+            #if NET_DEBUG >= 3
+            /* Las estadisticas deben ser desactivadas en produccion */
+            #if UIP_CONF_STATISTICS == 1
+            printf("Stats-> recv: %d, send: %d drop: %d\r\n",
+            uip_stat.tcp.recv,
+            uip_stat.tcp.sent,
+            uip_stat.tcp.drop);
+            #endif
+            #endif
+
+            /* y si hay que responder, respondemos */
+            if (uip_len > 0) {
+                /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
+                y pone el encabezado LLH (Eth) completo */
+                uip_arp_out();
+
+                /* y se envía */
+                mac_send((uint8_t * )uip_buf, uip_len);
+            }                
+
+        } else if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_ARP)) {
+
+            #if NET_DEBUG >= 3
+            printf("ARP frame from: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
+                                    hdr_eth->src.addr[0],
+                                    hdr_eth->src.addr[1],
+                                    hdr_eth->src.addr[2],
+                                    hdr_eth->src.addr[3],
+                                    hdr_eth->src.addr[4],
+                                    hdr_eth->src.addr[5]);
+            #endif
+
+            /* Situar nueva info ARP en la tabla */
+            uip_arp_arpin();
+
+            if (uip_len > 0) {
 
                 #if NET_DEBUG >= 3
-                printf("IP frame from NIC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
-                                        hdr_eth->src.addr[0],
-                                        hdr_eth->src.addr[1],
-                                        hdr_eth->src.addr[2],
-                                        hdr_eth->src.addr[3],
-                                        hdr_eth->src.addr[4],
-                                        hdr_eth->src.addr[5]);
-                printf("IP frame from host: %d.%d.%d.%d to port: %u from port: %u\r\n",
-                                        hdr_ip_tcp->srcipaddr[0] & 0xff,
-                                        (hdr_ip_tcp->srcipaddr[0] >> 8) & 0xff,
-                                        hdr_ip_tcp->srcipaddr[1] & 0xff,
-                                        (hdr_ip_tcp->srcipaddr[1] >> 8) & 0xff,
-                                        htons(hdr_ip_tcp->destport),
-                                        htons(hdr_ip_tcp->srcport));
-                #endif
-                
-                /* Refrescar o inicializar la tabla ARP */
-                uip_arp_ipin();
+                printf("ARP response\r\n");
+                #endif   
 
-                /* uip procesa el frame */
-                uip_input();
-
-                #if NET_DEBUG >= 3
-                /* Las estadisticas deben ser desactivadas en produccion */
-                #if UIP_CONF_STATISTICS == 1
-                printf("Stats-> recv: %d, send: %d drop: %d\r\n",
-                uip_stat.tcp.recv,
-                uip_stat.tcp.sent,
-                uip_stat.tcp.drop);
-                #endif
-                #endif
-
-                /* y si hay que responder, respondemos */
-                if (uip_len > 0) {
-                    /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
-                    y pone el encabezado LLH (Eth) completo */
-                    uip_arp_out();
-
-                    /* y se envía */
-                    send_success = mac_send();
-                }                
-
-            } else if (hdr_eth->type == HTONS(UIP_ETHTYPE_ARP)) {
-
-                #if NET_DEBUG >= 3
-                printf("ARP frame from: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
-                                        hdr_eth->src.addr[0],
-                                        hdr_eth->src.addr[1],
-                                        hdr_eth->src.addr[2],
-                                        hdr_eth->src.addr[3],
-                                        hdr_eth->src.addr[4],
-                                        hdr_eth->src.addr[5]);
-                #endif
-
-                /* Situar nueva info ARP en la tabla */
-                uip_arp_arpin();
-                if (uip_len > 0) {
-
-                    #if NET_DEBUG >= 3
-                    printf("ARP response\r\n");
-                    #endif   
-
-                    /* Enviamos el frame y si fue exitoso... */
-                    send_success = mac_send();
-                }
-            }
-
-            if (send_success) {
-                
-                #if NET_DEBUG >= 3
-                printf("Freeing frame\r\n");
-                #endif      
-
-                /* Liberamos el buffer en la NIC */
-                free_frame_arch();
-
-            } else {
-                /* !!!!!! Si el frame no se pudo enviar tiene que pasar algo!!!!! */                        
-                ;
+                /* Enviamos el frame */
+                mac_send((uint8_t * )uip_buf, uip_len);
             }
         }
     }
@@ -225,7 +210,7 @@ void net_tick(void) {
     /** -------------------------------- Enviar datos a la red --------------------------------  */
 
     #ifdef UIP_PERIODIC_TIMER
-    unsigned long now = millis();
+    unsigned long now = msec_now();
 
     /* Si periodic_timer expiró */
     if ((long)( now - periodic_timer ) >= 0) {
@@ -245,12 +230,12 @@ void net_tick(void) {
             if (uip_len > 0) {
 
                 #if NET_DEBUG >= 3
-                printf("App resp to: %d.%d.%d.%d:%u len: %u\r\n",
+                printf("App tcp resp to: %d.%d.%d.%d:%u len: %u\r\n",
                         hdr_ip_tcp->destipaddr[0] & 0xff,
                         (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
                         hdr_ip_tcp->destipaddr[1] & 0xff,
                         (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
-                        htons(hdr_ip_tcp->destport), 
+                        uip_htons(hdr_ip_tcp->destport), 
                         uip_len);
                 #endif
 
@@ -258,29 +243,38 @@ void net_tick(void) {
                 y pone el encabezado LLH (Eth) completo */
                 uip_arp_out();
                 /* Enviar frame */
-                mac_send();
-                /* Aquí no será necesario limpiar el buffer de TX */
-
-                if (uip_conn->appstate != NULL) {
-                    tcp_listener_st * listener = (tcp_listener_st *) uip_conn->appstate;
-                    if ((listener->state & LISTENER_CONECTING) && (uip_conn->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED) {
-                        listener->state = LISTENER_LISTENING | LISTENER_CONNECTED;
-                        printf(" >> connected\r\n");
-                    }
-                }
+                mac_send((uint8_t * )uip_buf, uip_len);
+            
             }
         }
-/*     #if UIP_UDP
-        for (int i = 0; i < UIP_UDP_CONNS; i++) {
-            uip_udp_periodic(i);
+        #if UIP_UDP
+        for (int udp_conn = 0; udp_conn < UIP_UDP_CONNS; udp_conn++) {
+            uip_udp_periodic(udp_conn);
             // If the above function invocation resulted in data that
-            // should be sent out on the Enc28J60Network, the global variable
             // uip_len is set to a value > 0.
             if (uip_len > 0) {
-                EthernetUDP::_send(&uip_udp_conns[i]);
+
+                /* Limpiar el remoto para que pueda aceptar una nueva pseudoconexión */
+                udp_remove_remote(uip_udp_conn);
+
+                #if NET_DEBUG >= 3
+                printf("App resp to: %d.%d.%d.%d:%u len: %u\r\n",
+                        hdr_ip_tcp->destipaddr[0] & 0xff,
+                        (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
+                        hdr_ip_tcp->destipaddr[1] & 0xff,
+                        (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
+                        uip_htons(hdr_ip_tcp->destport), 
+                        uip_len);
+                #endif
+
+                /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
+                y pone el encabezado LLH (Eth) completo */
+                uip_arp_out();
+                /* Enviar frame */
+                mac_send((uint8_t * )uip_buf, uip_len);
             }
         }
-        #endif  *//* UIP_UDP */
+        #endif  /* UIP_UDP */
     #ifdef UIP_PERIODIC_TIMER
     }
     #endif
@@ -336,7 +330,7 @@ uint16_t uip_ipchksum(void) {
     uint16_t sum;
 
     sum = chksum(0, &uip_buf[UIP_LLH_LEN], UIP_IPH_LEN);
-    return (sum == 0) ? 0xffff : htons(sum);
+    return (sum == 0) ? 0xffff : uip_htons(sum);
 }
 
 /** 
@@ -402,11 +396,11 @@ uint16_t upper_layer_chksum(uint8_t protocol) {
     printf("chksum uip_frame [%d - %d]: %X\r\n",
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_header_len,
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_segment_len, 
-            htons(sum));
+            uip_htons(sum));
     #endif
     
     /* 0xffff es el resultado de una comprobación exitosa de checksum */
-    return (sum == 0) ? 0xffff : htons(sum);
+    return (sum == 0) ? 0xffff : uip_htons(sum);
 }
 
 /** 

@@ -1,3 +1,4 @@
+#include "../idos.h"
 #include "sleep.h"
 
 void deep_sleep(void){

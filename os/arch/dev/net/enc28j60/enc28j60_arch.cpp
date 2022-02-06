@@ -4,42 +4,26 @@
  * 
  */
 
-
+#include "../../../arch.h"
 #include "enc28j60_arch.h"
 
 /*  */
 static uint16_t next_frame_ptr;
 static uint8_t bank;
 
-/** 
- *  \brief Guarda la dirección de memoria del paquete en el ENC y su tamaño
- */
-static struct received_frame_t received_frame;
-
-/* Registros para guardar temporalmente el estado de SPI */
-//uint8_t spcr_temp;
-//uint8_t spsr_temp;
 
 /** \brief  Configurar SPI para el ENC28J60 */
 void enc_spi_enable(void) {
-
-    /* Guardo el estado de SPCR */
-    //spcr_temp = SPCR;
-    //spsr_temp = SPSR;
-
-    /* initializar la interface SPI */
-    SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
- 
+    /* initializar la interface SPI (clock, bitOrder{MSBFIRST}, 
+    dataMode{SPI_MODE0}) */
+    spi_begin_transaction(20000000, MSBFIRST, 0x00);
 }
 
 /** \brief Recuperar los valores de configuración de SPI */
 void enc_spi_disable(void) {
-
-    /* Recupero los registros */
-    //SPCR = spcr_temp;
-    //SPSR = spsr_temp;
-    SPI.endTransaction();
-
+    /* Liberar la interface para que otro dispositivo pueda 
+    utilizarla */
+    spi_end_transaction();
 }
 
 /**  \note SPI Instruction Set
@@ -74,13 +58,13 @@ uint8_t read_command(uint8_t op, uint8_t address) {
     enc_select();
 
     /* Enviar el comando de lectura */
-    SPI.transfer(op | (address & ADDR_MASK));
+    spi_transfer(op | (address & ADDR_MASK));
     /* Leer el dato */
     if(address & 0x80) {
         // do dummy read if needed (for mac and mii, see datasheet page 29)
-        SPI.transfer(0x00);
+        spi_transfer(0x00);
     }
-    uint8_t c = SPI.transfer(0x00);
+    uint8_t c = spi_transfer(0x00);
 
     enc_deselect();
     return c;
@@ -96,9 +80,9 @@ void write_command(uint8_t op, uint8_t address, uint8_t data) {
     enc_select();
 
     /* write command */
-    SPI.transfer(op | (address & ADDR_MASK));
+    spi_transfer(op | (address & ADDR_MASK));
     /* write data */
-    SPI.transfer(data);
+    spi_transfer(data);
 
     enc_deselect();
  
@@ -172,20 +156,6 @@ void write_phy(uint8_t address, uint16_t data) {
  }
 
 /** 
- * 
- */
-void free_frame_arch(void) {
-
-    enc_spi_enable();
-
-    /* Mover el puntero RX read al comienzo del próximo paquete */
-    write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
-
-    enc_spi_disable();
-
-}
-
-/** 
  *  Leer un único byte
  */
 uint8_t read_byte(uint16_t addr){
@@ -199,10 +169,10 @@ uint8_t read_byte(uint16_t addr){
     enc_select();
 
     /* Invocar comando de lectura de SPI */
-    SPI.transfer(ENC28J60_READ_BUF_MEM);
+    spi_transfer(ENC28J60_READ_BUF_MEM);
 
     /* Leer dato SPI */
-    uint8_t c = SPI.transfer(0x00);
+    uint8_t c = spi_transfer(0x00);
     
     /* Desabilitar el SPI para ENC */
     enc_deselect();
@@ -226,10 +196,10 @@ void write_byte(uint16_t addr, uint8_t data){
     enc_select();
 
     /* Invocar comando de lectura de SPI */
-    SPI.transfer(ENC28J60_WRITE_BUF_MEM);
+    spi_transfer(ENC28J60_WRITE_BUF_MEM);
 
     /* Escribir dato SPI */
-    SPI.transfer(data);
+    spi_transfer(data);
     
     /* Desabilitar el SPI para ENC */
     enc_deselect();
@@ -237,20 +207,14 @@ void write_byte(uint16_t addr, uint8_t data){
 
 }
 
-/** 
- * 
- */
-uint16_t frame_size_arch(void) {
 
-    return received_frame.size;
-
-}
+/* ------------------------------- mac_init() -------------------------------- */
 
 /** \brief  Inicializar el ENC28J60 
  *  \note   Lo primero debería ser configurar el SPI pero este 
  *          debió haber sido inicializado por el sistema. 
 */
-bool mac_init_arch(uint8_t * macaddr) {
+bool mac_init(uint8_t * macaddr) {
 
     enc_spi_enable();
 
@@ -327,10 +291,9 @@ bool mac_init_arch(uint8_t * macaddr) {
 
 }
 
-/** 
- * 
- */
-bool receive_frame_arch(void) {
+/*----------------------------- mac_poll() ----------------------------------*/
+
+uint16_t mac_poll(uint8_t * frame) {
 
     uint8_t rxstat;
     uint16_t len;
@@ -381,84 +344,60 @@ bool receive_frame_arch(void) {
         /* Chequear el CRC antes de devolver el buffer */
         if ((rxstat & 0x80) != 0) {
 
-            received_frame.begin = read_ptr;
-            received_frame.size = len;
+            if (UIP_BUFSIZE < len)
+                len = UIP_BUFSIZE;
+
+            #if NET_DEBUG >= 3
+            printf("Readed %d bytes from NIC\r\n", len);
+            #endif
+
+            /* ---------------------- Leer ---------------------- */
+
+            /* Se posiciona el buffer que se quiere leer */
+            if (read_ptr > RXSTOP_INIT)
+                write_reg_16(ERDPT, read_ptr - RXSTOP_INIT + RXSTART_INIT);
+            else
+                write_reg_16(ERDPT, read_ptr);
+            
+            /* <<- Traer el buffer de ENC al buffer de uip <<- */
+            
+            /* Seleccionar el ENC en SPI */
+            enc_select();
+
+            /* Invocar comando de lectura de SPI */
+            spi_transfer(ENC28J60_READ_BUF_MEM);
+
+            uint16_t rlen = len;
+
+            while(rlen) {
+                rlen --;
+                /* Leer dato SPI */
+                * frame = spi_transfer(0x00);
+                frame ++;
+            }
+            
+            /* Desabilitar el SPI para ENC */
+            enc_deselect();
+
+            /* Mover el puntero RX read al comienzo del próximo paquete para liberar 
+            el paquete leido en el buffer de la ENC (free packet) */
+            write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
 
             enc_spi_disable();
 
-            return true;
+            return len;
         }
-
-        /* Mover el puntero RX read al comienzo del próximo paquete */
-        write_reg_16(ERXRDPT, next_frame_ptr == RXSTART_INIT ? RXSTOP_INIT : next_frame_ptr - 1);
-
     }
 
     /* No ha llegado paquete */
     enc_spi_disable();
-    return false;
+    return 0;
 }
 
 
-/** 
- * 
- */
-uint16_t read_frame_arch (uint8_t * buffer, uint16_t len) {
+/* ------------------------------ mac_send() --------------------------------- */
 
-
-    /** Se ajusta len al largo del buffer que se va a leer en caso que sea más grande. En caso que el 
-     * buffer llegado a ENC sea más grande la transferencia se litará al tamaño máximo de uip_len.
-     */
-    if (len < received_frame.size)
-        len = received_frame.size;
-
-    #if NET_DEBUG >= 3
-    printf("Readed %d bytes from NIC\r\n", len);
-    #endif
-
-    /* Habilitar el SPI para el ENC */
-    enc_spi_enable();
-
-    /* Se posiciona el buffer que se quiere leer */
-    if (received_frame.begin > RXSTOP_INIT)
-        write_reg_16(ERDPT, received_frame.begin - RXSTOP_INIT + RXSTART_INIT);
-    else
-        write_reg_16(ERDPT, received_frame.begin);
-    
-    /* <<- Traer el buffer de ENC al buffer de uip <<- */
-    
-    /* Seleccionar el ENC en SPI */
-    enc_select();
-
-    /* Invocar comando de lectura de SPI */
-    SPI.transfer(ENC28J60_READ_BUF_MEM);
-
-    while(len) {
-        len --;
-        /* Leer dato SPI */
-        * buffer = SPI.transfer(0x00);
-        buffer ++;
-    }
-    
-    /* Desabilitar el SPI para ENC */
-    enc_deselect();
-    enc_spi_disable();
-
-    return len;
-}
-
-/* (revisar esto para optimizar) 
-    esta variable recoge el tamanno del buffer que ha sido enviado al enc 
-    para que sea enviado a la red por send 
-*/
-static uint16_t buffer_length = 0;
-
-/** 
- * 
- */
-void  write_frame_arch(uint8_t * buffer, uint16_t len) {
-
-    buffer_length = len;
+bool  mac_send(uint8_t * buffer, uint16_t len) {
 
     /* Habilitar el SPI para el ENC */
     enc_spi_enable();
@@ -476,29 +415,23 @@ void  write_frame_arch(uint8_t * buffer, uint16_t len) {
     enc_select();
 
     /* Invocar comando de escritura de SPI */
-    SPI.transfer(ENC28J60_WRITE_BUF_MEM);
+    spi_transfer(ENC28J60_WRITE_BUF_MEM);
+
+    /* Apunto al bloque donde está el paquete y marco el pricipio y el fin */
+    uint16_t start = TXSTART_INIT - 1;
+    uint16_t end = start + len;
 
     while(len) {
         len --;
         /* Escribir el dato */
-        SPI.transfer(* buffer);
+        spi_transfer(* buffer);
         buffer ++;
     }
 
     /* Desabilitar el SPI para ENC */
     enc_deselect();
-    enc_spi_disable(); 
 
-}
-
-/** 
- * 
- */
-bool send_frame_arch(void) {
-
-    /* Apunto al bloque donde está el paquete y marco el pricipio y el fin */
-    uint16_t start = TXSTART_INIT - 1;
-    uint16_t end = start + buffer_length;
+    /* ---------------------- Enviar ---------------------- */
 
     /* Habilitar el SPI para el ENC */
     enc_spi_enable();
@@ -545,7 +478,8 @@ bool send_frame_arch(void) {
 
 }
 
-/* Power and status */
+
+/* --------------------------- power and status ------------------------------ */
 
 void nic_power_off(void) {
 

@@ -39,19 +39,25 @@
 #ifndef _NETSTACK_H_
 #define _NETSTACK_H_
 
-#include "../../idos.h"
+
 
 #include "netconf.h"
 
 #include "mac/mac.h"
 
+#ifdef __cplusplus
 extern "C" {
+#endif
+
+   #include "ip/uipopt.h"
    #include "ip/uip-conf.h"
    #include "ip/uip.h"
    #include "ip/uip_arp.h"
    #include "ip/uip_timer.h"
+   
+#ifdef __cplusplus
 }
-
+#endif
 
 /** \brief Número IP en 4 bytes
  *  \details Diferencia a un IP formado por 4 optetos del 
@@ -60,8 +66,8 @@ extern "C" {
 typedef uint8_t ip_address_t[4];
 
 #define uip_ip_addr(addr, ip) do { \
-                     ((u16_t *)(addr))[0] = HTONS(((ip[0]) << 8) | (ip[1])); \
-                     ((u16_t *)(addr))[1] = HTONS(((ip[2]) << 8) | (ip[3])); \
+                     ((u16_t *)(addr))[0] = UIP_HTONS(((ip[0]) << 8) | (ip[1])); \
+                     ((u16_t *)(addr))[1] = UIP_HTONS(((ip[2]) << 8) | (ip[3])); \
                   } while(0)
 
 
@@ -99,7 +105,7 @@ typedef uint8_t ip_address_t[4];
  *       array) y se forman variables de más de un byte estas quedan 
  *       ordenadas alrevés, por ejemplo, la secuencia 00 05 (80) cuando
  *       se castea a un uint16_t queda 50 00 (20480). Si se espera leer 
- *       el número, hacer un cálculo o comparación utilizar htons()
+ *       el número, hacer un cálculo o comparación utilizar uip_htons()
 */
 #define hdr_ip_tcp ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define hdr_ip_udp ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])

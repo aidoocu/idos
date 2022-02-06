@@ -6,9 +6,6 @@
 #ifndef _SPI_ARCH_H_
 #define _SPI_ARCH_H_
 
-#include <Arduino.h>
-#include <SPI.h>
-
 /** Pines para SPI según micro
  * 
  * | ENC28J60 | Arduino Uno | Arduino Mega |
@@ -24,5 +21,11 @@
 #endif
 
 void spi_init(void);
+
+void spi_begin_transaction(uint32_t clock, uint8_t bitOrder, uint8_t dataMode);
+
+void spi_end_transaction(void);
+
+uint8_t spi_transfer(uint8_t data);
 
 #endif /* _SPI_ARCH_H_ */

@@ -20,7 +20,11 @@
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
-#include "../idos.h"
+
+
+////// TODO este typedef hay que pasarlo para aqui !!!!!
+/* Tipo de dato para guardar tiempo, sea en mseg o usec */
+//typedef unsigned long time_t; 
 
 /** 
  * \brief   Estructura del timer
@@ -59,35 +63,29 @@ struct timer_st {
  *  timer.
  *  \param  timer El timer que debe pasar el mensaje a su tarea
  */
-#define ipc_msg_timer(timer)                    \
-            do {                                \
-                timer->msg = {                  \
-                    MSG_AVAILABLE,              \
-                    MSG_TIMER,                  \
-                    0,                          \
-                    __null                      \
-                };                              \
-                task_set_ready(timer->task);    \
+#define ipc_msg_timer(timer)                            \
+            do {                                        \
+                timer_list->msg.status = MSG_AVAILABLE; \
+                timer_list->msg.msg_src = MSG_TIMER;    \
+                timer_list->msg.event = 0;              \
+                timer_list->msg.data = NULL;            \
+                task_set_ready(timer->task);            \
             } while (0)
 
 /** 
  *  \brief Determina si el timer ha expirado o no.
- *  \note Con este macro se verifica el mensaje del timer pasivamente, no lo modifica
+ *  \note Esta función verifica el mensaje del timer pasivamente, no lo modifica
  *  \param timer El timer que se va a verificar
  *  \return true si el timer ha expirado, false si no.
  */
-bool timer_expired(timer_st * timer);
+bool timer_expired(struct timer_st * timer);
 
 /** 
- *  \brief Lee el timer para determinar si ha expirado
- *  \details Esta función hace lo mismo que timer_expired verificando que el timer ha expirado
- *  con la diferencia de que si determina que el efectivamente ha expirado, queda como "leido"
- *  por lo que el mensaje se limpia. 
- *  \note Este procedimiento modifica el mensaje desabilitandolo
- *  \param timer El timer que se va a leer
- *  \return true si el timer ha expirado, false si no.
+ *  \brief Desabilitar timer
+ *  \details El timer es una variable que persiste (y ¿es muy costoso sacarlo de la lista?)
+ *  por lo que esta función lo que hace es poner el mensaje a null y desabilitarlo. 
  */
-bool timer_read(timer_st * timer);
+void timer_disable(struct timer_st * timer);
 
 /* --------------------------------------------------------------------------------- */
 
@@ -104,10 +102,10 @@ void timer_sys_init(void);
  *  \param  msec        Dentro de cuantos milisegundo el timer debe disparar
  *  \param  task        La tarea que setea el timer
 */
-void timer_set_sys(timer_st * timer, time_t time, task_st * task);
+void timer_set_sys(struct timer_st * timer, time_t time, struct task_st * task);
 
 /** \brief   Resetear el timer */
-void timer_reset(timer_st * timer);
+void timer_reset(struct timer_st * timer);
 
 /** \brief      Función que verifica si hay un timer activo y está listo para correr. 
  * 

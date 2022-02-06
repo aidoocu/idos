@@ -18,11 +18,18 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/////// No es correcto, hay que hacerlo maas global
+#ifdef ARDUINO
 #include <Arduino.h>
+#include "../../../arch/board/arduino/timer_ino.h"
+#else
+#include "../../../arch/board/native/arch_timer.h"
+#endif
+
 #include "clock-arch.h"
 
 clock_time_t
 clock_time(void)
 {
-  return (clock_time_t) millis();
+  return (clock_time_t)msec_now();
 }

@@ -45,12 +45,74 @@
 
 /** \brief  Punto de entrada para idOS */
 
+
+/** \brief  Inicializando idOS
+ *  \return Estado de la inicialización
+ *  \retval INIT_SUCCESS Inicialización exitosa
+ * ........
+ */
+uint8_t idos_init(void){
+
+    /* Si la plataforma es native no se inicializa hardware */
+    #if BOARD == NATIVE
+
+    #if NET_STACK
+    net_stack_init();
+    #endif
+
+    #else /* BOARD == NATIVE */
+    /* La inicialización del idOS no debe ser interrumpida */
+    uint8_t cSREG = inte_fall();
+
+    /* Inicializar el UART como salida estándar de printf */
+    uart_init();
+
+    /* Inicializar el SPI */
+    #ifdef SPI_ARCH
+    spi_init();
+    #endif
+
+    #if NET_STACK
+    net_stack_init();
+    #endif
+
+    /* Si estamos con el framework Arduino ya este inicializa el timer */
+    #ifndef ARDUINO
+    timer_sys_init();
+    #endif /* ARDUINO */
+
+    #if SLEEP_MODE
+    sleep_mode_init();
+    #endif
+
+    /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
+    inte_raise(cSREG);
+
+    #endif /* BOARD == NATIVE */
+
+    /* Levantar las apps. Cada app que se adicione debe ser incluida aquí */
+    #ifdef BUILD_COAP
+    #include "../apps/coap/coap.h"
+    coap_start();
+    #endif
+    
+    return INIT_SUCCESS;
+}
+
+
+
+
+
 #ifndef ARDUINO
+
+/** 
+ * \brief Punto de entrada de IdOS cuando NO se está usando Arduino
+ */
 int main(void){
 
-    /* Inicializamos idOS */
+    /* Inicializamos idOS según plataforma */
     idos_init();
-
+    
     /* Arrancamos las tareas que inician al principio */
     task_start();
 
@@ -60,14 +122,21 @@ int main(void){
         while(task_runing() != 0x00){
             ;
         }
-        /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
-        //deep_sleep();
+
+        /* Verificar los timers */
+        timer_exec();
+
+        /* netstack */
+        net_tick();
+
     }
     return 0;
 }
-#endif
+#else
 
-#ifdef ARDUINO
+/** 
+ * \brief Punto de entrada de IdOS cuando se está usando Arduino
+ */
 void setup(){
     /* Inicializamos idOS */
     idos_init();
@@ -96,43 +165,8 @@ void loop(){
 
     /* !!!! Aquí Arduino verifica si hay algún evento serial diponibles !!!! */
 }
-#endif
+#endif /* ARDUINO */
 
-
-uint8_t idos_init(void){
-
-    /* La inicialización del idOS no debe ser interrumpida */
-    char cSREG;
-    cSREG = SREG;
-    cli();
-
-    /* Inicializar el UART como salida estándar de printf */
-    uart_init();
-
-    /* Inicializar el SPI */
-    #ifdef SPI_ARCH
-    spi_init();
-    #endif
-
-    #if NET_STACK
-    net_stack_init();
-    #endif
-
-    /* Si estamos con el framework Arduino ya este inicializa el timer */
-    #ifndef ARDUINO
-    timer_sys_init();
-    #endif /* ARDUINO */
-
-    #if SLEEP_MODE
-    sleep_mode_init();
-    #endif
-
-    /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
-    SREG = cSREG;
-    sei();
-    
-    return INIT_SUCCESS;
-}
 
 /*---------------------------------------------------------------------------*/
 /**

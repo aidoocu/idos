@@ -55,8 +55,10 @@
 #define NET_DEBUG   2
 
 
-/** ----------------------- Dispositivos ----------------------- */
+/** -------------------- Dispositivos (dev) -------------------- */
 /** \brief Se defininen los dispositivos y forma de conectarse   */
+
+
 
 /**                          Networkig                           */
 
@@ -75,6 +77,7 @@
 #endif
 
 #endif /* __ENC28J60__ */
+
 
 /** ------------------- Definiciones de red -------------------- */
 

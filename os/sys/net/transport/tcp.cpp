@@ -5,6 +5,7 @@
  *  \date diciembre 2021
  */
 
+#include "../../../idos.h"
 #include "tcp.h"
 
 /* Puntero al primer server creado */
@@ -15,15 +16,13 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
     /** Crear una escucha de TCP por port 
      * \note uIP recive el puerto (y el resto) leyendo el byte alto primero, así es 
      *      necesario hacer lo mismo cuando le pasemos el puerto. Ejemplo, 80 en uint16_t
-     *      es 0x0050, uip lee el frame como 0x5000, htons cambia de lugar los bytes 
+     *      es 0x0050, uip lee el frame como 0x5000, uip_htons cambia de lugar los bytes 
     */
-    uip_listen((u16_t)htons(port));
+    uip_listen((u16_t)uip_htons(port));
 
     listener->port = port;
     listener->msg_len_in = listener->msg_len_out = 0;
 
-    /* Este puerto está escuchando */
-    listener->state = LISTENER_LISTENING;
     /* Este listener acaba de llegar por lo tanto es el último */
     listener->next = NULL;
     /* Si es el primero, tcp_servers lo apuntará */
@@ -44,126 +43,138 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
  * 
  */
 void tcp_listener_end(tcp_listener_st listener, uint16_t port) {
-
     uip_unlisten(port);
     listener.state = false;
-
-
 }
 
-/** 
- * 
- */
-uint8_t tcp_read(tcp_listener_st * listener) {
-
-    if (listener->ipc_msg.status == MSG_NULL)
-        return 0;
-
-    listener->ipc_msg.status = MSG_NULL;
-    return listener->ipc_msg.event;  
-}
-
-
-/** 
- * 
- */
-bool tcp_write(struct tcp_listener_st * listener, uint8_t * buffer, uint16_t len) {
-
-	if (listener->msg_len_out == 0) {
-
-        if (len > MAX_NET_MSG_SIZE) {
-            //Aquí hay que hacer algo, picar el mensaje, denegarlo...
-            ;
-            //por ahora solo le limitaremos el tamanno pero no es correcto
-            len = MAX_NET_MSG_SIZE;
-        }
-
-        listener->msg_len_out = len;
-	    memcpy(listener->net_msg_out, buffer, len);
-        return true;
-    } 
-    /* Si algo pasa en el e */
-    return false;
-}
-
-
-bool tcp_client_connect(tcp_listener_st * listener, uint8_t * ip_dst, uint16_t port_dst) {
-
-    if(!nic_is_active()) {
-
-        #if NET_DEBUG >= 3
-        printf("NIC is no active\r\n");
-        #endif
-
-        return 0;
-    }
-
-    //stop();
-
-    uip_ipaddr_t uip_dst;
-    uip_ip_addr(uip_dst, ip_dst);
-
-    #ifdef NET_DEBUGGER_
-    printf ("Try to connect to: %d.%d.%d.%d:%d\r\n", 
-                ip_dst[0],
-                ip_dst[1],
-                ip_dst[2],
-                ip_dst[3],
-                port_dst);
-    #endif
-
-    /* Creamos una estructura para la conexión y se apunta con conn */
-    struct uip_conn * conn = uip_connect(&uip_dst, htons(port_dst));
-
-    if (conn) {
-
-        listener->port = htons(uip_conn->lport);
-        listener->state = LISTENER_LISTENING | LISTENER_CONECTING;
-        uip_conn->appstate = listener;
-
-    }
-    return 0;
-}
 
 /* --------------------------------------------------------------------------------- */
 
 /** 
  *   
- *  
+ *  \brief Callback de uIP para tcp 
+ *  \details Esta función es el puente entre uIP y las tareas. Esta función es llamada
+ * 	por uIP siempre que exista una conexión para situarle a las tareas resultados de 
+ * 	sus operaciones y para ejecutar acciones referidas por las tareas. El listener
+ * 	es la estructura compartida entre una tarea y la conexión asociada. 
+ * 	A esta función solo se entra en caso de una conexión establecida por uIP. Primero
+ *  se verifica si esta conexión (uip_conn) ya está asociada a un listerner 
+ * 	(uip_conn->appstate != NULL) y de no ser así se busca que listener escucha por el 
+ *  y se asocia.
  */
 void uipclient_appcall(void) {
 
     uint16_t send_len = 0;
-    tcp_listener_st * listener = (tcp_listener_st * )uip_conn->appstate;
+
+	/* Creamos un listener temporal */
+    struct tcp_listener_st * listener = (tcp_listener_st * )uip_conn->appstate;
 
     /* Si es una conexión nueva y aún desasociada */
-    if(uip_connected() && listener == NULL) {
-        
-        /* Cargamos al listener con el principio de la lista de los listeners... */
-        listener = tcp_listeners;
-        /* ...y buscamos en la lista de listeners quien está escuchando por el puerto */
-        do {
-            if (htons(listener->port) == uip_conn->lport) 
-                break;
-            listener = listener->next;
-        } while(listener->next != NULL);
+    if(uip_connected()) {
 
-        /* Se ha recibido un dato nuevo. uip_len ahora contiene el largo del net_msg) */
-        #if NET_DEBUG >= 2
-        printf("tcp conn -> %u\r\n", uip_len);
-        #endif
+		if (listener != NULL) {
+			/* Si es una conexión solicitada al extremo, llegar aquí significa que ha aceptado... */
+			if(listener->state == LISTENER_CONNECTING) {
+				
+				/* por lo que ya estamos efectivamente conectados como clientes */
+				listener->state = LISTENER_CONNECTED;
 
-        uip_conn->appstate = listener;
-        listener->state |= LISTENER_CONNECTED;
-    
+
+				/* ¡¡¡¡ hay que ver por cual puerto escucha el conn ??? y pasarlo a listener ??? */
+				#if NET_DEBUG >= 3 
+				printf("Connecting as client\r\n");
+				#endif
+
+				/* Notificamos a la tarea */
+				ipc_msg_net(listener, NET_MSG_CONNECTED);
+			}
+		} else { /* En este punto se trata de una conexión solicitada por el extremo */
+			/* Cargamos al listener con el principio de la lista de los listeners... */
+			listener = tcp_listeners;
+			/* ...y buscamos en la lista de listeners quien está escuchando por el puerto */
+			do {
+				if (uip_htons(listener->port) == uip_conn->lport) 
+					break;
+				listener = listener->next;
+			} while(listener->next != NULL);
+
+			#if NET_DEBUG >= 3
+		printf("income tcp connection");
+			#endif
+
+			/* entonces ya estamos conectados como servidores */
+			uip_conn->appstate = listener;
+			listener->state = LISTENER_CONNECTED;
+		}    
     }
 
-    if (listener->state & LISTENER_CONNECTED) {
+	/** 
+	 * 	Si tenemos una conexión activa puede que la tarea asociada a la conexión le solicite a uIP:
+	 * 	- Detener la conexión (no cerrarla) (listener->state = LISTENER_STOP)
+	 * 	- Reiniciar la conexión (listener->state & LISTENER_RESTART)
+	 * 	- Cerrar la conexión (listener->state & LISTENER_DISCONNECT)
+	 *   Por otra parte uIP informe que:
+	 * 	- Se ha recibido un dato nuevo (uip_newdata()) - uip_buf tiene el dato de tamaño uip_len
+	 * 	- La conexión ha sido o cerrada por el cliente o timeout (uip_closed() || uip_timedout())
+	 *  - El extremo notifica la llegada del datagrama (uip_acked())
+	 *  - uIP encuesta a la tarea si hay algo que enviar (uip_poll()) o retransmitir (uip_rexmit())
+	 * 	  en caso de ser necesario.
+	 */
+    if (listener != NULL) {
 
-        #if NET_DEBUG >= 2
-        printf("state %02X\r\n", listener->state);
-        #endif
+		/* El app indica detener la conexión */
+		if (listener->state == LISTENER_STOP) {
+                
+			#if NET_DEBUG >= 3
+		printf("stop connection\r\n");
+			#endif
 
+			uip_stop();
+			listener->state = LISTENER_STOPED;
+
+			return;
+		}
+
+        /* La tarea pide reiniciar la conexión */
+        if (listener->state == LISTENER_RESTART) {
+
+			/* Si efectivamente la conexión está detenida */
+			if (uip_stopped(uip_conn)) {
+
+				#if NET_DEBUG >= 3
+			printf("Conn restart\r\n");
+				#endif
+
+				listener->state = LISTENER_CONNECTING;
+				uip_restart();
+				
+				return;
+			}
+			/// Si no está detenida tiene que pasar algo
+			return;
+        }
+        
+        /* La tarea pide cerrar la conexión */
+        if (listener->state == LISTENER_DISCONNECT) {
+            
+            #if NET_DEBUG >= 3
+         printf("app close connection: ");
+            #endif
+
+			/* liberamos el lisneter */
+			listener->state = LISTENER_OFFLINE;
+			uip_conn->appstate = NULL;
+			/* cerramos la conexión */
+			uip_close();
+
+			#if NET_DEBUG >= 3
+		printf("close\r\n");
+			#endif
+
+			return;        
+        }
+
+		/* Se ha recibido un dato nuevo  */
         if (uip_newdata()) {
             
             #if NET_DEBUG >= 3
@@ -176,92 +187,50 @@ void uipclient_appcall(void) {
             printf("\r\n");
             #endif
 
-            #if NET_DEBUG >= 2
-            printf("new data ");
+            #if NET_DEBUG >= 3
+         printf("new data\n\r");
             #endif       
 
-            /* Si el task ha cerrado o el extemo han cerrado la conexión */
-            if (uip_len && !(listener->state & (LISTENER_CLOSE | LISTENER_REMOTECLOSED))) {
+			/* Preparar el listener con el mensaje pasándole la longitud que no puede ser mayor que MAX_TCP_MSG_SIZE */
+			/* !!!! hay que ver que hacer cuando el paquete es más que el buffer del listener, lo loogico seriia que 
+			el mensaje fuera descartado y solicitado reembiio ¡¡¡¡ */
+			if (uip_len > MAX_TCP_MSG_SIZE)
+				listener->msg_len_in = MAX_TCP_MSG_SIZE;
+				// dropped!!!!!
+			else
+				listener->msg_len_in = uip_len;
+			
+			/** y el contenido de uip_buf a partir del mensaje (UIP_LLH_LEN + UIP_TCPIP_HLEN) */
+			memcpy(listener->net_msg_in, &uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN], (int)listener->msg_len_in);
 
-                #if NET_DEBUG >= 2
-                printf("proccess\r\n");
-                #endif 
+			/* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
+			ipc_msg_net(listener, NET_MSG_RECEIVED);
 
-                /* Preparar el listener con el mensaje pasándole la longitud que no puede ser mayor que MAX_NET_MSG_SIZE */
-                /* !!!! hay que ver que hacer cuando el paquete es más que el buffer del listener ¡¡¡¡ */
-                if (uip_len > MAX_NET_MSG_SIZE)
-                    listener->msg_len_in = MAX_NET_MSG_SIZE;
-                else
-                    listener->msg_len_in = uip_len;
-                
-                /** y el contenido de uip_buf a partir del mensaje (UIP_LLH_LEN + UIP_TCPIP_HLEN) */
-                memcpy(listener->net_msg_in, &uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN], (int)listener->msg_len_in);
-
-                /* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
-                ipc_msg_net(listener, NET_MSG_RECEIVED);
-
-            } else {
-                
-                #if NET_DEBUG >= 2
-                printf("droped\r\n");
-                #endif 
-
-                //packet_state &= ~UIPETHERNET_FREEPACKET;
-                uip_stop();
-
-                goto finish;
-            }
+			return;
         } 
-
-        /* Si el task pide reiniciar la conexión */
-        if (listener->state & LISTENER_RESTART) {
-            
-            #if NET_DEBUG >= 2
-            printf("Conn restart\r\n");
-            #endif
-
-            listener->state &= ~LISTENER_RESTART;
-            uip_restart();
-            
-        }
 
         /* La conexión ha sido cerrada por el cliente o ha sido timeout */
         if (uip_closed() || uip_timedout()) {
             
-            #if NET_DEBUG >= 2
-            printf("client closed: ");
+            #if NET_DEBUG >= 3
+         printf("client closed: ");
             #endif
 
-            /* Si el extremo ha cerrado la conexión pero hay un mensaje pendiente por leer */
-            if (listener->msg_len_in != 0) {
+			/* Le informamos a la tarea del cierre de la conexión */
+			listener->state = LISTENER_OFFLINE;
+            ipc_msg_net(listener, NET_MSG_CLOSED);
 
-                #if NET_DEBUG >= 2
-                printf("last message\r\n");
-                #endif
-
-                /* Le informamos a la tarea del cierre de la conexión */
-                listener->state &= 0xF0;
-
-            } else {
-
-                /* Si no hemos terminado por completo de procesar la conexión */
-                listener->state &= 0x0F;
-                
-                #if NET_DEBUG >= 2
-                printf("no more message\r\n");
-                #endif
-
-            }
             /* Desasociar appdata */
             uip_conn->appstate = NULL;
-            goto finish;
+            
+			return;
         }
 
         /* El extremo notifica la llegada del datagrama */
         if (uip_acked()) {
 
-            #if NET_DEBUG >= 2
-            printf("uip_acked\r\n");
+            #if NET_DEBUG >= 3
+         printf("uip_acked\r\n");
             #endif
 
             /* Limpio el buffer de salida */
@@ -270,55 +239,22 @@ void uipclient_appcall(void) {
             /* Notifico a la tarea */
             ipc_msg_net(listener, NET_MSG_ACKED);
 
-            goto finish;
+            return;
             
         }
-        
-        /* Si la tarea ha cerrado la conexión */
-        if (listener->state & LISTENER_CLOSE) {
-            
-            #if NET_DEBUG >= 2
-            printf("app close connection: ");
-            #endif
 
-            /* Si no queda nada pendiente por enviar se cierra por completo la conexión */
-            if (listener->msg_len_out == 0) {
-
-                /* liberamos el lisneter */
-                listener->state &= 0x0F;
-                uip_conn->appstate = NULL;
-                /* cerramos la conexión */
-                uip_close();
-
-                #if NET_DEBUG >= 2
-                printf("close\r\n");
-                #endif
-
-            } else {
-                /* De quedar algo pendiente se le indica al extremo que la conexión fue interrumpida */
-                uip_stop();
-                
-                #if NET_DEBUG >= 2
-                printf("stop\r\n");
-                #endif
-            }
-            
-            goto finish;
-        
-        }
-
-        /* Aquí uip espera encontrar datos nuevos a enviar o retransmitir según sea el caso */
+        /* Aquí uIP espera encontrar datos nuevos a enviar o retransmitir según sea el caso */
         if (uip_poll() || uip_rexmit()) {
         
-            #if NET_DEBUG >= 2
-            if(uip_poll()) 
+            #if NET_DEBUG >= 3
+         if(uip_poll()) 
                 printf("poll\r\n");
             else
                 printf("rexmit\r\n");
             #endif
 
             /* Si hay algo en el buffer de salida del listener */
-            if (listener->msg_len_out && (listener->msg_len_out <= MAX_NET_MSG_SIZE)) {
+            if (listener->msg_len_out && (listener->msg_len_out <= MAX_TCP_MSG_SIZE)) {
 
                 /** Según la documentación de uIP:
                  * If the application wishes to send any data, this data should be
@@ -329,13 +265,87 @@ void uipclient_appcall(void) {
                 send_len = listener->msg_len_out;
                 uip_appdata = &listener->net_msg_out[0];
 
+				uip_send(uip_appdata, send_len);
+    			uip_len = send_len;
+
+				return;
             }
         }
     }
-
-    finish:
-    uip_send(uip_appdata, send_len);
-    uip_len = send_len;
-
 }
 
+/* --------------------------------------------------------------------------------- */
+
+bool tcp_open(tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port){
+
+	/* Creamos una conexión y una dirección tipo uIP  */
+	struct uip_conn * conn;
+	uip_ipaddr_t uip_addr;
+  	//static uip_ipaddr_t addr;
+
+	/* Se convierte IP en uIP */
+	uip_ip_addr(uip_addr, ip_addr);
+
+	/* uIP solicita una conexión al remoto */
+	conn = uip_connect(&uip_addr, uip_htons(port));
+
+	/* Si la conexión se pudo solicitar... */
+	if(conn){
+
+		/* Poniendo el estado a conectando */
+		listener->state = LISTENER_CONNECTING;
+
+		printf("Connecting...\n");
+
+		/* Asignamos el listener a la conexión que se intenta establecer */
+		conn->appstate = listener;
+		return true;
+	}
+	
+	/* Si no se pudo solicitar la conexión */
+	return false;
+}
+
+/* --------------------------------------------------------------------------------- */
+
+bool tcp_connected(tcp_listener_st * listener){
+	if(listener->state == LISTENER_CONNECTED)
+		return true;
+	return false;
+}
+
+/* --------------------------------------------------------------------------------- */
+
+uint16_t tcp_recv(tcp_listener_st * listener) {
+
+	/* Si no se ha enviado un mensaje es que no hay datagrama */
+	if (listener->ipc_msg.status == MSG_NULL)
+		return 0;
+
+	/* Se marcas el mensaje como leido */
+	listener->ipc_msg.status = MSG_NULL;
+
+	/* y se devuelve el tamaño del mensaje */
+	return listener->msg_len_in;
+}
+
+/* --------------------------------------------------------------------------------- */
+
+bool tcp_send(tcp_listener_st * listener, uint8_t * msg, uint16_t len) {
+
+	if (listener->msg_len_out == 0) {
+
+        if (len > MAX_TCP_MSG_SIZE) {
+            //Aquí hay que hacer algo, picar el mensaje, denegarlo...
+            ;
+            //por ahora solo le limitaremos el tamanno pero no es correcto
+            len = MAX_TCP_MSG_SIZE;
+        }
+
+        listener->msg_len_out = len;
+	    memcpy(listener->net_msg_out, msg, len);
+        return true;
+    } 
+
+    return false;
+}

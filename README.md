@@ -1,8 +1,6 @@
 [![BuyMeACoffe](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bernardoyla)
 # idOS
 Básicamente es un planificador de eventos que incluye un timer y pone al micro en modo de bajo consumo mientras no esté haciendo nada, pero para simplificar consideramos que es un sistema operativo. Estamos en proceso y también lo traduciremos al inglés, si le interesa, su ayuda es bienvenida.
-## Ejemplos
-Puede encontrar los ejemplos [aquí](https://github.com/bernardoyla/idos_examples) y la forma de utilizarlos.
 ## Desarrollo
 Se ha desarrollado en VSCode con PlatformIO. Hasta el momento solo se ha programado y testeado (tanto en simulación como en hardware) en Arduino Nano (atmega328p). Una vez creado el proyecto de Arduino Nano en PlatformIO, copiar todo el directorio en src/.
 Para comenzar a programar entrar en main.cpp.

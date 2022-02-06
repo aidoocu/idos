@@ -6,7 +6,7 @@
 
 /* Config MAC */
 #define MAC_LEN 6
-#define MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+#define MAC_ADDRESS 0xde, 0xad, 0xbe, 0xef, 0xfe, 0xed
 
 #define NET_STATIC
 
@@ -20,6 +20,12 @@
 #define IP_GATEWAY 192, 168, 1, 1
 #define IP_SUBNET 192, 168, 1, 0
 #define IP_MASK 255, 255, 255, 0
+
+/* #define IP_ADDRESS 172, 18, 0, 5
+#define IP_GATEWAY 172, 18, 0, 1
+#define IP_SUBNET 172, 18, 0, 0
+#define IP_MASK 255, 255, 0, 0 */
+
 #endif /* NET_STATIC */
 
 
