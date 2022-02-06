@@ -25,4 +25,10 @@
 
 void spi_init(void);
 
+void spi_begin_transaction(SPISettings settings);
+
+void spi_end_transaction(void);
+
+uint8_t spi_transfer(uint8_t data);
+
 #endif /* _SPI_ARCH_H_ */

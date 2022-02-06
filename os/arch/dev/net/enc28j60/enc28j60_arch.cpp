@@ -15,14 +15,14 @@ static uint8_t bank;
 /** \brief  Configurar SPI para el ENC28J60 */
 void enc_spi_enable(void) {
     /* initializar la interface SPI */
-    SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
+    spi_begin_transaction(SPI_ETHERNET_SETTINGS);
 }
 
 /** \brief Recuperar los valores de configuración de SPI */
 void enc_spi_disable(void) {
     /* Liberar la interface para que otro dispositivo pueda 
     utilizarla */
-    SPI.endTransaction();
+    spi_end_transaction();
 }
 
 /**  \note SPI Instruction Set
@@ -57,13 +57,13 @@ uint8_t read_command(uint8_t op, uint8_t address) {
     enc_select();
 
     /* Enviar el comando de lectura */
-    SPI.transfer(op | (address & ADDR_MASK));
+    spi_transfer(op | (address & ADDR_MASK));
     /* Leer el dato */
     if(address & 0x80) {
         // do dummy read if needed (for mac and mii, see datasheet page 29)
-        SPI.transfer(0x00);
+        spi_transfer(0x00);
     }
-    uint8_t c = SPI.transfer(0x00);
+    uint8_t c = spi_transfer(0x00);
 
     enc_deselect();
     return c;
@@ -79,9 +79,9 @@ void write_command(uint8_t op, uint8_t address, uint8_t data) {
     enc_select();
 
     /* write command */
-    SPI.transfer(op | (address & ADDR_MASK));
+    spi_transfer(op | (address & ADDR_MASK));
     /* write data */
-    SPI.transfer(data);
+    spi_transfer(data);
 
     enc_deselect();
  
@@ -168,10 +168,10 @@ uint8_t read_byte(uint16_t addr){
     enc_select();
 
     /* Invocar comando de lectura de SPI */
-    SPI.transfer(ENC28J60_READ_BUF_MEM);
+    spi_transfer(ENC28J60_READ_BUF_MEM);
 
     /* Leer dato SPI */
-    uint8_t c = SPI.transfer(0x00);
+    uint8_t c = spi_transfer(0x00);
     
     /* Desabilitar el SPI para ENC */
     enc_deselect();
@@ -195,10 +195,10 @@ void write_byte(uint16_t addr, uint8_t data){
     enc_select();
 
     /* Invocar comando de lectura de SPI */
-    SPI.transfer(ENC28J60_WRITE_BUF_MEM);
+    spi_transfer(ENC28J60_WRITE_BUF_MEM);
 
     /* Escribir dato SPI */
-    SPI.transfer(data);
+    spi_transfer(data);
     
     /* Desabilitar el SPI para ENC */
     enc_deselect();
@@ -364,14 +364,14 @@ uint16_t mac_poll(uint8_t * frame) {
             enc_select();
 
             /* Invocar comando de lectura de SPI */
-            SPI.transfer(ENC28J60_READ_BUF_MEM);
+            spi_transfer(ENC28J60_READ_BUF_MEM);
 
             uint16_t rlen = len;
 
             while(rlen) {
                 rlen --;
                 /* Leer dato SPI */
-                * frame = SPI.transfer(0x00);
+                * frame = spi_transfer(0x00);
                 frame ++;
             }
             
@@ -414,7 +414,7 @@ bool  mac_send(uint8_t * buffer, uint16_t len) {
     enc_select();
 
     /* Invocar comando de escritura de SPI */
-    SPI.transfer(ENC28J60_WRITE_BUF_MEM);
+    spi_transfer(ENC28J60_WRITE_BUF_MEM);
 
     /* Apunto al bloque donde está el paquete y marco el pricipio y el fin */
     uint16_t start = TXSTART_INIT - 1;
@@ -423,7 +423,7 @@ bool  mac_send(uint8_t * buffer, uint16_t len) {
     while(len) {
         len --;
         /* Escribir el dato */
-        SPI.transfer(* buffer);
+        spi_transfer(* buffer);
         buffer ++;
     }
 
