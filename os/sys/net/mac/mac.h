@@ -11,23 +11,4 @@
 #define _MAC_H_
 
 
-
-/* Encabezados de las frame */
-/* !!!! ToDo el resto de los encabezados, CSMA...... */
-
-
-
-
-/** \brief Inicializa la NIC 
- * \param mac Máscara MAC, para eth, un arreglo de 6 bytes
-*/
-//bool mac_init(uint8_t * mac_address);
-
-
-
-/** 
- * 
- */
-//bool mac_send(void);
-
 #endif /* _MAC_H_ */
