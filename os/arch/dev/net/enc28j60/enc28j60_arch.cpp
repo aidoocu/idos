@@ -4,7 +4,7 @@
  * 
  */
 
-
+#include "../../../arch.h"
 #include "enc28j60_arch.h"
 
 /*  */
@@ -14,8 +14,9 @@ static uint8_t bank;
 
 /** \brief  Configurar SPI para el ENC28J60 */
 void enc_spi_enable(void) {
-    /* initializar la interface SPI */
-    spi_begin_transaction(SPI_ETHERNET_SETTINGS);
+    /* initializar la interface SPI (clock, bitOrder{MSBFIRST}, 
+    dataMode{SPI_MODE0}) */
+    spi_begin_transaction(20000000, MSBFIRST, 0x00);
 }
 
 /** \brief Recuperar los valores de configuración de SPI */

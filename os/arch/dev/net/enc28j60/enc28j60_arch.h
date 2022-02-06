@@ -31,8 +31,6 @@
 #define TX_COLLISION_RETRY_COUNT 3
 
 /** Macros para SPI */
-/** \brief Configurar el SPI para el ENC28J60 */
-#define SPI_ETHERNET_SETTINGS SPISettings(20000000, MSBFIRST, SPI_MODE0)
 
 /** \brief Seleccionar el ENC */
 #define enc_select() digitalWrite(ENC28J60_CS, LOW)

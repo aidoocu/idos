@@ -2,6 +2,10 @@
  * 
  * 
  */
+
+#include <Arduino.h>
+#include <SPI.h>
+
 #include "spi_ino.h"
 
 void spi_init(void) {
@@ -17,8 +21,9 @@ void spi_init(void) {
 }
 
 
-void spi_begin_transaction(SPISettings settings){
-  	SPI.beginTransaction(settings);
+
+void spi_begin_transaction(uint32_t clock, uint8_t bitOrder, uint8_t dataMode){
+  	SPI.beginTransaction(SPISettings(clock, bitOrder, dataMode));
 }
 
 
