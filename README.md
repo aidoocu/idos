@@ -10,5 +10,3 @@ Para la simulación en windows he probado con el Proteus.
 En Macos X se ha probado con simavr. Este será el comando completo para sinmular un Arduino Nano compilado en PlatforIO:
 simavr -m atmega328p -f 16000000 ~/Documents/PlatformIO/Projects/idOS/.pio/build/nanoatmega328new/firmware.elf
 Supongo que en Linux funciones de la misma forma que en Macos X.
-## Nota
-En la medida que se avance en el desarrollo de idOS el contenido de este archivo irá cambiando.
