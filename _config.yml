@@ -1,15 +1,1 @@
----
-
 theme: jekyll-theme-slate
-
----
-
-<ul> 
-  {% for p in site.pages | sort:weight %} 
-    <li> 
-      <a {% if p.url == page.url %}class="active"{% endif %} href="{{ p.url }}"> 
-        {{ p.title }} 
-      </a> 
-    </li> 
-  {% endfor %} 
-</ul>
