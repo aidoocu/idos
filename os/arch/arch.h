@@ -69,6 +69,9 @@ definiciones */
 #include "dev/net/enc28j60/enc28j60_arch.h"
 #endif
 
+
+#include "dev/sensor/new_ping/NewPing.h"
+
 #endif /* BOARD == NATIVE */
 
 /* ----------------------------- / dev ----------------------------------- */

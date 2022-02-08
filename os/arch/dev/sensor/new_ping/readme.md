@@ -1,4 +1,4 @@
-# New Ping para Sensore de Ultrasonido
+# New Ping para Sensor de Ultrasonido
 El código de esta biblioteca está tomado tal cual (as is) de la biblioteca New Ping de Tim Eckel.
 
 - *versión* - v1.9.4 - 01/26/2022
