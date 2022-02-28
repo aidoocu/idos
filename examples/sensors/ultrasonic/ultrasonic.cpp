@@ -28,11 +28,11 @@ static uint8_t doppler_get(coap_payload_st * payload) {
   
   printf("Doppler GET!!!\n");
 
-    char dstc_char[3];
+    char dstc_char[2];
 
-    sprintf(dstc_char, "%d", dstc);
+    sprintf(dstc_char, "%c", dstc);
 
-    payload->send_len = 3;
+    payload->send_len = 2;
     memcpy(payload->send, dstc_char, payload->send_len);
  
 
@@ -45,12 +45,12 @@ static uint8_t doppler_get(coap_payload_st * payload) {
 TASK_PT(task_uno){
 
   TASK_BEGIN
-    timer_set(timer_a, 3000);
+    timer_set(timer_a, 1000);
 
     udp_listener(listener);
     udp_listener_begin(&listener, COAP_PORT);
 
-    coap_resource_create(doppler, "doppler", NULL);
+    coap_resource_create(doppler, "doopler", NULL);
     coap_resource_activate(&doppler);
     doppler.get = * doppler_get;
 
