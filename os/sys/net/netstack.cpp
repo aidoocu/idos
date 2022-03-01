@@ -126,6 +126,15 @@ void net_stack_init(void) {
  */
 void net_tick(void) {
 
+    /* Si no está difinido uIP es porque el stack IP será definido o por hardware u otra biblioteca 
+    */
+    #ifndef NET_UIP_STACK
+
+    
+
+    /* Si está definido el uso del stack de se usa este código uIP */
+    #else
+
     /** -------------------------------- Recibir datos desde la red --------------------------------  */
 
     /* Hacemos un poll a la interface... */
@@ -277,7 +286,10 @@ void net_tick(void) {
         #endif  /* UIP_UDP */
     #ifdef UIP_PERIODIC_TIMER
     }
-    #endif
+    #endif /* UIP_PERIODIC_TIMER */
+
+    #endif /* NET_UIP_STACK */
+    
 }
 
 /* ------------------------------ Funciones de checksum ------------------------------ */

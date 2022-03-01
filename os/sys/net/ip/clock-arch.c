@@ -21,8 +21,18 @@
 /////// No es correcto, hay que hacerlo maas global
 #ifdef ARDUINO
 #include <Arduino.h>
+#endif
+
+/////// El timer debe partir de selecionado en el arch y no aquii
+#ifdef ARDUINO_AVR_NANO
 #include "../../../arch/board/arduino/timer_ino.h"
-#else
+#endif
+
+#ifdef ARDUINO_ARCH_ESP8266 
+#include "../../../arch/board/esp/timer_esp.h"
+#endif
+
+#ifdef NATIVE
 #include "../../../arch/board/native/arch_timer.h"
 #endif
 

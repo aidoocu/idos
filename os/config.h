@@ -67,7 +67,7 @@
  *  \details    Se conecta por SPI y solo implementa el mecanismo de
  *              acceso al medio Ethernet. Deberá utilizarse uip
 */
-#define __ENC28J60__
+//#define __ENC28J60__
 
 /** Configuraciones por defecto */
 #ifdef __ENC28J60__
