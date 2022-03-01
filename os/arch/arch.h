@@ -16,15 +16,21 @@
 /** Tipos de plataformas (boards) disponibles */
 #define NATIVE 1
 #define ARDUINO_NANO 2
+//#define ESP_ESP8266
 
 /** Definiciones de Arduino */
 #ifdef ARDUINO
 #include <Arduino.h>
-#include "board/arduino/arduino.h"
+
 
 /* Arduino hasta ahora es definido por el platformio así que BOARD no será definida */
 #ifdef ARDUINO_AVR_NANO
 #define BOARD ARDUINO_NANO
+#include "board/arduino/arduino.h"
+#endif
+
+#ifdef ARDUINO_ARCH_ESP8266
+#include "board/esp/esp8266.h"
 #endif
 
 #endif /* ARDUINO */
