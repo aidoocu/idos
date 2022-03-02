@@ -5,7 +5,7 @@
 #ifndef _IDOS_H_
 #define _IDOS_H_
 
-#include <stdint.h>
+//#include <stdint.h>
 
 /** Cargar configuraciones globales */
 #include "config.h"
