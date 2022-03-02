@@ -43,13 +43,6 @@
 #ifdef __AVR_ATmega328P__
 #include <avr/io.h>
 #include "cpu/avr/atmega328p/sleep_arch.h"
-
-/* Si estamos usando el framework de arduino se tomarán de ahí las siguientes 
-definiciones */
-#ifndef ARDUINO
-#include "cpu/avr/atmega328p/timer_arch.h"
-#endif /* ARDUINO */
-
 #endif /* __AVR_ATmega328P__ */
 
 
