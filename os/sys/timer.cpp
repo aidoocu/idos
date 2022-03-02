@@ -26,16 +26,6 @@ static struct timer_st * timer_list = NULL;
 static struct timer_st * timer_index = NULL;
 
 
-/* Si estamos con el framework Arduino ya este inicializa el timer */
-#ifndef ARDUINO
-/* Si la plataforma es native usamos el timestamp del sistema */
-#if BOARD != NATIVE
-void timer_sys_init(void){
-    timer_sys_init_arch();
-}
-#endif /* BOARD != NATIVE */
-#endif /* ARDUINO */
-
 void timer_set_sys(timer_st * timer, time_t msec, task_st * task){
    
     /* Inicializamos el timer */
