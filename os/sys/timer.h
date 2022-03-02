@@ -84,13 +84,6 @@ void timer_disable(struct timer_st * timer);
 
 /* --------------------------------------------------------------------------------- */
 
-/* Si estamos con el framework Arduino ya este inicializa el timer */
-#ifndef ARDUINO
-/** \brief  Arranca el conteo de TICKs para los timer de sistema  
- * 
-*/
-void timer_sys_init(void);
-#endif /* ARDUINO */
 
 /** \brief  Crea y setea el timer 
  *  \param  timer_name  El nombre del timer

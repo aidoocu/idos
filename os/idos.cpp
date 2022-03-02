@@ -53,14 +53,14 @@
  */
 uint8_t idos_init(void){
 
-    /* Si la plataforma es native no se inicializa hardware */
-    #ifdef NATIVE
-
+    /* Inicializar el stack de red */
     #if NET_STACK
     net_stack_init();
     #endif
 
-    #else /* NATIVE */
+    /* Si la plataforma es native no se inicializa hardware */
+    #ifndef NATIVE
+
     /* La inicialización del idOS no debe ser interrumpida */
     uint8_t cSREG = inte_fall();
 
@@ -71,15 +71,6 @@ uint8_t idos_init(void){
     #ifdef SPI_ARCH
     spi_init();
     #endif
-
-    #if NET_STACK
-    net_stack_init();
-    #endif
-
-    /* Si estamos con el framework Arduino ya este inicializa el timer */
-    #ifndef ARDUINO
-    timer_sys_init();
-    #endif /* ARDUINO */
 
     #if SLEEP_MODE
     sleep_mode_init();
