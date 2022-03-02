@@ -24,10 +24,9 @@ include $(IDOS)/tools/make/help.mk
 include $(IDOS)/tools/make/define.mk
 
 ## Tipos de plataforma
-#define NATIVE = 0
 
 ifeq ($(BOARD),native)
-  CFLAGS += -DBOARD=1
+  CFLAGS += -DNATIVE	#Definimos NATIVE
   CFLAGS += -D$(OS_BASE)
 endif
 

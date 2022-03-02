@@ -54,13 +54,13 @@
 uint8_t idos_init(void){
 
     /* Si la plataforma es native no se inicializa hardware */
-    #if BOARD == NATIVE
+    #ifdef NATIVE
 
     #if NET_STACK
     net_stack_init();
     #endif
 
-    #else /* BOARD == NATIVE */
+    #else /* NATIVE */
     /* La inicialización del idOS no debe ser interrumpida */
     uint8_t cSREG = inte_fall();
 
@@ -88,7 +88,7 @@ uint8_t idos_init(void){
     /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
     inte_raise(cSREG);
 
-    #endif /* BOARD == NATIVE */
+    #endif /* NATIVE */
 
     /* Levantar las apps. Cada app que se adicione debe ser incluida aquí */
     #ifdef BUILD_COAP

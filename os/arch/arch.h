@@ -13,19 +13,14 @@
 
 /* --------- Compilación condicional según la plataforma (board) --------- */
 
-/** Tipos de plataformas (boards) disponibles */
-#define NATIVE 1
-#define ARDUINO_NANO 2
-//#define ESP_ESP8266
 
 /** Definiciones de Arduino */
 #ifdef ARDUINO
 #include <Arduino.h>
 
 
-/* Arduino hasta ahora es definido por el platformio así que BOARD no será definida */
+/* Arduino hasta ahora es definido por el platformio */
 #ifdef ARDUINO_AVR_NANO
-#define BOARD ARDUINO_NANO
 #include "board/arduino/arduino.h"
 #endif
 
@@ -35,7 +30,7 @@
 
 #endif /* ARDUINO */
 
-#if BOARD == NATIVE
+#ifdef NATIVE
 #include "board/native/native.h"
 #endif
 
@@ -69,7 +64,7 @@ definiciones */
 */
 
 /** \note En caso de que la BOARD sea NATIVE se asume que no tendrá dev  */
-#if BOARD != NATIVE
+#ifndef NATIVE
 
 #ifdef __ENC28J60__
 #include "dev/net/enc28j60/enc28j60_arch.h"
@@ -78,7 +73,7 @@ definiciones */
 
 #include "dev/sensor/new_ping/NewPing.h"
 
-#endif /* BOARD == NATIVE */
+#endif /* NATIVE */
 
 /* ----------------------------- / dev ----------------------------------- */
 
