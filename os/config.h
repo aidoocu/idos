@@ -62,21 +62,15 @@
 
 /**                          Networkig                           */
 
-/** \b ENC28J60  
- *  \brief      Microchip ENC28J60 Ethernet Interface
- *  \details    Se conecta por SPI y solo implementa el mecanismo de
- *              acceso al medio Ethernet. Deberá utilizarse uip
-*/
-//#define __ENC28J60__
 
 /** Configuraciones por defecto */
-#ifdef __ENC28J60__
+#ifdef ENC28J60
 
 #ifndef SPI_ARCH
 #define SPI_ARCH
 #endif
 
-#endif /* __ENC28J60__ */
+#endif /* ENC28J60 */
 
 
 /** ------------------- Definiciones de red -------------------- */
@@ -91,9 +85,6 @@
 
 
 #ifdef NET_STACK
-
-
-
 
 
 /*      Pontencialmente esto no sea necesario       */

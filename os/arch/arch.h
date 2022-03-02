@@ -59,7 +59,7 @@
 /** \note En caso de que la BOARD sea NATIVE se asume que no tendrá dev  */
 #ifndef NATIVE
 
-#ifdef __ENC28J60__
+#ifdef ENC28J60
 #include "dev/net/enc28j60/enc28j60_arch.h"
 #endif
 
