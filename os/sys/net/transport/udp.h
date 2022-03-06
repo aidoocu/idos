@@ -1,15 +1,15 @@
 #ifndef _UDP_H_
 #define _UDP_H_
 
-//>>???
+#include "../ip/ip.h"
 
 /* Tamaño total de todos lo headers de UDP (LLH + IPH + UDPH) */
-#define UIP_UDP_PHYH_LEN UIP_LLH_LEN + UIP_IPUDPH_LEN
+#define UIP_UDP_PHYH_LEN LLH_LEN + IPUDPH_LEN
 /* Tamaño máximo del mensaje (payload) que se puede enviar */
-#define MAX_UDP_MSG_SIZE UIP_BUFSIZE - UIP_UDP_PHYH_LEN
+#define MAX_UDP_MSG_SIZE NET_BUFSIZE - UIP_UDP_PHYH_LEN
 
 /* Aisla en la estructura uip_udpip_hdr los headers IP, UDP y el payload */
-#define udp_buf ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
+#define udp_buf ((struct uip_udpip_hdr *)&uip_buf[LLH_LEN])
 
 
 enum {
@@ -21,7 +21,7 @@ enum {
 
 struct udp_listener_st {
 	uint8_t status;						/**< Estado del mensaje */
-	uip_ipaddr_t ripaddr;				/**< IP remoto desde donde hay una conexión >*/
+	ipaddr_t ripaddr;					/**< IP remoto desde donde hay una conexión >*/
 	uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
 	struct task_st * task;				/**< Puntero a la tarea que setea el listerner */
 	struct msg_st ipc_msg;				/**< Mensaje a la tarea que setea el listerner */
@@ -107,16 +107,16 @@ bool udp_response(uint8_t * msg, uint16_t len);
  */
 #define udp_remote_addr(listener, ip_addr)						\
 	ip_addr[0] = (uint8_t)(listener.ripaddr[0]);				\
-	ip_addr[1] = (uint8_t)uip_htons(listener.ripaddr[0]);		\
+	ip_addr[1] = (uint8_t)ip_htons(listener.ripaddr[0]);		\
 	ip_addr[2] = (uint8_t)(listener.ripaddr[1]);				\
-	ip_addr[3] = (uint8_t)uip_htons(listener.ripaddr[1])
+	ip_addr[3] = (uint8_t)ip_htons(listener.ripaddr[1])
 
 
 /** 
  * \brief Obtener el puerto de origen en el remoto
  * \param listener Puntero al listerner del que vamos a extraer el puerto
  */
-#define udp_remote_port(listener) uip_htons(listener.rport)
+#define udp_remote_port(listener) ip_htons(listener.rport)
 
 
 /** 

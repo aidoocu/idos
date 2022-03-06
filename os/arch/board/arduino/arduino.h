@@ -4,14 +4,14 @@
  * 
  * 
  */
+#include <Arduino.h>
 
-#include "uart_ino.h"
-#include "timer_ino.h"
-#include "spi_ino.h"
-#include "inte_ino.h"
+/* Arduino hasta ahora es definido por el platformio */
+#ifdef ARDUINO_AVR_NANO
+#include "nano/nano.h"
+#endif
 
-// Tal vez sea más simple y organizado porner todas las definiciones de
-// Arduino en un solo archivo.
+
 
 
 

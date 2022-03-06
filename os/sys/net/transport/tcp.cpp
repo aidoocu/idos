@@ -16,9 +16,11 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
     /** Crear una escucha de TCP por port 
      * \note uIP recive el puerto (y el resto) leyendo el byte alto primero, así es 
      *      necesario hacer lo mismo cuando le pasemos el puerto. Ejemplo, 80 en uint16_t
-     *      es 0x0050, uip lee el frame como 0x5000, uip_htons cambia de lugar los bytes 
+     *      es 0x0050, uip lee el frame como 0x5000, ip_htons cambia de lugar los bytes 
     */
-    uip_listen((u16_t)uip_htons(port));
+    #ifdef UIP_STACK
+	uip_listen((u16_t)ip_htons(port));
+	#endif /* UIP_STACK */
 
     listener->port = port;
     listener->msg_len_in = listener->msg_len_out = 0;
@@ -43,10 +45,94 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
  * 
  */
 void tcp_listener_end(tcp_listener_st listener, uint16_t port) {
+	#ifdef UIP_STACK
     uip_unlisten(port);
     listener.state = false;
+	#endif /* UIP_STACK */
 }
 
+
+
+bool tcp_open(tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port){
+
+	/* Creamos una conexión y una dirección tipo uIP  */
+	struct uip_conn * conn;
+	ipaddr_t uip_addr;
+  	//static ipaddr_t addr;
+
+	#ifdef UIP_STACK
+	/* Se convierte IP en uIP */
+	uip_ip_addr(uip_addr, ip_addr);
+
+	/* uIP solicita una conexión al remoto */
+	conn = uip_connect(&uip_addr, ip_htons(port));
+
+	/* Si la conexión se pudo solicitar... */
+	if(conn){
+
+		/* Poniendo el estado a conectando */
+		listener->state = LISTENER_CONNECTING;
+
+		printf("Connecting...\n");
+
+		/* Asignamos el listener a la conexión que se intenta establecer */
+		conn->appstate = listener;
+		return true;
+	}
+	#endif /* UIP_STACK */
+
+	
+	/* Si no se pudo solicitar la conexión */
+	return false;
+}
+
+/* --------------------------------------------------------------------------------- */
+
+bool tcp_connected(tcp_listener_st * listener){
+	if(listener->state == LISTENER_CONNECTED)
+		return true;
+	return false;
+}
+
+/* --------------------------------------------------------------------------------- */
+
+uint16_t tcp_recv(tcp_listener_st * listener) {
+
+	/* Si no se ha enviado un mensaje es que no hay datagrama */
+	if (listener->ipc_msg.status == MSG_NULL)
+		return 0;
+
+	/* Se marcas el mensaje como leido */
+	listener->ipc_msg.status = MSG_NULL;
+
+	/* y se devuelve el tamaño del mensaje */
+	return listener->msg_len_in;
+}
+
+/* --------------------------------------------------------------------------------- */
+
+bool tcp_send(tcp_listener_st * listener, uint8_t * msg, uint16_t len) {
+
+	if (listener->msg_len_out == 0) {
+
+        if (len > MAX_TCP_MSG_SIZE) {
+            //Aquí hay que hacer algo, picar el mensaje, denegarlo...
+            ;
+            //por ahora solo le limitaremos el tamanno pero no es correcto
+            len = MAX_TCP_MSG_SIZE;
+        }
+
+        listener->msg_len_out = len;
+	    memcpy(listener->net_msg_out, msg, len);
+        return true;
+    } 
+
+    return false;
+}
+
+/* ------------------------------ STACK UIP ------------------------------ */
+
+#ifdef UIP_STACK
 
 /* --------------------------------------------------------------------------------- */
 
@@ -93,7 +179,7 @@ void uipclient_appcall(void) {
 			listener = tcp_listeners;
 			/* ...y buscamos en la lista de listeners quien está escuchando por el puerto */
 			do {
-				if (uip_htons(listener->port) == uip_conn->lport) 
+				if (ip_htons(listener->port) == uip_conn->lport) 
 					break;
 				listener = listener->next;
 			} while(listener->next != NULL);
@@ -276,76 +362,5 @@ void uipclient_appcall(void) {
 
 /* --------------------------------------------------------------------------------- */
 
-bool tcp_open(tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port){
+#endif /* UIP_STACK */
 
-	/* Creamos una conexión y una dirección tipo uIP  */
-	struct uip_conn * conn;
-	uip_ipaddr_t uip_addr;
-  	//static uip_ipaddr_t addr;
-
-	/* Se convierte IP en uIP */
-	uip_ip_addr(uip_addr, ip_addr);
-
-	/* uIP solicita una conexión al remoto */
-	conn = uip_connect(&uip_addr, uip_htons(port));
-
-	/* Si la conexión se pudo solicitar... */
-	if(conn){
-
-		/* Poniendo el estado a conectando */
-		listener->state = LISTENER_CONNECTING;
-
-		printf("Connecting...\n");
-
-		/* Asignamos el listener a la conexión que se intenta establecer */
-		conn->appstate = listener;
-		return true;
-	}
-	
-	/* Si no se pudo solicitar la conexión */
-	return false;
-}
-
-/* --------------------------------------------------------------------------------- */
-
-bool tcp_connected(tcp_listener_st * listener){
-	if(listener->state == LISTENER_CONNECTED)
-		return true;
-	return false;
-}
-
-/* --------------------------------------------------------------------------------- */
-
-uint16_t tcp_recv(tcp_listener_st * listener) {
-
-	/* Si no se ha enviado un mensaje es que no hay datagrama */
-	if (listener->ipc_msg.status == MSG_NULL)
-		return 0;
-
-	/* Se marcas el mensaje como leido */
-	listener->ipc_msg.status = MSG_NULL;
-
-	/* y se devuelve el tamaño del mensaje */
-	return listener->msg_len_in;
-}
-
-/* --------------------------------------------------------------------------------- */
-
-bool tcp_send(tcp_listener_st * listener, uint8_t * msg, uint16_t len) {
-
-	if (listener->msg_len_out == 0) {
-
-        if (len > MAX_TCP_MSG_SIZE) {
-            //Aquí hay que hacer algo, picar el mensaje, denegarlo...
-            ;
-            //por ahora solo le limitaremos el tamanno pero no es correcto
-            len = MAX_TCP_MSG_SIZE;
-        }
-
-        listener->msg_len_out = len;
-	    memcpy(listener->net_msg_out, msg, len);
-        return true;
-    } 
-
-    return false;
-}

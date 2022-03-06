@@ -13,22 +13,13 @@
 
 /* --------- Compilación condicional según la plataforma (board) --------- */
 
-
-/** Definiciones de Arduino */
 #ifdef ARDUINO
-#include <Arduino.h>
-
-
-/* Arduino hasta ahora es definido por el platformio */
-#ifdef ARDUINO_AVR_NANO
 #include "board/arduino/arduino.h"
-#endif
+#endif /* ARDUINO */
 
 #ifdef ARDUINO_ARCH_ESP8266
-#include "board/esp/esp8266.h"
+#include "board/esp/esp.h"
 #endif
-
-#endif /* ARDUINO */
 
 #ifdef NATIVE
 #include "board/native/native.h"
@@ -59,12 +50,34 @@
 /** \note En caso de que la BOARD sea NATIVE se asume que no tendrá dev  */
 #ifndef NATIVE
 
+/* Placa ESP8266 */
+#ifdef ARDUINO_ARCH_ESP8266
+
+/* Configurando LwIP que viene con el framework */
+#define LWIP_STACK
+#include "board/esp/net_esp.h"
+
+#endif /* ARDUINO_ARCH_ESP8266 */
+
+
+/* Interface Ethernet */
 #ifdef ENC28J60
+
+/*  */
+#define UIP_STACK
 #include "dev/net/enc28j60/enc28j60_arch.h"
+
+#endif
+
+#ifdef ULTRASONIC
+#include "dev/sensor/new_ping/NewPing.h"
 #endif
 
 
-#include "dev/sensor/new_ping/NewPing.h"
+#else /* NATIVE */
+
+/* La forma nativa usa uIP por ahora */
+#define UIP_STACK
 
 #endif /* NATIVE */
 

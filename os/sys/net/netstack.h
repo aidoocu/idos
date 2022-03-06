@@ -43,42 +43,26 @@
 
 #include "netconf.h"
 
-#include "mac/mac.h"
+//#include "mac/mac.h"
+#include "ip/ip.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-   #include "ip/uipopt.h"
-   #include "ip/uip-conf.h"
-   #include "ip/uip.h"
-   #include "ip/uip_arp.h"
-   #include "ip/uip_timer.h"
-   
-#ifdef __cplusplus
-}
-#endif
-
-/** \brief Número IP en 4 bytes
- *  \details Diferencia a un IP formado por 4 optetos del 
- *          uIP que está formado por 2 palabras de 16 bits
- */
-typedef uint8_t ip_address_t[4];
-
-#define uip_ip_addr(addr, ip) do { \
-                     ((u16_t *)(addr))[0] = UIP_HTONS(((ip[0]) << 8) | (ip[1])); \
-                     ((u16_t *)(addr))[1] = UIP_HTONS(((ip[2]) << 8) | (ip[3])); \
-                  } while(0)
+#include "transport/udp.h"
+#include "transport/tcp.h"
 
 
-#define uip_seteth_addr(eaddr) do {uip_ethaddr.addr[0] = eaddr[0]; \
-                              uip_ethaddr.addr[1] = eaddr[1];\
-                              uip_ethaddr.addr[2] = eaddr[2];\
-                              uip_ethaddr.addr[3] = eaddr[3];\
-                              uip_ethaddr.addr[4] = eaddr[4];\
-                              uip_ethaddr.addr[5] = eaddr[5];} while(0)
 
 
+
+
+/** \brief Inicializa la NIC e IP si está definido */
+void net_stack_init(void);
+
+void net_tick(void);
+
+
+/* ------------------------------ STACK UIP ------------------------------ */
+
+#ifdef UIP_STACK
 
 /** 
  * \brief Cada frame recibido de o enviado a la NIC para por uip 
@@ -105,7 +89,7 @@ typedef uint8_t ip_address_t[4];
  *       array) y se forman variables de más de un byte estas quedan 
  *       ordenadas alrevés, por ejemplo, la secuencia 00 05 (80) cuando
  *       se castea a un uint16_t queda 50 00 (20480). Si se espera leer 
- *       el número, hacer un cálculo o comparación utilizar uip_htons()
+ *       el número, hacer un cálculo o comparación utilizar ip_htons()
 */
 #define hdr_ip_tcp ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define hdr_ip_udp ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
@@ -119,12 +103,6 @@ typedef uint8_t ip_address_t[4];
 #define uip_tcp_msg &uip_buf[UIP_LLH_LEN + UIP_IPTCPH_LEN]
 #define uip_udp_msg &uip_buf[UIP_LLH_LEN + UIP_IPUDPH_LEN]
 
-
-/** \brief Inicializa la NIC e IP si está definido */
-void net_stack_init(void);
-
-/** \brief Configura IP */
-//void net_stack_configure(void);
 
 /** \brief Envia, recibe y/o procesa paquetes IP 
  * \details Esta es la función que hace básicamente todo el trabajo en net y debe ser llamada
@@ -164,10 +142,17 @@ void net_stack_init(void);
  * |              |    return<---|--------------|---------+       |              |              |              |
 
 */
-void net_tick(void);
+
+#endif /* UIP_STACK */
 
 
-#include "transport/udp.h"
-#include "transport/tcp.h"
+/* ------------------------------ STACK LWIP ----------------------------- */
+
+#ifdef LWIP_STACK
+
+
+#endif /* LWIP_STACK */
+
+
 
 #endif /* _NETSTACK_H_ */

@@ -3,7 +3,7 @@
 #include "udp.h"
 
 /* Si UDP está activado */
-#if UIP_UDP
+//#if UIP_UDP
 
 #define UIP_ARPHDRSIZE 42
 
@@ -18,6 +18,113 @@ static struct udp_sender_st {
 	uint16_t len;					/* Largo del mensaje */
 	uint8_t msg[MAX_UDP_MSG_SIZE];	/* Buffer para el mensaje */
 } udp_sender;
+
+
+
+/** 
+ * 
+ */
+bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
+
+    /* Como el listener siempre está asociado a la pseudoconexión, no es necesario listarlo */
+
+	#ifdef UIP_STACK
+    /* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
+    struct uip_udp_conn * udp_conn = uip_udp_new(NULL, 0);
+
+    if(udp_conn) {
+
+        /* Si la pseudoconexión la asociamos al puerto del listener... */
+        uip_udp_bind(udp_conn, ip_htons(port));
+        /* y asociamos el listener a la pseudoconexión */
+        udp_conn->appstate = listener;
+		/* y a su vez asociamos la pseudoconexión al listener */
+		//listener->udp_conn = udp_conn;
+        /* Como la pseudoconexión será manejada internamente por uIP no es necesario devolver 
+        referencia a la task */
+        return true;
+    }
+    return false;
+
+	#endif /* UIP_STACK */
+
+	return true;
+
+}
+
+
+/** 
+ * 
+ */
+bool udp_recv(udp_listener_st * listener){
+	if (listener->status == UDP_MSG_IN) {
+		/* ???? Se establece el mensaje como leído */
+		listener->status = UDP_MSG_READED;
+		return true;
+	}
+	return false;
+}
+
+
+/** 
+ * 
+ */
+bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len){
+
+	if(!udp_sender.send && !udp_sender.response){	
+		/* Se convierte IP en uIP */
+		ipaddr_t uip_addr;
+
+		#ifdef UIP_STACK
+		uip_ip_addr(uip_addr, dst_addr);
+
+		/* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
+		struct uip_udp_conn * udp_conn = uip_udp_new(&uip_addr, ip_htons(port));
+
+		if(udp_conn){
+
+			/* Copiamos al sender el mensaje */
+			memcpy(udp_sender.msg, msg, len);
+			/* Le pasamos al sender el tamaño del mensaje */
+			udp_sender.len = len;
+
+			/* Levanto la bandera de send */
+			udp_sender.send = true;
+			return true;
+		}
+
+		#endif /* UIP_STACK */
+		
+		return true;
+	}
+
+	return false;
+}
+
+/** 
+ * 
+ */
+bool udp_response(uint8_t * msg, uint16_t len){
+
+	if (!udp_sender.send) {
+
+		/* Copiamos al sender el mensaje */
+		memcpy(udp_sender.msg, msg, len);
+		/* Le pasamos al sender el tamaño del mensaje */
+		udp_sender.len = len;
+
+		/* Levanto la bandera de send */
+		udp_sender.response = true;
+	
+		return true;
+	}
+	return false;
+}
+
+
+/* ------------------------------ STACK UIP ------------------------------ */
+
+#ifdef UIP_STACK
 
 /* --------------------------------------------------------------------------------- */
 
@@ -49,17 +156,17 @@ void uipudp_appcall(void) {
 
 
 			/* Pasamos el largo del mensaje */
-			listener->msg_len = uip_htons(udp_buf->udplen) - UIP_UDPH_LEN;
+			listener->msg_len = ip_htons(udp_buf->udplen) - UIP_UDPH_LEN;
 
             #if NET_DEBUG >= 3
             printf("-> new data ");
             printf("from: %d.%d.%d.%d:%d ", 
 					(uint8_t)(listener->ripaddr[0]), 
-					(uint8_t)uip_htons(listener->ripaddr[0]),
+					(uint8_t)ip_htons(listener->ripaddr[0]),
 					(uint8_t)(listener->ripaddr[1]), 
-					(uint8_t)uip_htons(listener->ripaddr[1]),
-					uip_htons(listener->rport));
-            printf("to local port: %d -> ", uip_htons(uip_udp_conn->lport));
+					(uint8_t)ip_htons(listener->ripaddr[1]),
+					ip_htons(listener->rport));
+            printf("to local port: %d -> ", ip_htons(uip_udp_conn->lport));
 			printf("len: %d\n\r", listener->msg_len);
             #endif
 
@@ -123,94 +230,8 @@ void uipudp_appcall(void) {
 
 }
 
-/** 
- * 
- */
-bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
-
-    /* Como el listener siempre está asociado a la pseudoconexión, no es necesario listarlo */
-
-    /* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
-    struct uip_udp_conn * udp_conn = uip_udp_new(NULL, 0);
-
-    if(udp_conn) {
-
-        /* Si la pseudoconexión la asociamos al puerto del listener... */
-        uip_udp_bind(udp_conn, uip_htons(port));
-        /* y asociamos el listener a la pseudoconexión */
-        udp_conn->appstate = listener;
-		/* y a su vez asociamos la pseudoconexión al listener */
-		//listener->udp_conn = udp_conn;
-        /* Como la pseudoconexión será manejada internamente por uIP no es necesario devolver 
-        referencia a la task */
-        return true;
-    }
-    return false;
-}
-
-
-/** 
- * 
- */
-bool udp_recv(udp_listener_st * listener){
-	if (listener->status == UDP_MSG_IN) {
-		/* ???? Se establece el mensaje como leído */
-		listener->status = UDP_MSG_READED;
-		return true;
-	}
-	return false;
-}
-
-
-/** 
- * 
- */
-bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len){
-
-	if(!udp_sender.send && !udp_sender.response){	
-		/* Se convierte IP en uIP */
-		uip_ipaddr_t uip_addr;
-		uip_ip_addr(uip_addr, dst_addr);
-
-		/* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
-		struct uip_udp_conn * udp_conn = uip_udp_new(&uip_addr, uip_htons(port));
-
-		if(udp_conn){
-
-			/* Copiamos al sender el mensaje */
-			memcpy(udp_sender.msg, msg, len);
-			/* Le pasamos al sender el tamaño del mensaje */
-			udp_sender.len = len;
-
-			/* Levanto la bandera de send */
-			udp_sender.send = true;
-			return true;
-		}
-	}
-
-	return false;
-}
-
-/** 
- * 
- */
-bool udp_response(uint8_t * msg, uint16_t len){
-
-	if (!udp_sender.send) {
-
-		/* Copiamos al sender el mensaje */
-		memcpy(udp_sender.msg, msg, len);
-		/* Le pasamos al sender el tamaño del mensaje */
-		udp_sender.len = len;
-
-		/* Levanto la bandera de send */
-		udp_sender.response = true;
-	
-		return true;
-	}
-	return false;
-}
+#endif /* UIP_STACK */
 
 
 
-#endif /* UIP_UDP */
+//#endif /* UIP_UDP */

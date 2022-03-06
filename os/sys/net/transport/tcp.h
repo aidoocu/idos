@@ -7,7 +7,7 @@
 #ifndef _TCP_H_
 #define _TCP_H_
 
-//#include "../netstack.h"
+#include "../ip/ip.h"
 
 /** 
  *  Significado de las banderas uip_conn->tcpstateflags:
@@ -43,11 +43,11 @@
 
 
 /** \brief  El total de octetos dedicados a encabezados en la trama 
- *  \note   El mensaje comienza en uip_buf[UIP_LLH_LEN - UIP_TCPIP_HLEN - 1]
- *          y su largo es uip_len - UIP_LLH_LEN - UIP_TCPIP_HLEN
- *          y no será más largo que UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN
+ *  \note   El mensaje comienza en uip_buf[LLH_LEN - TCPIP_HLEN - 1]
+ *          y su largo es uip_len - LLH_LEN - TCPIP_HLEN
+ *          y no será más largo que NET_BUFSIZE - LLH_LEN - TCPIP_HLEN
 */
-#define MAX_TCP_MSG_SIZE UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN
+#define MAX_TCP_MSG_SIZE NET_BUFSIZE - LLH_LEN - TCPIP_HLEN
 
 /* --------------------------------------------------------------------------------- */
 
@@ -65,9 +65,9 @@
 struct tcp_listener_st {
     uint16_t port;                              /**< Puerto TCP de escucha */
     uint8_t state;                              /**< Banderas de estado de la escucha */        
-    struct tcp_listener_st * next;                     /**< Puntero al próximo listener o a NULL */
-    struct task_st * task;                             /**< Puntero a la tarea que setea el listerner */
-    struct msg_st ipc_msg;                             /**< Mensaje a la tarea que setea el listerner */
+    struct tcp_listener_st * next;              /**< Puntero al próximo listener o a NULL */
+    struct task_st * task;                      /**< Puntero a la tarea que setea el listerner */
+    struct msg_st ipc_msg;                      /**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer de entrada */
     uint16_t msg_len_out;                       /**< Tamaño del mensaje que está en el buffer de salida */
     uint8_t net_msg_in[MAX_TCP_MSG_SIZE];       /**< Buffer que contendrá el mensaje de la red */
@@ -223,22 +223,6 @@ uint16_t tcp_recv(struct tcp_listener_st * listener);
  * \return 
  */
 bool tcp_send(struct tcp_listener_st * listener, uint8_t * msg, uint16_t len);
-
-
-
-/*  */
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -15,6 +15,10 @@ static unsigned long periodic_timer;
  * 
  */
 void net_stack_init(void) {
+
+    /* ------------------------------ STACK UIP ------------------------------ */
+
+    #ifdef UIP_STACK
     
     #ifdef UIP_PERIODIC_TIMER
     periodic_timer = msec_now() + UIP_PERIODIC_TIMER;
@@ -61,7 +65,7 @@ void net_stack_init(void) {
      */
 
     /* variables de 16 bits para direcciones IP de uIP */
-    uip_ipaddr_t uipaddr;
+    ipaddr_t uipaddr;
 
     /* Si está configurado como static se inicializa según configuración */
     #ifdef NET_STATIC
@@ -83,12 +87,12 @@ void net_stack_init(void) {
     #if NET_DEBUG >= 3
     
     /* Se imprime la dirección IP configurada */
-    uip_ipaddr_t hostaddr;
+    ipaddr_t hostaddr;
     uip_gethostaddr(&hostaddr);
     host[0] = (uint8_t)hostaddr[0];
-    host[1] = (uint8_t)uip_htons(hostaddr[0]);
+    host[1] = (uint8_t)ip_htons(hostaddr[0]);
     host[2] = (uint8_t)hostaddr[1];
-    host[3] = (uint8_t)uip_htons(hostaddr[1]);
+    host[3] = (uint8_t)ip_htons(hostaddr[1]);
 
     printf ("IP address: %d.%d.%d.%d \r\n", 
                         host[0],
@@ -119,6 +123,15 @@ void net_stack_init(void) {
                     subnet[3]);
     #endif
 
+    #endif /* UIP_STACK */
+
+
+    #ifdef LWIP_STACK
+
+    /* ------------------------------ STACK LWIP ----------------------------- */
+
+    #endif /* LWIP_STACK */
+
 }
 
 /** 
@@ -126,14 +139,10 @@ void net_stack_init(void) {
  */
 void net_tick(void) {
 
-    /* Si no está difinido uIP es porque el stack IP será definido o por hardware u otra biblioteca 
-    */
-    #ifndef NET_UIP_STACK
+    /* ------------------------------ STACK UIP ------------------------------ */
 
-    
+    #ifdef UIP_STACK
 
-    /* Si está definido el uso del stack de se usa este código uIP */
-    #else
 
     /** -------------------------------- Recibir datos desde la red --------------------------------  */
 
@@ -144,7 +153,7 @@ void net_tick(void) {
     if (uip_len > 0) {
 
         /* !!!!! Esta funcion esta contando con que el frame es Eth !!!!!! */
-        if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
+        if (hdr_eth->type == ip_htons(UIP_ETHTYPE_IP)) {
 
             #if NET_DEBUG >= 3
             printf("IP frame from NIC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
@@ -159,8 +168,8 @@ void net_tick(void) {
                                     (hdr_ip_tcp->srcipaddr[0] >> 8) & 0xff,
                                     hdr_ip_tcp->srcipaddr[1] & 0xff,
                                     (hdr_ip_tcp->srcipaddr[1] >> 8) & 0xff,
-                                    uip_htons(hdr_ip_tcp->destport),
-                                    uip_htons(hdr_ip_tcp->srcport));
+                                    ip_htons(hdr_ip_tcp->destport),
+                                    ip_htons(hdr_ip_tcp->srcport));
             #endif
             
             /* Refrescar o inicializar la tabla ARP */
@@ -189,7 +198,7 @@ void net_tick(void) {
                 mac_send((uint8_t * )uip_buf, uip_len);
             }                
 
-        } else if (hdr_eth->type == UIP_HTONS(UIP_ETHTYPE_ARP)) {
+        } else if (hdr_eth->type == ip_htons(UIP_ETHTYPE_ARP)) {
 
             #if NET_DEBUG >= 3
             printf("ARP frame from: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
@@ -244,7 +253,7 @@ void net_tick(void) {
                         (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
                         hdr_ip_tcp->destipaddr[1] & 0xff,
                         (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
-                        uip_htons(hdr_ip_tcp->destport), 
+                        ip_htons(hdr_ip_tcp->destport), 
                         uip_len);
                 #endif
 
@@ -272,7 +281,7 @@ void net_tick(void) {
                         (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
                         hdr_ip_tcp->destipaddr[1] & 0xff,
                         (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
-                        uip_htons(hdr_ip_tcp->destport), 
+                        ip_htons(hdr_ip_tcp->destport), 
                         uip_len);
                 #endif
 
@@ -288,9 +297,26 @@ void net_tick(void) {
     }
     #endif /* UIP_PERIODIC_TIMER */
 
-    #endif /* NET_UIP_STACK */
+    #endif /* UIP_STACK */
+
+
+
+    /* ------------------------------ STACK LWIP ----------------------------- */
+    
+    
+    #ifdef LWIP_STACK
+
+
+    #endif /* LWIP_STACK */
     
 }
+
+
+
+
+/* ------------------------------ STACK UIP ------------------------------ */
+
+#ifdef UIP_STACK
 
 /* ------------------------------ Funciones de checksum ------------------------------ */
 
@@ -342,7 +368,7 @@ uint16_t uip_ipchksum(void) {
     uint16_t sum;
 
     sum = chksum(0, &uip_buf[UIP_LLH_LEN], UIP_IPH_LEN);
-    return (sum == 0) ? 0xffff : uip_htons(sum);
+    return (sum == 0) ? 0xffff : ip_htons(sum);
 }
 
 /** 
@@ -378,7 +404,7 @@ uint16_t upper_layer_chksum(uint8_t protocol) {
     sum = upper_layer_segment_len + protocol;
 
     /* Llamamos a checksum para calcular el pseudoheader a partir de upper_layer_segment_len + protocol */
-    sum = chksum(sum, (u8_t *)&hdr_ip_tcp->srcipaddr[0], 2 * sizeof(uip_ipaddr_t));
+    sum = chksum(sum, (u8_t *)&hdr_ip_tcp->srcipaddr[0], 2 * sizeof(ipaddr_t));
 
     /* ------ Checksum del TCP header ------ */
 
@@ -408,11 +434,11 @@ uint16_t upper_layer_chksum(uint8_t protocol) {
     printf("chksum uip_frame [%d - %d]: %X\r\n",
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_header_len,
             UIP_IPH_LEN + UIP_LLH_LEN + upper_layer_segment_len, 
-            uip_htons(sum));
+            ip_htons(sum));
     #endif
     
     /* 0xffff es el resultado de una comprobación exitosa de checksum */
-    return (sum == 0) ? 0xffff : uip_htons(sum);
+    return (sum == 0) ? 0xffff : ip_htons(sum);
 }
 
 /** 
@@ -430,3 +456,6 @@ uint16_t uip_udpchksum(void) {
     return upper_layer_chksum(UIP_PROTO_UDP);
 }
 #endif /* UIP_UDP */
+
+
+#endif /* UIP_STACK */

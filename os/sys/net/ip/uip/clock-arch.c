@@ -25,16 +25,16 @@
 
 /////// El timer debe partir de selecionado en el arch y no aquii
 #ifdef ARDUINO_AVR_NANO
-#include "../../../arch/board/arduino/timer_ino.h"
+#include "../../../../arch/timer.h"
 #endif
 
-#ifdef ARDUINO_ARCH_ESP8266 
+/* #ifdef ARDUINO_ARCH_ESP8266 
 #include "../../../arch/board/esp/timer_esp.h"
 #endif
 
 #ifdef NATIVE
 #include "../../../arch/board/native/arch_timer.h"
-#endif
+#endif */
 
 #include "clock-arch.h"
 
