@@ -7,22 +7,18 @@
 static uint8_t mac_address[] = { MAC_ADDRESS };
 static bool nic_initialized;
 
+#ifdef UIP_STACK
 #ifdef UIP_PERIODIC_TIMER
 static unsigned long periodic_timer;
-#endif
+#endif /* UIP_PERIODIC_TIMER */
+#endif /* UIP_STACK */
 
 /** 
  * 
  */
 void net_stack_init(void) {
 
-    /* ------------------------------ STACK UIP ------------------------------ */
-
-    #ifdef UIP_STACK
-    
-    #ifdef UIP_PERIODIC_TIMER
-    periodic_timer = msec_now() + UIP_PERIODIC_TIMER;
-    #endif
+    /* ------------------------------ ALL STACK ------------------------------ */
 
     /* Inicializar la interface */
     nic_initialized = mac_init(mac_address);
@@ -34,13 +30,27 @@ void net_stack_init(void) {
         #endif
         
         return;
-    
-    }
 
     #if NET_DEBUG >= 1
     printf("NIC init success :)\r\n");
-    
     #endif
+    
+    }
+
+    #ifdef LWIP_STACK
+
+    /* ------------------------------ STACK LWIP ----------------------------- */
+
+    #endif /* LWIP_STACK */
+
+    /* ------------------------------ STACK UIP ------------------------------ */
+
+    #ifdef UIP_STACK
+    
+    #ifdef UIP_PERIODIC_TIMER
+    periodic_timer = msec_now() + UIP_PERIODIC_TIMER;
+    #endif
+
 
     /* Pasarle a uip la mac inicializada */
     uip_seteth_addr(mac_address);
@@ -124,13 +134,6 @@ void net_stack_init(void) {
     #endif
 
     #endif /* UIP_STACK */
-
-
-    #ifdef LWIP_STACK
-
-    /* ------------------------------ STACK LWIP ----------------------------- */
-
-    #endif /* LWIP_STACK */
 
 }
 
