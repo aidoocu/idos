@@ -50,10 +50,6 @@
 #include "transport/tcp.h"
 
 
-
-
-
-
 /** \brief Inicializa la NIC e IP si está definido */
 void net_stack_init(void);
 

@@ -1,8 +1,14 @@
 /** 
  * 
+ *
+ * \note Por defecto, ESP intentará reconectarse a la red Wi-Fi cada vez 
+ *  que se desconecte. No hay necesidad de manejar esto por un código separado.
+ *  Una buena manera de simular la desconexión sería reiniciar el punto de 
+ *  acceso. El ESP informará de la desconexión y luego intentará reconectarse 
+ *  automáticamente.
  * 
  * 
-*/
+ */
 
 #ifndef _ESP8266_WIFI_H_
 #define _ESP8266_WIFI_H_
@@ -29,5 +35,9 @@
  * que sea configurable o .......
 */
 bool mac_init(uint8_t * mac);
+
+
+void mac_get_address(uint8_t * mac);
+
 
 #endif /* _ESP8266_WIFI_H_ */

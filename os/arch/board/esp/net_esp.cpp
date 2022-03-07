@@ -14,11 +14,16 @@
  */
 bool mac_init(uint8_t * mac){
     
+    #if NET_DEBUG >= 3
+    printf("ESP WiFi starting \r\n");
+    #endif
+
     /* Modo de estación */
     WiFi.mode(WIFI_STA);
 
-    #if NET_DEBUG >= 3
-    printf("ESP WiFi starting \r\n");
+    /* Si hay una dirección mac declarada se inicializa */
+    #ifdef MAC_ADDRESS
+    wifi_set_macaddr(STATION_IF, mac);
     #endif
 
     /*  */
@@ -56,8 +61,17 @@ bool mac_init(uint8_t * mac){
 
     #if NET_DEBUG >= 3
     printf("WiFi connexion sucess \r\n");
-    printf("IP address: %s\r\n", WiFi.localIP())
-    #endif   
+    #endif
 
     return true;
 }
+
+
+void mac_get_address(uint8_t * mac){
+    wifi_get_macaddr(STATION_IF, mac);    
+}
+
+
+
+
+

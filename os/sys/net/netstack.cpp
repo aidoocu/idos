@@ -4,7 +4,6 @@
 
 
 /* Variables */
-static uint8_t mac_address[] = { MAC_ADDRESS };
 static bool nic_initialized;
 
 #ifdef UIP_STACK
@@ -20,7 +19,65 @@ void net_stack_init(void) {
 
     /* ------------------------------ ALL STACK ------------------------------ */
 
-    /* Inicializar la interface */
+    /* -------------------------- IP Configuration --------------------------- */
+
+    /* Si está configurado como static se inicializa según configuración */
+    #ifdef NET_STATIC
+    /* Variables de 8 bits */
+    uint8_t host[] = {IP_ADDRESS};
+    uint8_t gateway[] = {IP_GATEWAY};
+    uint8_t subnet_mask[] = {IP_MASK};
+
+    ip_config(host, gateway, subnet_mask);
+
+    /* Si no, se llama al DHCP */
+    #else
+
+    //DHCP aqui!!!!!!!!
+    uint8_t host[4];
+    uint8_t gateway[4];
+    uint8_t subnet_mask[4];
+
+    #endif /* NET_STATIC */
+
+
+
+    #if NET_DEBUG >= 3
+
+    /* Se sustituyen las direcciones de configuración por las
+    que efectivamente se han configurado */
+    ip_get_address(host, ADDR_HOST);
+    ip_get_address(gateway, ADDR_GATEWAY);
+    ip_get_address(subnet_mask, MASK_SUBNET);
+
+    /* Se imprime la dirección IP configurada */
+    printf ("IP address: %d.%d.%d.%d \r\n", 
+                        host[0],
+                        host[1],
+                        host[2],
+                        host[3]);
+    printf ("Gateway address: %d.%d.%d.%d \r\n", 
+                        gateway[0],
+                        gateway[1],
+                        gateway[2],
+                        gateway[3]);
+    printf ("Subnet_mask address: %d.%d.%d.%d \r\n", 
+                    subnet_mask[0],
+                    subnet_mask[1],
+                    subnet_mask[2],
+                    subnet_mask[3]);
+
+    #endif /* NET_DEBUG */
+
+    /* ------------------------------ MAC Init ------------------------------- */
+
+    #ifdef MAC_ADDRESS
+    uint8_t mac_address[] = {MAC_ADDRESS};
+    #else 
+    static uint8_t mac_address[] = NULL;
+    #endif /* MAC_ADDRESS */
+
+    /* Inicializar la interface de red con la dirección mac si hubiera */
     nic_initialized = mac_init(mac_address);
 
     if (!nic_initialized) {
@@ -37,9 +94,10 @@ void net_stack_init(void) {
     
     }
 
+    /* ------------------------------ STACK LWIP ----------------------------- */
+
     #ifdef LWIP_STACK
 
-    /* ------------------------------ STACK LWIP ----------------------------- */
 
     #endif /* LWIP_STACK */
 
@@ -55,87 +113,29 @@ void net_stack_init(void) {
     /* Pasarle a uip la mac inicializada */
     uip_seteth_addr(mac_address);
 
-    #if NET_DEBUG >= 3
-    printf("mac address: %x:%x:%x:%x:%x:%x \r\n", 
-                        uip_ethaddr.addr[0], 
-                        uip_ethaddr.addr[1], 
-                        uip_ethaddr.addr[2], 
-                        uip_ethaddr.addr[3], 
-                        uip_ethaddr.addr[4], 
-                        uip_ethaddr.addr[5]);
-    #endif
-
     uip_init();
     uip_arp_init();
 
-    /** 
-     * Se configura la capa de red a partir de la implementación de uIP de Adam Dunkels. 
-     *  Esta utiliza variables de 16 bits para representarlas direcciones IP así que hay 
-     *  que llevarlas de 8 bits a 16 e inicializar. 
-     */
-
-    /* variables de 16 bits para direcciones IP de uIP */
-    ipaddr_t uipaddr;
-
-    /* Si está configurado como static se inicializa según configuración */
-    #ifdef NET_STATIC
-    /* Variables de 8 bits */
-    uint8_t host[] = {IP_ADDRESS};
-    uint8_t gateway[] = {IP_GATEWAY};
-    uint8_t subnet[] = {IP_SUBNET};
-
-    /* Si no, se llama al DHCP */
-    #else
-
-    //DHCP aqui!!!!!!!!
-
-    #endif /* NET_STATIC */
-
-    uip_ip_addr(uipaddr, host);
-    uip_sethostaddr(uipaddr);
-
-    #if NET_DEBUG >= 3
-    
-    /* Se imprime la dirección IP configurada */
-    ipaddr_t hostaddr;
-    uip_gethostaddr(&hostaddr);
-    host[0] = (uint8_t)hostaddr[0];
-    host[1] = (uint8_t)ip_htons(hostaddr[0]);
-    host[2] = (uint8_t)hostaddr[1];
-    host[3] = (uint8_t)ip_htons(hostaddr[1]);
-
-    printf ("IP address: %d.%d.%d.%d \r\n", 
-                        host[0],
-                        host[1],
-                        host[2],
-                        host[3]);
-    #endif
-
-    uip_ip_addr(uipaddr, gateway);
-    uip_setdraddr(uipaddr);
-
-    #if NET_DEBUG >= 3 
-    printf ("Gateway address: %d.%d.%d.%d \r\n", 
-                        gateway[0],
-                        gateway[1],
-                        gateway[2],
-                        gateway[3]);
-    #endif
-
-    uip_ip_addr(uipaddr, subnet);
-    uip_setnetmask(uipaddr);
-    
-    #if NET_DEBUG >= 3
-    printf ("Subnet address: %d.%d.%d.%d \r\n", 
-                    subnet[0],
-                    subnet[1],
-                    subnet[2],
-                    subnet[3]);
-    #endif
-
     #endif /* UIP_STACK */
 
+    #if NET_DEBUG >= 3
+
+    /* Sustituimos la dirección mac de configuración por la que efectivamente
+    se ha configurado */
+    mac_get_address(mac_address);
+
+    printf("mac address: %x:%x:%x:%x:%x:%x \r\n", 
+                        mac_address[0], 
+                        mac_address[1], 
+                        mac_address[2], 
+                        mac_address[3], 
+                        mac_address[4], 
+                        mac_address[5]);
+    #endif
+
 }
+
+
 
 /** 
  * 

@@ -291,6 +291,25 @@ bool mac_init(uint8_t * macaddr) {
 
 }
 
+
+/*-------------------------- mac_get_address() ------------------------------*/
+
+void mac_get_address(uint8_t * macaddr){
+
+    enc_spi_enable();
+
+    /* Config MAC address */
+    macaddr[0] = read_reg(MAADR5);
+    macaddr[1] = read_reg(MAADR4);
+    macaddr[2] = read_reg(MAADR3);
+    macaddr[3] = read_reg(MAADR2);
+    macaddr[4] = read_reg(MAADR1);
+    macaddr[5] = read_reg(MAADR0);
+
+    enc_spi_disable();
+
+}
+
 /*----------------------------- mac_poll() ----------------------------------*/
 
 uint16_t mac_poll(uint8_t * frame) {

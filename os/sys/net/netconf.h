@@ -18,7 +18,7 @@
 /* Config static by default*/
 #define IP_ADDRESS 10, 16, 21, 155
 #define IP_GATEWAY 10, 16, 21, 1
-#define IP_SUBNET 10, 16, 21, 1
+//#define IP_SUBNET 10, 16, 21, 1
 #define IP_MASK 255, 255, 255, 0
 
 /* #define IP_ADDRESS 192, 168, 1, 115

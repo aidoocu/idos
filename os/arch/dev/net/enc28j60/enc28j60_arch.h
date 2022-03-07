@@ -44,8 +44,14 @@
 /** 
  *  \brief Inicializar el ENC 
  *  \param mac Dirección (máscara) MAC que deberá tener el ENC
-*/
+ */
 bool mac_init(uint8_t * mac);
+
+/** 
+ *  \brief Escribir  
+ *  \param mac Dirección (máscara) MAC que deberá tener el ENC
+*/
+void mac_get_address(uint8_t * mac);
 
 /** 
  *  \brief  Poll a la ENC para ver si ha llegado algo
