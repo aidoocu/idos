@@ -33,10 +33,35 @@ bool mac_init(uint8_t * mac){
 
     /* Verificamos conección al AP y si no fuera exitosa reintentamos
     hasta WIFI_CONN_RETRY veces */
-    while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        
-        #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
+    int8_t conn_result;
+
+    while ((conn_result = WiFi.waitForConnectResult()) != WL_CONNECTED) {
+    #else /* NET_DEBUG */
+    while ((WiFi.waitForConnectResult()) != WL_CONNECTED) {
+    #endif /* NET_DEBUG */
+
+        /* Razones por la que la connexión no fue exitosa */
+        #if NET_DEBUG >= 2
         printf(".");
+
+        switch (conn_result){
+        case WL_NO_SSID_AVAIL:
+            printf("Configured SSID cannot be reached");
+            break;
+        case WL_CONNECT_FAILED:
+            printf("Connection failed");
+            break;
+        case WL_WRONG_PASSWORD:
+            printf("Password is incorrect");
+            break;
+        case -1:
+            printf("connection failed");
+            break;        
+        default:
+            break;
+        }
+
         #endif
 
         /* Esperamos 5 segundos */
@@ -59,9 +84,14 @@ bool mac_init(uint8_t * mac){
 
     }
 
+    /* Solicitarle a la NIC reconectarse en caso de perder la conexión */
+    #ifdef AUTO_RECONNECT
+    WiFi.setAutoReconnect(true);
+    #endif /* AUTO_RECONNECT */
+
     #if NET_DEBUG >= 3
     printf("WiFi connexion sucess \r\n");
-    #endif
+    #endif /* NET_DEBUG */
 
     return true;
 }

@@ -23,7 +23,6 @@
 /* Placa ESP8266 - LwIP incluido en el framework */
 #ifdef ARDUINO_ARCH_ESP8266
 #include <ESP8266WiFi.h>
-#define LWIP_STACK
 #endif /* ARDUINO_ARCH_ESP8266 */
 
 

@@ -45,7 +45,7 @@ void ip_config(uint8_t * host, uint8_t * gateway, uint8_t * subnet){
     IPAddress mask_subnet(subnet);
     
     WiFi.config(ip_host, ip_gateway, mask_subnet);
-    
+
     #endif /* ARDUINO_ARCH_ESP8266 */
 
     #endif /* LWIP_STACK */

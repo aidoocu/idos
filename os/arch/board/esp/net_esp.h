@@ -20,9 +20,15 @@
 #include <WiFi.h>
 #else
 #include <ESP8266WiFi.h>
+//#include <user_interface.h> /* sdk de base */
 #endif
 
+/* Cantidad de intentos de reconectarse */
+#ifndef WIFI_CONN_RETRY
 #define WIFI_CONN_RETRY 5
+#endif
+
+#define AUTO_RECONNECT
 
 #define WIFI_SSID "TP-LINK_CC7300"
 #define WIFI_PASS "60774774"
