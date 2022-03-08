@@ -9,6 +9,10 @@
 
 #include "../ip/ip.h"
 
+#ifdef LWIP_STACK
+//#include <lwip/tcp.h>
+#endif /* LWIP_STACK */
+
 /** 
  *  Significado de las banderas uip_conn->tcpstateflags:
  *  - UIP_CLOSED (0): La conexión se ha cerrado de consenso (el extremo ha respondido con un ack al cierre o simplemente
@@ -49,6 +53,10 @@
 */
 #define MAX_TCP_MSG_SIZE NET_BUFSIZE - LLH_LEN - TCPIP_HLEN
 
+#ifndef MAX_PENDING_CLIENTS_PER_PORT
+#define MAX_PENDING_CLIENTS_PER_PORT 5
+#endif
+
 /* --------------------------------------------------------------------------------- */
 
 /* Algunos puertos estándar */
@@ -68,10 +76,16 @@ struct tcp_listener_st {
     struct tcp_listener_st * next;              /**< Puntero al próximo listener o a NULL */
     struct task_st * task;                      /**< Puntero a la tarea que setea el listerner */
     struct msg_st ipc_msg;                      /**< Mensaje a la tarea que setea el listerner */
+
     uint16_t msg_len_in;                        /**< Tamaño del mensaje que está en el buffer de entrada */
     uint16_t msg_len_out;                       /**< Tamaño del mensaje que está en el buffer de salida */
     uint8_t net_msg_in[MAX_TCP_MSG_SIZE];       /**< Buffer que contendrá el mensaje de la red */
     uint8_t net_msg_out[MAX_TCP_MSG_SIZE];      /**< Buffer que contendrá el mensaje de la red */
+
+    //#ifdef LWIP_STACK
+    //tcp_pcb * pcb;              /* Puntero al bloque de control de TCP creado por LwIP */
+    //#endif
+
 };
 
 /** 

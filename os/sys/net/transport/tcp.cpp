@@ -18,9 +18,28 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
      *      necesario hacer lo mismo cuando le pasemos el puerto. Ejemplo, 80 en uint16_t
      *      es 0x0050, uip lee el frame como 0x5000, ip_htons cambia de lugar los bytes 
     */
-    #ifdef UIP_STACK
+    
+	#ifdef UIP_STACK
 	uip_listen((u16_t)ip_htons(port));
 	#endif /* UIP_STACK */
+
+	#ifdef LWIP_STACK
+
+	/* Aqui se crea el bloque de control de TCP para LwIP */
+	//tcp_pcb * pcb = tcp_new();
+	//pcb->so_options |= SOF_REUSEADDR;
+
+	//tcp_bind(pcb, IP_ANY_TYPE, port);
+	//tcp_pcb * listen_pcb = tcp_listen_with_backlog(pcb, MAX_PENDING_CLIENTS_PER_PORT);
+
+	/* y se asigna al listener */
+	//listener->pcb = listen_pcb;
+	//listener->port = listen_pcb->local_port;
+
+	//tcp_accept(listen_pcb, client_accept);
+    //tcp_arg(listen_pcb, (void*) this);
+
+	#endif /* LWIP_STACK */
 
     listener->port = port;
     listener->msg_len_in = listener->msg_len_out = 0;

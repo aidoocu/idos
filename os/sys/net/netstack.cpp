@@ -98,6 +98,7 @@ void net_stack_init(void) {
 
     #ifdef LWIP_STACK
 
+    
 
     #endif /* LWIP_STACK */
 
@@ -306,8 +307,22 @@ void net_tick(void) {
 
     /* ------------------------------ STACK LWIP ----------------------------- */
     
-    
     #ifdef LWIP_STACK
+
+    /* ------------------------------- ESP8266 ------------------------------- */
+    #ifdef ARDUINO_ARCH_ESP8266
+
+    /* Si está conectado procedemos a verificar si se ha recibido algo */
+    if(WiFi.status() == WL_CONNECTED){
+
+    /* ----------------------- Recibir datos desde la red --------------------- */
+    /* Se recive desde la capa de transporte en TCP y UPD */
+
+
+    }
+
+    #endif /* ARDUINO_ARCH_ESP8266 */
+    /* ------------------------------- /ESP8266 ------------------------------ */
 
 
     #endif /* LWIP_STACK */

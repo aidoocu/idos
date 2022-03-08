@@ -3,6 +3,10 @@
 
 #include "../ip/ip.h"
 
+#ifndef ARDUINO_ARCH_ESP8266
+#include <WiFiUdp.h>
+#endif /* ARDUINO_ARCH_ESP8266 */
+
 /* Tamaño total de todos lo headers de UDP (LLH + IPH + UDPH) */
 #define UIP_UDP_PHYH_LEN LLH_LEN + IPUDPH_LEN
 /* Tamaño máximo del mensaje (payload) que se puede enviar */

@@ -83,6 +83,10 @@
 /* Comente la linea a continuación si no tiene ninguna interface de red */
 #define NET_STACK NET_STACK_UIP
 
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#define LWIP_STACK
+//#define LWIP_INTERNAL
+#endif
 
 #ifdef NET_STACK
 
