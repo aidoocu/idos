@@ -23,7 +23,7 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
 	uip_listen((u16_t)ip_htons(port));
 	#endif /* UIP_STACK */
 
-	#ifdef LWIP_STACK
+	#if defined(LWIP_STACK) || defined(ESP_NET_STACK) 
 
 	/* Aqui se crea el bloque de control de TCP para LwIP */
 	//tcp_pcb * pcb = tcp_new();
@@ -39,7 +39,7 @@ void tcp_listener_begin(tcp_listener_st * listener, uint16_t port) {
 	//tcp_accept(listen_pcb, client_accept);
     //tcp_arg(listen_pcb, (void*) this);
 
-	#endif /* LWIP_STACK */
+	#endif /* LWIP_STACK || ESP_NET_STACK*/
 
     listener->port = port;
     listener->msg_len_in = listener->msg_len_out = 0;
@@ -74,12 +74,14 @@ void tcp_listener_end(tcp_listener_st listener, uint16_t port) {
 
 bool tcp_open(tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port){
 
+
+	#ifdef UIP_STACK
+
 	/* Creamos una conexión y una dirección tipo uIP  */
 	struct uip_conn * conn;
 	ipaddr_t uip_addr;
   	//static ipaddr_t addr;
 
-	#ifdef UIP_STACK
 	/* Se convierte IP en uIP */
 	uip_ip_addr(uip_addr, ip_addr);
 

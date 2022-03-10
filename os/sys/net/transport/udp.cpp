@@ -7,6 +7,10 @@
 
 #define UIP_ARPHDRSIZE 42
 
+#ifdef ESP_NET_STACK
+struct udp_listener_st * udp_listeners = NULL;		
+#endif /* ESP_NET_STACK */
+
 /////// !esto ppuede que este mal definido
 static struct udp_sender_st {
 	bool send;						/* Actúa como bandera para uipudp_appcall() y como 
@@ -48,6 +52,33 @@ bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
 
 	#endif /* UIP_STACK */
 
+	#ifdef ESP_NET_STACK
+
+	listener->udp_conn.begin(port);
+	
+	#if NET_DEBUG >= 3
+	printf("UDP listener initialized on port %d\n", listener->udp_conn.localPort());
+	#endif
+
+	/* En este caso los listeners se listarán pues deberán ser chequeados
+	por net_tick en busca de cambios */
+    /* Este listener acaba de llegar por lo tanto es el último */
+    listener->next = NULL;
+
+    /* Si es el primero, udp_listeners lo apuntará */
+    if(udp_listeners == NULL) {
+        udp_listeners = listener;
+    } else {
+        /* Si no es el primero hay que buscar el último y que este lo apunte */
+        udp_listener_st * udp_listener_index = udp_listeners;
+        while (udp_listener_index->next != NULL) {
+            udp_listener_index = udp_listener_index->next;
+        }
+        udp_listener_index->next = listener;
+    }
+
+	#endif /* ESP_NET_STACK */	
+
 	return true;
 
 }
@@ -73,9 +104,10 @@ bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len)
 
 	if(!udp_sender.send && !udp_sender.response){	
 		/* Se convierte IP en uIP */
-		ipaddr_t uip_addr;
 
 		#ifdef UIP_STACK
+
+		ipaddr_t uip_addr;
 		uip_ip_addr(uip_addr, dst_addr);
 
 		/* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
@@ -121,12 +153,84 @@ bool udp_response(uint8_t * msg, uint16_t len){
 	return false;
 }
 
+/* ---------------------------- ESP_NET_STACK UIP ---------------------------- */
+
+#ifdef ESP_NET_STACK
+
+void esp_net_udp_appcall(void){
+
+	int udp_packet_size = 0;
+	udp_listener_st * listener_index = udp_listeners;
+
+	/* Buscando en todos los listeners si hay algo recibido para notificarlo al app dueña 
+	del listener. Note que cada listener se recorre en este ciclo una sola vez, por lo que
+	de haber más de un mensaje recibido en un listener en particular, se recibirá y procesará
+	en el próximo ciclo */
+	while(1) {
+
+		/* ----------------------------------- Receive ---------------------------------- */
+		udp_packet_size = listener_index->udp_conn.parsePacket();
+	
+		/* Si hay algo en el buffer se recibirá y se le notifica a la task */
+		if (udp_packet_size) {
+
+			printf("Algo en el buffer de largo %d\n", udp_packet_size);
+						
+			listener_index->msg_len = listener_index->udp_conn.read(listener_index->msg, MAX_UDP_MSG_SIZE);
+
+			if (listener_index->msg_len > 0){
+
+				listener_index->msg[listener_index->msg_len] = '\0';
+				printf("Leidos %d chars: %s\n", udp_packet_size, listener_index->msg);
+
+				/* Anunciamos a la tarea que hay un mensaje nuevo */
+				listener_index->status = UDP_MSG_IN;
+				
+				//listener_index->ripaddr = (uint8_t *)listener_index->udp_conn.remoteIP();
+				listener_index->rport = listener_index->udp_conn.remotePort();
+				
+				/* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
+				udp_ipc(listener_index);
+			}
+		}
+
+		/* --------------------------------- Send/Respoce ------------------------------- */
+		// @@@!!!! aqui hay que identificar o garantizar de alguna manera que efectivamente la respuesta
+		// desde este listener y no de otro !!!
+		if(udp_sender.response){
+
+			printf("Respondiendo a %s:%d desde %d\n", listener_index->udp_conn.remoteIP().toString().c_str(), 
+												listener_index->udp_conn.remotePort(),
+												listener_index->udp_conn.localPort());
+
+			/* Situar puerto e IP del remoto en el datagrama de respuesta */
+			listener_index->udp_conn.beginPacket(listener_index->udp_conn.remoteIP(), 
+													listener_index->udp_conn.remotePort());
+
+			/* Pasar el mensaje de respuesta */
+			listener_index->udp_conn.write(udp_sender.msg, udp_sender.len);
+			listener_index->udp_conn.endPacket();
+
+			/* Bajar la bandera */
+			udp_sender.response = false;
+
+		}
+
+		/* Si next es NULL implica que ya hemos revisado el último listener y salimos
+		del while. No me gusta como queda esto pero :( */
+		if(listener_index->next == NULL)
+			break;
+		
+		listener_index = listener_index->next;
+
+	}
+}
+
+#endif /* ESP_NET_SATCK */
 
 /* ------------------------------ STACK UIP ------------------------------ */
 
 #ifdef UIP_STACK
-
-/* --------------------------------------------------------------------------------- */
 
 /** 
  * 

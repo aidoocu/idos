@@ -23,6 +23,7 @@ void net_stack_init(void) {
 
     /* Si está configurado como static se inicializa según configuración */
     #ifdef NET_STATIC
+    
     /* Variables de 8 bits */
     uint8_t host[] = {IP_ADDRESS};
     uint8_t gateway[] = {IP_GATEWAY};
@@ -42,7 +43,7 @@ void net_stack_init(void) {
 
 
 
-    #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
 
     /* Se sustituyen las direcciones de configuración por las
     que efectivamente se han configurado */
@@ -51,6 +52,7 @@ void net_stack_init(void) {
     ip_get_address(subnet_mask, MASK_SUBNET);
 
     /* Se imprime la dirección IP configurada */
+    printf("\n ...\n");
     printf ("IP address: %d.%d.%d.%d \r\n", 
                         host[0],
                         host[1],
@@ -74,7 +76,7 @@ void net_stack_init(void) {
     #ifdef MAC_ADDRESS
     uint8_t mac_address[] = {MAC_ADDRESS};
     #else 
-    static uint8_t mac_address[] = NULL;
+    static uint8_t mac_address[6];
     #endif /* MAC_ADDRESS */
 
     /* Inicializar la interface de red con la dirección mac si hubiera */
@@ -94,13 +96,6 @@ void net_stack_init(void) {
     
     }
 
-    /* ------------------------------ STACK LWIP ----------------------------- */
-
-    #ifdef LWIP_STACK
-
-    
-
-    #endif /* LWIP_STACK */
 
     /* ------------------------------ STACK UIP ------------------------------ */
 
@@ -119,7 +114,7 @@ void net_stack_init(void) {
 
     #endif /* UIP_STACK */
 
-    #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
 
     /* Sustituimos la dirección mac de configuración por la que efectivamente
     se ha configurado */
@@ -305,24 +300,46 @@ void net_tick(void) {
 
 
 
+
+    /* ---------------------------- ESP_NET_STACK ---------------------------- */
+
+    #ifdef ESP_NET_STACK
+
+    if(WiFi.status() != WL_CONNECTED){
+        /* Aquí hay que hacer algo, reconectarse..... */
+
+        return;
+    }
+
+    /** El stack del ESP que es atendido por el framework de Arduino ya se ocupa
+     * de alguna manera de atender y gestionar hasta ip y protocolos intermedios
+     * como arp e icmp. Hasta aquí sólo habrá que verificar si hay alguna escucha
+     * activa de TCP o UDP y en ese caso verificar si hay algo recibido, o listo 
+     * para enviar.
+     */
+
+    /* ------------------------------ UDP RX/TX ------------------------------- */
+    if(udp_listeners){
+        udp_poll();
+    }
+
+    if(tcp_listeners){
+        /* !!! */
+    }
+
+
+
+    /* ------------------------------- Receive ------------------------------- */
+
+
+
+    #endif /* ESP_NET_STACK */
+
+
+
     /* ------------------------------ STACK LWIP ----------------------------- */
     
     #ifdef LWIP_STACK
-
-    /* ------------------------------- ESP8266 ------------------------------- */
-    #ifdef ARDUINO_ARCH_ESP8266
-
-    /* Si está conectado procedemos a verificar si se ha recibido algo */
-    if(WiFi.status() == WL_CONNECTED){
-
-    /* ----------------------- Recibir datos desde la red --------------------- */
-    /* Se recive desde la capa de transporte en TCP y UPD */
-
-
-    }
-
-    #endif /* ARDUINO_ARCH_ESP8266 */
-    /* ------------------------------- /ESP8266 ------------------------------ */
 
 
     #endif /* LWIP_STACK */

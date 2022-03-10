@@ -21,10 +21,12 @@
 #endif /* ENC28J60 */
 
 /* Placa ESP8266 - LwIP incluido en el framework */
-#ifdef ARDUINO_ARCH_ESP8266
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#define LWIP_STACK
+#define ESP_NET_STACK
 #include <ESP8266WiFi.h>
-#endif /* ARDUINO_ARCH_ESP8266 */
-
+//#define LWIP_INTERNAL
+#endif
 
 #ifdef NATIVE
 /* Por ahora NATIVE usara uIP */
@@ -116,12 +118,12 @@ extern "C" {
 #endif /* UIP_STACK */
 
 /* Definiciones para LowIP placas como ESP8266 o ESP32 */
-#ifdef LWIP_STACK
+#if defined(LWIP_STACK) || defined(ESP_NET_STACK)
 
 #define LLH_LEN      12 
-#define IPUDPH_LEN   12
+#define IPUDPH_LEN   30
 #define TCPIP_HLEN   40
-#define NET_BUFSIZE  128
+#define NET_BUFSIZE  512
 
 /* Homogenizando el tipo ip_addr */
 typedef uint16_t lwipv4_addr_t[2];
@@ -131,6 +133,13 @@ typedef uint16_t lwipv4_addr_t[2];
 #define ip_htons lwip_htons
 //#define IP_HTONS LWIP_HTONS
 
-#endif /* LWIP_STACK */
+#endif /* LWIP_STACK || ESP_NET_STACK */
+
+/* Función que atiende udp tanto para recibir como transmitir */
+#ifdef ESP_NET_STACK
+void esp_net_udp_appcall(void);
+#define udp_poll esp_net_udp_appcall
+#endif /* ESP_NET_SATCK */
+
 
 #endif /* _IP_H_ */

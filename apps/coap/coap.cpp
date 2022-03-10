@@ -222,7 +222,7 @@ TASK_PT(coap_task){
     coap_resource_create(discover, ".well-known", NULL);
     coap_resource_activate(&discover);
 
-    #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
     printf(":: CoAP listening!!\n\r");
     #endif
 

@@ -3,9 +3,9 @@
 
 #include "../ip/ip.h"
 
-#ifndef ARDUINO_ARCH_ESP8266
+#ifdef ESP_NET_STACK
 #include <WiFiUdp.h>
-#endif /* ARDUINO_ARCH_ESP8266 */
+#endif /* ESP_NET_STACK */
 
 /* Tamaño total de todos lo headers de UDP (LLH + IPH + UDPH) */
 #define UIP_UDP_PHYH_LEN LLH_LEN + IPUDPH_LEN
@@ -31,8 +31,17 @@ struct udp_listener_st {
 	struct msg_st ipc_msg;				/**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len;					/**< Tamaño del mensaje en el buffer de entrada */
     uint8_t msg[MAX_UDP_MSG_SIZE];		/**< Buffer que contendrá el mensaje de la red */
+
+#ifdef ESP_NET_STACK
+	WiFiUDP udp_conn;
+	udp_listener_st * next;
+#endif /* ESP_NET_STACK */
 };
 
+
+#ifdef ESP_NET_STACK
+extern struct udp_listener_st * udp_listeners;		
+#endif /* ESP_NET_STACK */
 
 #define udp_listener(listener)                  \
             static udp_listener_st listener;    \
@@ -102,6 +111,8 @@ bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len)
  *  intentar el próximo ciclo.
  */
 bool udp_response(uint8_t * msg, uint16_t len);
+
+//#define udp_response(msg, len) udp_response(msg, len, )
 
 
 /** 

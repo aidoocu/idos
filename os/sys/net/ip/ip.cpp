@@ -34,11 +34,9 @@ void ip_config(uint8_t * host, uint8_t * gateway, uint8_t * subnet){
     
     #endif /* UIP_STACK */
 
-    /* ------------------------------ STACK LWIP ----------------------------- */
+    /* ----------------------------- ESP_NET_STACK --------------------------- */
 
-    #ifdef LWIP_STACK
-
-    #ifdef ARDUINO_ARCH_ESP8266
+    #ifdef ESP_NET_STACK
 
     IPAddress ip_host(host);
     IPAddress ip_gateway(gateway);
@@ -46,9 +44,7 @@ void ip_config(uint8_t * host, uint8_t * gateway, uint8_t * subnet){
     
     WiFi.config(ip_host, ip_gateway, mask_subnet);
 
-    #endif /* ARDUINO_ARCH_ESP8266 */
-
-    #endif /* LWIP_STACK */
+    #endif /* ESP_NET_STACK */
 
 }
 
@@ -86,29 +82,32 @@ void ip_get_address(uint8_t * address, uint8_t option){
 
     #ifdef LWIP_STACK
 
-    #ifdef ARDUINO_ARCH_ESP8266
+    #endif /* LWIP_STACK */
+
+    /* ---------------------------- ESP_NET_STACK ---------------------------- */
+    
+    #ifdef ESP_NET_STACK
 
     /* Obtener la estructura con la configuración de IP */
     struct ip_info esp_ip_address;
     wifi_get_ip_info(STATION_IF, &esp_ip_address);
 
     switch (option) {
-    case ADDR_HOST:
-        address = (uint8_t *)&esp_ip_address.ip;
-        break;
-    case ADDR_GATEWAY:
-        address = (uint8_t *)&esp_ip_address.gw;
-        break;
-    case MASK_SUBNET:
-        address = (uint8_t *)&esp_ip_address.netmask;
-        break;      
-    default:
-        break;
+        case ADDR_HOST:
+            address = (uint8_t *)&esp_ip_address.ip;
+            break;
+        case ADDR_GATEWAY:
+            address = (uint8_t *)&esp_ip_address.gw;
+            break;
+        case MASK_SUBNET:
+            address = (uint8_t *)&esp_ip_address.netmask;
+            break;      
+        default:
+            break;
     }
 
+    #endif /* ESP_NET_STACK */
 
-    #endif /* ARDUINO_ARCH_ESP8266 */    
 
-    #endif /* LWIP_STACK */
 
 }

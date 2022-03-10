@@ -14,7 +14,7 @@
  */
 bool mac_init(uint8_t * mac){
     
-    #if NET_DEBUG >= 3
+    #if NET_DEBUG >= 2
     printf("ESP WiFi starting \r\n");
     #endif
 
@@ -75,7 +75,7 @@ bool mac_init(uint8_t * mac){
         /* Si alcanza el número máximo de reintentos y no se conecta, falla... */
         if (wifi_conn_retry == WIFI_CONN_RETRY) {
 
-            #if NET_DEBUG >= 3
+            #if NET_DEBUG >= 2
             printf("WiFi connexion failed \r\n");
             #endif
 
@@ -89,8 +89,8 @@ bool mac_init(uint8_t * mac){
     WiFi.setAutoReconnect(true);
     #endif /* AUTO_RECONNECT */
 
-    #if NET_DEBUG >= 3
-    printf("WiFi connexion sucess \r\n");
+    #if NET_DEBUG >= 2
+    printf("WiFi connexion success \r\n");
     #endif /* NET_DEBUG */
 
     return true;
