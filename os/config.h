@@ -73,60 +73,12 @@
 #endif /* ENC28J60 */
 
 
-/** ------------------- Definiciones de red -------------------- */
 
-#define NET_STACK_NULL  0
-#define NET_STACK_HW    1
-#define NET_STACK_UIP   2
 
 
 /* Comente la linea a continuación si no tiene ninguna interface de red */
-#define NET_STACK NET_STACK_UIP
+#define NET_STACK 
 
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-#define LWIP_STACK
-//#define LWIP_INTERNAL
-#endif
-
-#ifdef NET_STACK
-
-
-/*      Pontencialmente esto no sea necesario       */
-
-/** TRANSPORT 
- * \brief Habilita el uso de la capa de tansporte. Puede comletar con:
- * \b TRANSP_UDP  Su interface será configurada para utilizar IPv4 
- * \b TRANSP_TCP  Su interface será configurada para utilizar IPv6 
- * \note puede comentar esta linea para no cargar la capa de red */
-#define CONF_TRANSP TRANSP_UDP
-
-#define TRANSP_UDP 1
-#define TRANSP_TCP 2
-
-/** Routing: 
- *  \todo Aun no implementado
-*/
-
-/** NET 
- * \brief Habilita el uso de la capa de red. Puede comletar con:
- * \b NET_IPV4  Su interface será configurada para utilizar IPv4 
- * \b NET_IPV6  Su interface será configurada para utilizar IPv6 
- * \note puede comentar esta linea para no cargar la capa de red */
-#define CONF_NET NET_IPV4
-
-#define NET_IPV4 1
-#define NET_IPV6 2
-
-/** MAC 
- * \brief Habilita el uso de la capa de enlace. Puede comletar con:
- * \b MAC_ETH   Su interface será configurada para utilizar ETH
- * \todo Falta incluir los mecanismos de radio CSMA, TSCH y BLE
- * \note puede comentar esta linea para no cargar la capa de acceso al medio*/
-//#define CONF_MAC MAC_ETH
-
-//#define MAC_ETH 1
-
-#endif /* NET_SATCK */
 
 
 #endif /* _CONFIG_H_ */
