@@ -53,10 +53,7 @@
  */
 uint8_t idos_init(void){
 
-    /* Inicializar el stack de red */
-    #if NET_STACK
-    net_stack_init();
-    #endif
+    delay(2000);
 
     /* Si la plataforma es native no se inicializa hardware */
     #ifndef NATIVE
@@ -80,6 +77,11 @@ uint8_t idos_init(void){
     inte_raise(cSREG);
 
     #endif /* NATIVE */
+
+    /* Inicializar el stack de red */
+    #ifdef NET_STACK
+    net_stack_init();
+    #endif
 
     /* Levantar las apps. Cada app que se adicione debe ser incluida aquí */
     #ifdef BUILD_COAP
@@ -150,7 +152,7 @@ void loop(){
     /* Cuando se despierte por el TICK verifico los timers */
     timer_exec();
 
-    #if NET_STACK
+    #ifdef NET_STACK
     net_tick();
     #endif
 
