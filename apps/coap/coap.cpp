@@ -63,7 +63,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
     uint8_t coap_hdr_len = coap_token_len(coap_hdr) + COAP_HEADER_LEN;
 
     /* El msg no puede ser menor que el header de CoAP + token lenth */
-    if((coap_hdr_len) > listener->msg_len){
+    if((coap_hdr_len) > listener->msg_len_in){
 
         #if NET_DEBUG >= 3
         printf("error msg to short\n\r");
@@ -72,7 +72,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
         return false;
     }
 
-    if(((coap_hdr_len) == listener->msg_len) && (coap_hdr->code != EMPTY_MSG_0_00)) {
+    if(((coap_hdr_len) == listener->msg_len_in) && (coap_hdr->code != EMPTY_MSG_0_00)) {
 
         #if NET_DEBUG >= 3
         printf("msg has not options or payload, but code is not an empty msg \n\r");
@@ -81,7 +81,7 @@ bool coap_hdr_check(udp_listener_st * listener, coap_hdr_st * coap_hdr) {
         return false;        
     }
 
-    if(((coap_hdr_len) != listener->msg_len) && (coap_hdr->code == EMPTY_MSG_0_00)) {
+    if(((coap_hdr_len) != listener->msg_len_in) && (coap_hdr->code == EMPTY_MSG_0_00)) {
 
         #if NET_DEBUG >= 3
         printf("has a empty code, but the msg is bigger than header\n\r");
@@ -127,7 +127,7 @@ void coap_response(uint8_t type, uint8_t code, udp_listener_st * listener, coap_
     /* Si el token no es 0 */
     if(coap_token_len(rcvd_hdr)) {
         /* Lo adicionamos al frame */
-        memcpy(&coap_send_buf[COAP_HEADER_LEN], &listener->msg[COAP_HEADER_LEN], coap_token_len(rcvd_hdr));
+        memcpy(&coap_send_buf[COAP_HEADER_LEN], &listener->msg_in[COAP_HEADER_LEN], coap_token_len(rcvd_hdr));
         /* e incluimos su tamaño */
         cp += coap_token_len(rcvd_hdr);
     }
@@ -164,7 +164,7 @@ void coap_response(uint8_t type, uint8_t code, udp_listener_st * listener, coap_
 
 send_coap_message:
 
-    udp_response(coap_send_buf, cp);
+    udp_response_to(listener, coap_send_buf, cp);
 
     #if NET_DEBUG >= 3
     printf("Response: ");
@@ -258,10 +258,10 @@ TASK_PT(coap_task){
                 remote_port);
 
             //imprimimos el mensaje
-            printf("msg len: %d\n", coap_listener.msg_len);
+            printf("msg len: %d\n", coap_listener.msg_len_in);
 
-            for (uint8_t i = 0; i < coap_listener.msg_len; i++){
-                printf("%02x ", coap_listener.msg[i]);
+            for (uint8_t i = 0; i < coap_listener.msg_len_in; i++){
+                printf("%02x ", coap_listener.msg_in[i]);
             }
             printf("\n");
 
@@ -270,7 +270,7 @@ TASK_PT(coap_task){
             /* -------------------------- header ----------------------- */
 
             /* Dividir el mensaje en los campos de CoAP */
-            coap_hdr(coap_rcvd_hdr, coap_listener.msg);
+            coap_hdr(coap_rcvd_hdr, coap_listener.msg_in);
 
             /* Chequeo básico de forma de mensaje */
             if(!coap_hdr_check(&coap_listener, coap_rcvd_hdr)){
@@ -307,7 +307,7 @@ TASK_PT(coap_task){
 
 
             /* Verificamos si hay opciones. Si este byte es 0xFF... */
-            if(coap_listener.msg[cp] == COAP_PAYLOAD_MARK){
+            if(coap_listener.msg_in[cp] == COAP_PAYLOAD_MARK){
                 /* ... es el marcador de payload, no hay opciones */
                 goto coap_payload_proccess;
             }
@@ -315,8 +315,8 @@ TASK_PT(coap_task){
             /* Chequeamos todas las opciones */
             do {
                 /* Verificamos que sea correcto el primer byte de la opción */
-                if(((coap_listener.msg[cp] & 0x0F) == 0x0F) 
-                    || ((coap_listener.msg[cp] & 0xF0) == 0xF0)){
+                if(((coap_listener.msg_in[cp] & 0x0F) == 0x0F) 
+                    || ((coap_listener.msg_in[cp] & 0xF0) == 0xF0)){
 
                     /* Una F en Option Delta u Option Length es un error de formato */
                     coap_respond(COAP_TYPE_RST, BAD_REQUEST_4_00);
@@ -339,8 +339,8 @@ TASK_PT(coap_task){
 
                     #if NET_DEBUG >= 3
                     printf("URI: ");
-                    for(int i=1; i <= (coap_listener.msg[cp] & 0x0F); i++){
-                        printf("%c", coap_listener.msg[cp + i]);
+                    for(int i=1; i <= (coap_listener.msg_in[cp] & 0x0F); i++){
+                        printf("%c", coap_listener.msg_in[cp + i]);
                     }
                     printf("\n");
                     #endif
@@ -359,8 +359,8 @@ TASK_PT(coap_task){
                     /* Si  */
                     while(resource_demanded != NULL) {
                         if((!memcmp(resource_demanded->uri_path, 
-                                &coap_listener.msg[cp + 1], 
-                                (coap_listener.msg[cp]) & 0x0F))
+                                &coap_listener.msg_in[cp + 1], 
+                                (coap_listener.msg_in[cp]) & 0x0F))
                                 && (resource_demanded->parent == resource_parent)){
 
                             break;
@@ -374,8 +374,8 @@ TASK_PT(coap_task){
                         
                         #if NET_DEBUG >= 3
                         printf("CoAP error: Resource \"");
-                        for(int i = 1; i <= (coap_listener.msg[cp] & 0x0F); i++ )
-                            printf("%c", coap_listener.msg[cp + i]);
+                        for(int i = 1; i <= (coap_listener.msg_in[cp] & 0x0F); i++ )
+                            printf("%c", coap_listener.msg_in[cp + i]);
                         printf("\" not found\n\r");
                         #endif
 
@@ -408,8 +408,8 @@ TASK_PT(coap_task){
 
                     /* Como el objetivo de idOS son dispositivo muy restrigido, por ahora solo aceptaremos
                     texto plano en tipos MIME. Para ello hay que verificar que esta opción sea len = 0 */
-                    if((coap_listener.msg[cp] & 0x0F) != 0 && 
-                        (coap_listener.msg[++ cp] != 0)){
+                    if((coap_listener.msg_in[cp] & 0x0F) != 0 && 
+                        (coap_listener.msg_in[++ cp] != 0)){
                         
                         #if NET_DEBUG >= 3
                         printf("CoAP error: Unsupported Content-Format\n\r");
@@ -432,8 +432,8 @@ TASK_PT(coap_task){
 
                     /* Como el objetivo de idOS son dispositivo muy restrigido, por ahora solo enviaremos
                     texto plano en tipos MIME. Para ello hay que verificar que esta opción sea len = 0 */
-                    if((coap_listener.msg[cp] & 0x0F) != 0 && 
-                        (coap_listener.msg[++ cp] != 0)){
+                    if((coap_listener.msg_in[cp] & 0x0F) != 0 && 
+                        (coap_listener.msg_in[++ cp] != 0)){
                         
                         #if NET_DEBUG >= 3
                         printf("CoAP error: Unsupported media type\n\r");
@@ -449,8 +449,8 @@ TASK_PT(coap_task){
                 /* Block2 - 23 */
                 else if(option_delta == COAP_OPTION_BLOCK2){
                     printf("Block2: ");
-                    for(int i=1; i == (coap_listener.msg[cp] & 0x0F); i++){
-                        printf("%d", coap_listener.msg[cp + i]);
+                    for(int i=1; i == (coap_listener.msg_in[cp] & 0x0F); i++){
+                        printf("%d", coap_listener.msg_in[cp + i]);
                     }
                     printf("\n");
                 }
@@ -473,10 +473,10 @@ TASK_PT(coap_task){
                 /* ------ \Identificamos la opción ------- */
 
                 /* Avazamos el índice hasta el final de la opción */
-                cp = cp + (coap_listener.msg[cp] & 0x0F);
+                cp = cp + (coap_listener.msg_in[cp] & 0x0F);
 
                 /* Si se acabó el mensaje, hemos terminado, no hay payload */
-                if (cp == coap_listener.msg_len - 1)
+                if (cp == coap_listener.msg_len_in - 1)
                     goto end_hdr_process;
 
                 /* Abanzamos al próximo bloque a procesar */
@@ -484,7 +484,7 @@ TASK_PT(coap_task){
 
             /* Repetimos esta operación siempre que exita una opción. El final de las opciones será o
             el marcador de payload. */
-            } while (coap_listener.msg[cp] != COAP_PAYLOAD_MARK);
+            } while (coap_listener.msg_in[cp] != COAP_PAYLOAD_MARK);
 
 
             /* -------------------------- payload ----------------------- */
@@ -493,11 +493,11 @@ TASK_PT(coap_task){
 
             cp ++;
             /* Avanzo a la primera posición del payload y lo apunto */
-            coap_payload.rcvd = &coap_listener.msg[cp];
+            coap_payload.rcvd = &coap_listener.msg_in[cp];
 
             /* así como su largo */
             coap_payload.rcvd_len = 0;
-            while(cp < coap_listener.msg_len){
+            while(cp < coap_listener.msg_len_in){
                 cp ++;
                 coap_payload.rcvd_len ++;
             }

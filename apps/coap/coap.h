@@ -51,7 +51,7 @@ struct coap_payload_st {
 /** 
  * \brief Optener el option number
  */
-#define option_number() ((coap_listener.msg[cp] & 0xF0) >> 4) + option_delta 
+#define option_number() ((coap_listener.msg_in[cp] & 0xF0) >> 4) + option_delta 
 /* --------------------------------------------------------------------------------- */
 
 

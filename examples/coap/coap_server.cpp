@@ -10,110 +10,51 @@ TASK(task_uno, "primera tarea");
 /*  */
 TASKS_AUTO_START(&task_uno)
 
+/*  */
+#define ULTRASONIC_PIN 5
+#define MAX_DISTANCE 200
+
+/* Sonar */
+//NewPing sonar(ULTRASONIC_PIN, ULTRASONIC_PIN, MAX_DISTANCE);
 
 /*  */
-static bool toggle_luz_sala = false;
-static bool toggle_luz_cuarto = true;
+static uint8_t dstc;
 
 /* defiendo los callbacks de los recursos coap */
 
-/*  ---------- Sala ---------- */
+/*  ---------- Doppler ---------- */
 
 /* GET */
-static uint8_t luz_sala_get(coap_payload_st * payload) {
+static uint8_t doppler_get(coap_payload_st * payload) {
   
-  printf("Luz sala GET!!!\n");
+  printf("Doppler GET!!!\n");
 
-  /* Los dos estados de la luz */
-  char on[] = {"ON_SALA"};
-  char off[] = {"OFF_SALA"};
+    char dstc_char[4];
 
-  if(toggle_luz_sala){
-    payload->send_len = sizeof(on);
-    memcpy(payload->send, on, sizeof(on));
-  } else {
-    memcpy(payload->send, off, sizeof(off));
-    payload->send_len = sizeof(off);
-  }
+    sprintf(dstc_char, "%d", dstc);
+
+    payload->send_len = 4;
+    memcpy(payload->send, dstc_char, payload->send_len);
+ 
 
   return 1;
 
 }
-static uint8_t luz_sala_put(coap_payload_st * payload){
 
-  printf("Luz sala PUT!!!\n");
-
-  /* Verificar que el payload trae el largo correcto */
-  if(payload->rcvd_len > 9){
-    return 0;
-  }
-
-  printf("len %d - %s\n", payload->rcvd_len, payload->rcvd);
-
-  char on[] = {"ON_SALA"};
-  char off[] = {"OFF_SALA"};
-
-  /* Si el payload contien ON_SALA, enciendo la sala */
-  if(!memcmp(payload->rcvd, on, payload->rcvd_len)){
-    toggle_luz_sala = true;
-    printf("ON\r\n");
-  }
-
-  /* Si el payload contien OFF_SALA, apago la sala */
-  if(!memcmp(payload->rcvd, off, payload->rcvd_len)){
-    toggle_luz_sala = false;
-    printf("OFF\r\n");
-  }
-
-  return 1;
-}
-
-/*  ---------- Sala ---------- */
-
-/* GET */
-static uint8_t luz_cuarto_get(coap_payload_st * payload) {
-  
-  printf("Luz cuarto!!!\n");
-
-  /* Los dos estados de la luz */
-  char on[] = {"ON_CUARTO"};
-  char off[] = {"OFF_CUARTO"};
-
-  if(toggle_luz_cuarto){
-    payload->send_len = sizeof(on);
-    memcpy(payload->send, on, sizeof(on));
-  } else {
-    memcpy(payload->send, off, sizeof(off));
-    payload->send_len = sizeof(off);
-  }
-
-  return 1;
-
-}
 
 
 TASK_PT(task_uno){
 
   TASK_BEGIN
-    //timer_set(timer_a, 5000);
+    timer_set(timer_a, 5000);
 
-    udp_listener(listener);
-    udp_listener_begin(&listener, COAP_PORT);
+    //udp_listener(listener);
+    //udp_listener_begin(&listener, COAP_PORT);
 
-    coap_resource_create(sala, "sala", NULL);
-    coap_resource_activate(&sala);
+    coap_resource_create(doppler, "doppler", NULL);
+    coap_resource_activate(&doppler);
+    doppler.get = * doppler_get;
 
-    coap_resource_create(cuarto, "cuarto", NULL);
-    coap_resource_activate(&cuarto);
-
-    coap_resource_create(luz_sala, "luz", &sala);
-    coap_resource_activate(&luz_sala);
-    luz_sala.get = * luz_sala_get;
-    luz_sala.put = * luz_sala_put;
-
-    coap_resource_create(luz_cuarto, "luz", &cuarto);
-    coap_resource_activate(&luz_cuarto);
-    luz_cuarto.get = * luz_cuarto_get;
 
     while (1)
     {
@@ -123,10 +64,15 @@ TASK_PT(task_uno){
 
 
       /* Si el timer ha expirado, lo reseteamos */
-/* 			if (timer_expired(&timer_a)) {
-        printf("hello world\n");
+ 			if (timer_expired(&timer_a)) {
+
+         /* Valor del sonar */
+         //dstc = sonar.ping_cm();
+         dstc = 5;
+      
+        printf("Distancia: %d\n", dstc);
 			  timer_reset(&timer_a);
-			}  */
+			}
 
     }
     

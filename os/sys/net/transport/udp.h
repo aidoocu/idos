@@ -20,22 +20,30 @@ enum {
 	UDP_MSG_NULL = 0,
 	UDP_MSG_IN,
 	UDP_MSG_READED,
+	UDP_MSG_RESPONSE
 }; 
 
 
 struct udp_listener_st {
+
 	uint8_t status;						/**< Estado del mensaje */
-	ipaddr_t ripaddr;					/**< IP remoto desde donde hay una conexión >*/
-	uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
 	struct task_st * task;				/**< Puntero a la tarea que setea el listerner */
 	struct msg_st ipc_msg;				/**< Mensaje a la tarea que setea el listerner */
-    uint16_t msg_len;					/**< Tamaño del mensaje en el buffer de entrada */
-    uint8_t msg[MAX_UDP_MSG_SIZE];		/**< Buffer que contendrá el mensaje de la red */
+    uint16_t msg_len_in;                /**< Tamaño del mensaje que está en el buffer de entrada */
+    uint16_t msg_len_out;               /**< Tamaño del mensaje que está en el buffer de salida */
+    uint8_t msg_in[MAX_UDP_MSG_SIZE];   /**< Buffer que contendrá el mensaje de la red */
+    uint8_t msg_out[MAX_UDP_MSG_SIZE];  /**< Buffer que contendrá el mensaje de la red */
+
+//#ifdef UIP_STACK
+	ipaddr_t ripaddr;					/**< IP remoto desde donde hay una conexión >*/
+	uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
+//#endif /* UIP_STACK */
 
 #ifdef ESP_NET_STACK
 	WiFiUDP udp_conn;
 	udp_listener_st * next;
 #endif /* ESP_NET_STACK */
+
 };
 
 
@@ -95,24 +103,18 @@ bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len)
  *  persisten mientras no se reciba un mensaje de un remoto diferente.
  * \param msg Mensaje al remoto
  * \param len Tamaño del mensaje
+ * \param listener listener a cual se le responderá
  * \return true si se puede enviar, false si no, normalmente porque el sender está ocupado
  * \code {.c}
  *  if (udp_recv(&listener)) {
  * 		printf("%s\n", listener.net_msg_in);
  *      
  * 		uint8_t mensaje[] = {"hola remoto"};
- * 		udp_response(mensaje, sizeof(mensaje));
+ * 		udp_response_to(&listener, mensaje, sizeof(mensaje));
  * }
  * \endcode
- * 	\attention Esta función sitúa el mensaje a enviar en una estructura que es única
- * 	para todas las tareas, así que solo se podrá alojar un mensaje por siclo del 
- * 	planificador. Siendo así, si la tarea antecesora pide enviar un mesaje, se devolverá
- * 	un false. La tarea que optiene el false tiene dos opciones, descartar el envío o
- *  intentar el próximo ciclo.
  */
-bool udp_response(uint8_t * msg, uint16_t len);
-
-//#define udp_response(msg, len) udp_response(msg, len, )
+bool udp_response_to(struct udp_listener_st * listener, uint8_t * msg, uint16_t len);
 
 
 /** 
