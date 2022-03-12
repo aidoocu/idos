@@ -17,7 +17,7 @@ extern "C" {
     #include "arch_timer.h"
     #include "arch_sleep.h"
     #include "arch_uart.h"
-
+    #include "arch_sys.h"
     #include "arch_net.h"
 
 #ifdef __cplusplus

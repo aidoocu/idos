@@ -11,8 +11,20 @@
 
 #include "arch_sys.h"
 
+//#include <sys/ioctl.h>
+//#include <sys/socket.h>
+
+//#include <netinet/in.h>
+
+//#include <netdb.h>
+
+
 #ifdef Darwin
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <ifaddrs.h>
 #define DEVTAP "/dev/tap0"
+#define NETTAP "tap0"
 #elif Linux
 #include <sys/ioctl.h>
 #include <linux/if.h>
@@ -43,6 +55,8 @@ uint16_t mac_poll(uint8_t * frame);
 bool mac_send(uint8_t * frame, uint16_t len);
 
 
+/** \brief Devolver la dirección mac del sistema */
+void mac_get_address(uint8_t * mac_addr);
 
 
 ///// Quitar !!!!

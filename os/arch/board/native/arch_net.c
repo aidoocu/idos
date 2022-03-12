@@ -10,6 +10,16 @@ static char network[] = "172.18.0.0";
 /** Manipulador (file descriptor) del tap */
 static int fd_tap;
 
+/* Estructura para los datos de configuración */
+
+#ifdef SIOCGIFHWADDR
+static struct ifreq net_config;
+#endif
+//#ifdef GETIFADDRS
+static uint8_t mac_address[MAC_LEN];
+//static struct ifaddrs * net_config;
+//#endif /* GETIFADDRS */
+
 /*----------------------------- remove_route() ------------------------------*/
 
 static void remove_route(void) {
@@ -22,7 +32,8 @@ static void remove_route(void) {
 
 bool mac_init(uint8_t * mac){
 
-    /* Abrir tap */
+    char net_tap[] = NETTAP;
+	/* Abrir tap */
     fd_tap = open(DEVTAP, O_RDWR);
     /* Si no fue posible habrir tap notificamos y salimos */
     if(fd_tap == -1) {
@@ -31,8 +42,48 @@ bool mac_init(uint8_t * mac){
     }
 
     /* Inicializar la interface y la ruta hacia la red */
-	sys_cmd("ifconfig tap0 inet 172.18.0.1/16");
+	sys_cmd("ifconfig %s inet 172.18.0.1/16", net_tap);
 	sys_cmd("route add -net %s/16 -iface tap0", network);
+
+	/* Guardar la configuración actual en una net_config que 
+	es una estructura de tipo ifreq */
+
+	/* Para las plaformas que incluyan SIOCGIFHWADDR, normalmente
+	los Linux */
+	#ifdef SIOCGIFHWADDR
+	/* Abrir el socket para sacar los datos */
+	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+	/* Se guarda nombre de la interface */
+	memcpy(net_tap, net_config.ifr_name, sizeof(net_tap));
+
+	/* Se llenan los campos de net_config con lo configurado */
+	if(ioctl(sock, SIOCGIFHWADDR, &net_config) == -1){
+		/* manejar el error aquii */
+	}
+
+	/* Cerrar el socket una vez extraídos los datos */
+	close(sock);
+	
+	#endif /* SIOCGIFHWADDR */
+
+	//#ifdef GETIFADDRS
+	struct ifaddrs * iflist;
+	/* Optengo la lista de interfaces del sistema y la recorro buscando al tap */
+	if (getifaddrs(&iflist) == 0) {
+
+		for (struct ifaddrs * cur = iflist; cur; cur = cur->ifa_next) {
+			if ((cur->ifa_addr->sa_family == AF_LINK) &&
+					(strcmp(cur->ifa_name, net_tap) == 0) &&
+					cur->ifa_addr) {
+				struct sockaddr_dl * sdl = (struct sockaddr_dl *) cur->ifa_addr;
+				memcpy(mac_address, LLADDR(sdl), sdl->sdl_alen);
+				break;
+			}
+		}
+	}
+	//#endif /* GETIFADDRS */
+
+
 
     /* Eliminar la ruta una vez que termine */
 	atexit(remove_route);
@@ -40,6 +91,15 @@ bool mac_init(uint8_t * mac){
 	return true;
 
 }
+
+/*------------------------- mac_get_address() -------------------------------*/
+
+void mac_get_address(uint8_t * mac_addr){
+
+	memcpy(mac_address, mac_addr, MAC_LEN);
+
+	}
+
 
 /*----------------------------- tap_poll() ----------------------------------*/
 
