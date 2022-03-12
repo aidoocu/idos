@@ -6,9 +6,7 @@
 #ifndef _IP_H_
 #define _IP_H_
 
-#ifdef ARDUINO
-#include <Arduino.h>
-#endif /* ARDUINO */
+#include "../../../arch/arch.h"
 
 /* Definiendo el stack de IP según plataforma */
 
