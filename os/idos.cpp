@@ -53,8 +53,6 @@
  */
 uint8_t idos_init(void){
 
-    delay(2000);
-
     /* Si la plataforma es native no se inicializa hardware */
     #ifndef NATIVE
 
