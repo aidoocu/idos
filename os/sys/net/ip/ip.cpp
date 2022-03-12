@@ -108,6 +108,4 @@ void ip_get_address(uint8_t * address, uint8_t option){
 
     #endif /* ESP_NET_STACK */
 
-
-
 }
