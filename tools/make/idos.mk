@@ -76,7 +76,7 @@ ${patsubst %.c,%.o, ${patsubst %.cpp,%.o, $(1)}}
 endef
 
 SOURCE_PATH += $(IDOS_OS) $(IDOS_SYS) $(IDOS_KERNEL) 
-SOURCE_PATH += $(IDOS_NET) $(IDOS_NET)/ip $(IDOS_NET)/mac $(IDOS_NET)/transport 
+SOURCE_PATH += $(IDOS_NET) $(IDOS_NET)/ip $(IDOS_NET)/ip/uip $(IDOS_NET)/mac $(IDOS_NET)/transport 
 SOURCE_PATH += $(IDOS_BOARD)
 # Paths de las aplicaciones (app) que sean definidas
 SOURCE_PATH += ${foreach app, $(APPS), $(IDOS_APP)/$(app)}
@@ -96,7 +96,8 @@ SOURCE_FILES += ${notdir ${wildcard $(IDOS_SYS)/*.cpp}}
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_KERNEL)/*.cpp}}
 
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/*.cpp}}
-SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/ip/*.c}}
+SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/ip/*.cpp}}
+SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/ip/uip/*.c}}
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/mac/*.cpp}}
 SOURCE_FILES += ${notdir ${wildcard $(IDOS_NET)/transport/*.cpp}}
 
