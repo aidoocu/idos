@@ -71,7 +71,7 @@
 
 
 /** Se incluye el resto de idOS al final */
-#include "../idos.h"
+//#include "../idos.h"
 
 //#endif
 
