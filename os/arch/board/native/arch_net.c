@@ -96,7 +96,7 @@ bool mac_init(uint8_t * mac){
 
 void mac_get_address(uint8_t * mac_addr){
 
-	memcpy(mac_address, mac_addr, MAC_LEN);
+	memcpy(mac_addr, mac_address, MAC_LEN);
 
 	}
 
