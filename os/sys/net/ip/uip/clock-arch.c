@@ -30,11 +30,11 @@
 
 /* #ifdef ARDUINO_ARCH_ESP8266 
 #include "../../../arch/board/esp/timer_esp.h"
-#endif
+#endif  */
 
 #ifdef NATIVE
-#include "../../../arch/board/native/arch_timer.h"
-#endif */
+#include "../../../../arch/board/native/arch_timer.h"
+#endif
 
 #include "clock-arch.h"
 
