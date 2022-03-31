@@ -22,7 +22,6 @@
 #ifndef _ENC28J60_H_
 #define _ENC28J60_H_
 
-#include "../../../arch.h"
 #include "enc28j60.h"
 
 /* Pone el pin CS del SPI por defecto. Cambiar esta línea en caso de utilizar otro */

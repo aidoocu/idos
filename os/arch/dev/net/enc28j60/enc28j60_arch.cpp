@@ -5,6 +5,7 @@
  */
 
 #include "../../../arch.h"
+#include "../../../../sys/net/ip/uip/uipopt.h"
 #include "enc28j60_arch.h"
 
 /*  */
