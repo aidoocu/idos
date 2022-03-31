@@ -11,10 +11,10 @@
 #define COAP_RESORCE_MAX_LEN 14
 
 struct coap_resource_st {
-    const char * uri_path;          /* Opción Uri-Path */
-    struct coap_resource_st * parent;      /* Recurso padre (si tiene) */
-    struct coap_resource_st * next;        /* Próximo recurso en la lista de 
-                                    recursos activos */
+    const char * uri_path;              /* Opción Uri-Path */
+    struct coap_resource_st * parent;   /* Recurso padre (si tiene) */
+    struct coap_resource_st * next;     /* Próximo recurso en la lista de 
+                                        recursos activos */
     /* call backs por cada método */
     uint8_t (* get)(struct coap_payload_st *);     /* Payload */
     /* void (* post)(void *); */

@@ -48,9 +48,6 @@ TASK_PT(task_uno){
   TASK_BEGIN
     timer_set(timer_a, 5000);
 
-    //udp_listener(listener);
-    //udp_listener_begin(&listener, COAP_PORT);
-
     coap_resource_create(doppler, "doppler", NULL);
     coap_resource_activate(&doppler);
     doppler.get = * doppler_get;
