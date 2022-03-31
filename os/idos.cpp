@@ -109,7 +109,7 @@ int main(void){
 
     /* Esto es básicamente el planificador */    
     while(1){
-        /* Mientras exista una tarea en la cola será ivocado su pt */
+        /* Mientras exista una tarea en la cola será invocado su pt */
         while(task_runing() != 0x00){
             ;
         }
