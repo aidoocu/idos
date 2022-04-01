@@ -37,6 +37,22 @@ struct coap_resource_st {
         NULL,                                   \
     }                                                  
 
+/** 
+ * \brief Cear un recurso CoAP y activarlo
+ * \param name Nombre del recurso
+ * \param uri Uri-Path del recurso
+ * \param parent Padre del recurso si tiene
+ */
+#define coap_resource(name, uri, parent)        \
+        static struct coap_resource_st name = { \
+            uri,                                \
+            parent,                             \
+            NULL,                               \
+            NULL,                               \
+            NULL,                               \
+        };                                      \
+        coap_resource_activate(&name)
+
 
 /** 
  * \brief Poner el recurso en la lista de recursos activos
