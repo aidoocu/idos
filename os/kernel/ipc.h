@@ -68,18 +68,19 @@
 
 /** 
  * \enum    msg_src
- * \brief   Tipo de mensaje 
+ * \brief   Tipo de mensaje. Es una bandera que permite que una tarea reciba
+ *          más de un mensaje de distintas fuentes únivas.
  * \anchor  msg_src
  * */
 enum {
-    MSG_INIT = 0,           /**< Inicializado cuando se llama desde auto_start */
-    MSG_TASK,               /**< Desde una tarea */
-    MSG_TIMER,              /**< Desde un timer */ 
-    MSG_UART,               /**< Desde el puerto serie */
-    MSG_SPI,                /**< Desde el SPI */
-    MSG_I2C,                /**< Desde I2C */
-    MSG_EXT_INT,            /**< Desde una interrupción externa */
-    MSG_NETWORK             /**< Desde la red. Este mensaje lo envía TCP o UDP */
+    MSG_INIT = 0,       /**< Inicializado cuando se llama desde auto_start */
+    MSG_TASK = 1,       /**< Desde una tarea */
+    MSG_TIMER = 2,      /**< Desde un timer */ 
+    MSG_UART = 4,       /**< Desde el puerto serie */
+    MSG_SPI = 8,        /**< Desde el SPI */
+    MSG_I2C = 16,       /**< Desde I2C */
+    MSG_EXT_INT = 32,   /**< Desde una interrupción externa */
+    MSG_NETWORK = 64    /**< Desde la red. Este mensaje lo envía TCP o UDP */
 };
 
 
