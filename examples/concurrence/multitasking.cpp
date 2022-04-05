@@ -22,7 +22,7 @@ TASK_PT(task_uno){
     while (1)
     {
       printf("uno+\n");
-      MSG_TASK_SEND(task_dos, NULL);
+      task_ipc(task_dos, NULL);
       TASK_YIELD
       printf("uno-\n");
 
@@ -38,7 +38,7 @@ TASK_PT(task_dos){
     while (1)
     {
       printf("dos+\n");
-      MSG_TASK_SEND(task_uno, NULL);
+      task_ipc(task_uno, NULL);
       TASK_YIELD
       printf("dos-\n");
     }

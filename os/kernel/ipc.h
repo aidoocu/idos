@@ -110,7 +110,7 @@ struct msg_st {
 
 /* ------ Macros ------- */
 /**
- * \def     MSG_TASK_SEND
+ * \def     task_ipc
  * \brief   Macro para que una tarea envie un mensaje a otra tarea
  * \param   msg_send_to Tarea a la cual se le enviará el mensaje 
  * \param   msg_data    Cuerpo del mensaje
@@ -119,7 +119,7 @@ struct msg_st {
  *          se envía un mensaje a una tarea que ya esté despierta y esperando
  *          en la cola, el mensaje se pierde.
  */
-#define MSG_TASK_SEND(msg_send_to, msg_data)                \
+#define task_ipc(msg_send_to, msg_data)                \
             do {                                            \
                 * msg_send_to.msg = {                       \
                     MSG_TASK,                               \
