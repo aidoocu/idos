@@ -119,15 +119,11 @@ struct msg_st {
  *          se envía un mensaje a una tarea que ya esté despierta y esperando
  *          en la cola, el mensaje se pierde.
  */
-#define task_ipc(msg_send_to, msg_data)                \
-            do {                                            \
-                * msg_send_to.msg = {                       \
-                    MSG_TASK,                               \
-                    0,                                      \
-                    msg_data                                \
-                };                                          \
-                task_set_ready(&msg_send_to);               \
-            } while (0)
+#define task_ipc(msg_send_to, msg_data)                                         \
+            msg_send_to->msg->status = MSG_AVAILABLE;                           \
+            msg_send_to->msg->msg_src =  MSG_TASK | msg_send_to->msg->msg_src;  \
+            msg_send_to->msg->data = msg_data;                                  \
+            task_set_ready(msg_send_to)
 
 
 
