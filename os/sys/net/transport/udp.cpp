@@ -43,7 +43,7 @@ bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
         /* y asociamos el listener a la pseudoconexión */
         udp_conn->appstate = listener;
 		/* y a su vez asociamos la pseudoconexión al listener */
-		//listener->udp_conn = udp_conn;
+		listener->udp_conn = udp_conn;
         /* Como la pseudoconexión será manejada internamente por uIP no es necesario devolver 
         referencia a la task */
         return true;
@@ -133,6 +133,43 @@ bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len)
 	return false;
 }
 
+
+/** 
+ * 
+ */
+bool udp_send_from(udp_listener_st * listener, ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len) {
+
+	if(!udp_sender.send && !udp_sender.response){
+
+		//#ifdef UIP_STACK
+
+
+
+			/* Cargamos el uip_address y el port del remoto */
+			ipaddr_t uip_addr;
+			uip_ip_addr(uip_addr, dst_addr);
+
+			uip_ipaddr_copy(listener->udp_conn->ripaddr, uip_addr);
+			listener->udp_conn->rport = uip_htons(port);
+
+			/* Copiamos al sender el mensaje */
+			memcpy(listener->msg_out, msg, len);
+			/* Le pasamos al sender el tamaño del mensaje */
+			listener->msg_len_out = len;
+
+			return true;
+
+
+		//#endif /* UIP_STACK */		
+
+		return true;
+
+	}
+
+	return false;
+}
+
+
 /** 
  * 
  */
@@ -145,7 +182,7 @@ bool udp_response_to(udp_listener_st * listener, uint8_t * msg, uint16_t len){
 		/* Le pasamos al sender el tamaño del mensaje */
 		listener->msg_len_out = len;
 		/* y activamos la bandera de respuesta */
-		listener->status = UDP_MSG_RESPONSE;
+		//listener->status = UDP_MSG_RESPONSE;
 
 		return true;
 	}
@@ -256,22 +293,22 @@ void uipudp_appcall(void) {
 			/* uIP no llena los campos del remoto, en su defecto uip_buf carga con el frame 
 			completo, así que hay que aisla los headers. Aquí asignamos o actualizamos el ip 
 			y el puerto remoto en el listener */
-			listener->rport = udp_buf->srcport;
-			uip_ipaddr_copy(listener->ripaddr, udp_buf->srcipaddr);
+			uip_udp_conn->rport = udp_buf->srcport;
+			uip_ipaddr_copy(uip_udp_conn->ripaddr, udp_buf->srcipaddr);
 
 
 			/* Pasamos el largo del mensaje */
 			listener->msg_len_in = ip_htons(udp_buf->udplen) - UIP_UDPH_LEN;
 
-            #if NET_DEBUG >= 3
-            printf("-> new data ");
+            #if NET_DEBUG >= 2
+            printf("<- new data ");
             printf("from: %d.%d.%d.%d:%d ", 
-					(uint8_t)(listener->ripaddr[0]), 
-					(uint8_t)ip_htons(listener->ripaddr[0]),
-					(uint8_t)(listener->ripaddr[1]), 
-					(uint8_t)ip_htons(listener->ripaddr[1]),
-					ip_htons(listener->rport));
-            printf("to local port: %d -> ", ip_htons(uip_udp_conn->lport));
+					(uint8_t)(uip_udp_conn->ripaddr[0]), 
+					(uint8_t)ip_htons(uip_udp_conn->ripaddr[0]),
+					(uint8_t)(uip_udp_conn->ripaddr[1]), 
+					(uint8_t)ip_htons(uip_udp_conn->ripaddr[1]),
+					ip_htons(uip_udp_conn->rport));
+            printf("to local port: %d / ", ip_htons(uip_udp_conn->lport));
 			printf("len: %d\n\r", listener->msg_len_in);
             #endif
 
@@ -284,6 +321,10 @@ void uipudp_appcall(void) {
 						&uip_buf[UIP_UDP_PHYH_LEN], 
 						(int)listener->msg_len_in);
 
+				#if NET_DEBUG >= 2
+				printf("Send to task: %s\n", listener->task->task_strname);
+				#endif
+
 				/* Pasarle un mensaje a la tarea notificando la recepción del mensaje */
 				udp_ipc(listener);
 
@@ -293,19 +334,21 @@ void uipudp_appcall(void) {
 			}
 		}
 
-		if (uip_poll() && (listener->status == UDP_MSG_RESPONSE)){
+		if (uip_poll() && (listener->msg_len_out)){
 
-			#if NET_DEBUG >= 3
+			#if NET_DEBUG >= 2
 			printf("udp poll response\n\r");
 			#endif
 
 			/* Situar puerto e IP del remoto */
-			uip_udp_conn->rport = listener->rport;
-			uip_ipaddr_copy(uip_udp_conn->ripaddr, listener->ripaddr);
+			//uip_udp_conn->rport = listener->rport;
+			//uip_ipaddr_copy(uip_udp_conn->ripaddr, listener->ripaddr);
 
 			uip_appdata = &listener->msg_out[0];
 			/* set uip_slen (uip private) by calling uip_udp_send */
 			uip_udp_send(listener->msg_len_out);
+
+			listener->status = UDP_MSG_SENDED;
 
 			/* Reset el largo del mensaje de salida para indicar buffer vacío */
 			listener->msg_len_out = 0;
@@ -318,7 +361,7 @@ void uipudp_appcall(void) {
 			para saber si la tarea tiene algo que enviar lo tiene la variable listener.send */
 		if (uip_poll() && udp_sender.send) {
 
-			#if NET_DEBUG >= 3
+			#if NET_DEBUG >= 2
 			printf("udp poll send\n\r");
 			#endif
 

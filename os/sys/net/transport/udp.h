@@ -20,7 +20,8 @@ enum {
 	UDP_MSG_NULL = 0,
 	UDP_MSG_IN,
 	UDP_MSG_READED,
-	UDP_MSG_RESPONSE
+	UDP_MSG_RESPONSE,
+	UDP_MSG_SENDED
 }; 
 
 
@@ -28,6 +29,7 @@ struct udp_listener_st {
 
 	uint8_t status;						/**< Estado del mensaje */
 	struct task_st * task;				/**< Puntero a la tarea que setea el listerner */
+	/* Parece que esto no va a ser necesario */
 	struct msg_st ipc_msg;				/**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len_in;                /**< Tamaño del mensaje que está en el buffer de entrada */
     uint16_t msg_len_out;               /**< Tamaño del mensaje que está en el buffer de salida */
@@ -35,8 +37,10 @@ struct udp_listener_st {
     uint8_t msg_out[MAX_UDP_MSG_SIZE];  /**< Buffer que contendrá el mensaje de la red */
 
 //#ifdef UIP_STACK
-	ipaddr_t ripaddr;					/**< IP remoto desde donde hay una conexión >*/
-	uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
+	struct uip_udp_conn * udp_conn;		/**< Estructura a la conexión que maneja uIP */
+	//ipaddr_t ripaddr;					/**< IP remoto desde donde hay una conexión >*/
+	//uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
+	//uint16_t lport;						/**< Puerto local >*/
 //#endif /* UIP_STACK */
 
 #ifdef ESP_NET_STACK
@@ -51,8 +55,12 @@ struct udp_listener_st {
 extern struct udp_listener_st * udp_listeners;		
 #endif /* ESP_NET_STACK */
 
-#define udp_listener(listener)                  \
+/** 
+ * 	\brief	Crear e inicializar un listener udp
+ */
+#define udp_listener(listener, port)            \
             static udp_listener_st listener;    \
+			udp_listener_begin(&listener, port);\
             listener.task = task
 
 /* --------------------------------------------------------------------------------- */
@@ -62,7 +70,9 @@ extern struct udp_listener_st * udp_listeners;
  * \note Todo lo que la tarea necesita está en el listener, así que el mensaje está 
  *  vacío
  */
-#define udp_ipc(listener) task_set_ready(listener->task)
+#define udp_ipc(listener) 									\
+			listener->task->msg->msg_src |= MSG_NETWORK;	\
+			task_set_ready(listener->task)
 
 /* --------------------------------------------------------------------------------- */
 
@@ -97,6 +107,13 @@ bool udp_recv(struct udp_listener_st * listener);
 bool udp_send(ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len);
 
 /** 
+ * 	\brief Envía lo que esté seteado en el listener
+ * 	\param listener Listener UDP a procesar
+ */
+bool udp_send_from(struct udp_listener_st * listener, ip_address_t dst_addr, uint16_t port, uint8_t * msg, uint16_t len);
+
+
+/** 
  * \brief responder a un remoto udp
  * \details Esta función podemos utilizarla cuando hemos recibido un mensaje de un remoto
  * 	y queremos responderle a ese remoto en concreto. Los datos del remoto (ip y puerto) 
@@ -122,18 +139,18 @@ bool udp_response_to(struct udp_listener_st * listener, uint8_t * msg, uint16_t 
  * \param listener Puntero al listerner del que vamos a extraer el ip del remoto
  * \param ipaddr Puntero al arreglo donde vamos a poner la ip del remoto
  */
-#define udp_remote_addr(listener, ip_addr)						\
-	ip_addr[0] = (uint8_t)(listener.ripaddr[0]);				\
-	ip_addr[1] = (uint8_t)ip_htons(listener.ripaddr[0]);		\
-	ip_addr[2] = (uint8_t)(listener.ripaddr[1]);				\
-	ip_addr[3] = (uint8_t)ip_htons(listener.ripaddr[1])
+#define udp_remote_addr(listener, ip_addr)								\
+	ip_addr[0] = (uint8_t)(listener.udp_conn->ripaddr[0]);				\
+	ip_addr[1] = (uint8_t)ip_htons(listener.udp_conn->ripaddr[0]);		\
+	ip_addr[2] = (uint8_t)(listener.udp_conn->ripaddr[1]);				\
+	ip_addr[3] = (uint8_t)ip_htons(listener.udp_conn->ripaddr[1])
 
 
 /** 
  * \brief Obtener el puerto de origen en el remoto
  * \param listener Puntero al listerner del que vamos a extraer el puerto
  */
-#define udp_remote_port(listener) ip_htons(listener.rport)
+#define udp_remote_port(listener) ip_htons(listener.udp_conn->rport)
 
 
 /** 
