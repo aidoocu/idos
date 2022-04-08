@@ -1,6 +1,7 @@
 
 /* Incluir idOS ++ */
-#include "os/idos.h"
+#include "../../../src/os/idos.h"
+#include <stdio.h>
 
 
 /*  */
@@ -14,7 +15,7 @@ TASKS_AUTO_START(&task_uno)
 #define MAX_DISTANCE 200
 
 /* Sonar */
-NewPing sonar(ULTRASONIC_PIN, ULTRASONIC_PIN, MAX_DISTANCE);
+//NewPing sonar(ULTRASONIC_PIN, ULTRASONIC_PIN, MAX_DISTANCE);
 
 /*  */
 static uint8_t dstc;
@@ -47,13 +48,13 @@ TASK_PT(task_uno){
   TASK_BEGIN
     timer_set(timer_a, 5000);
 
-    //udp_listener(listener);
-    //udp_listener_begin(&listener, COAP_PORT);
-
-    coap_resource_create(doppler, "doppler", NULL);
-    coap_resource_activate(&doppler);
+    coap_resource(doppler, "doppler", NULL);
     doppler.get = * doppler_get;
 
+    static ip_address_t ip_remoto = {172, 18, 0, 1};
+    coap_link(remoto, ip_remoto, 5683, "hello", __null);
+
+    coap_client(coap_cliente);
 
     while (1)
     {
@@ -66,11 +67,20 @@ TASK_PT(task_uno){
  			if (timer_expired(&timer_a)) {
 
          /* Valor del sonar */
-         dstc = sonar.ping_cm();
+         //dstc = sonar.ping_cm();
+         dstc = 5;
       
-        printf("Distancia: %d\n", dstc);
-			  timer_reset(&timer_a);
+        //printf("Distancia: %d\n", dstc);
+
+        //coap_put_non(&remoto, "hola", 4);
+        coap_get(&remoto, &coap_cliente);
+
+        timer_reset(&timer_a);
 			}
+
+      if(coap_received(&coap_cliente)){
+        printf("%s\n", (char *)(task->msg->data));
+      }
 
     }
     
