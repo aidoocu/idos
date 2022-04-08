@@ -76,7 +76,19 @@ uint8_t idos_init(void){
 
     #endif /* NATIVE */
 
-    /* Inicializar el stack de red */
+    /* ----------------------------- random seed ----------------------------- */
+    #ifdef NATIVE
+    srandom(msec_now());
+    #endif /* NATIVE */
+
+    #ifdef ARDUINO
+    randomSeed(analogRead(A0));
+    #else
+
+    #endif /* ARDUINO */
+
+    /* ------------------------------ net stack ------------------------------ */
+
     #ifdef NET_STACK
     net_stack_init();
     #endif
