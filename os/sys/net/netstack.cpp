@@ -142,8 +142,80 @@ void net_tick(void) {
 
     #ifdef UIP_STACK
 
+    /** ---------------------------- Enviar datos a la red ---------------------------- */
 
-    /** -------------------------------- Recibir datos desde la red --------------------------------  */
+    #ifdef UIP_PERIODIC_TIMER
+    unsigned long now = msec_now();
+
+    /* Si periodic_timer expiró */
+    if ((long)( now - periodic_timer ) >= 0) {
+        
+        /* Reiniciar periodic_timer */
+        periodic_timer = now + UIP_PERIODIC_TIMER;
+    #endif /* UIP_PERIODIC_TIMER */
+
+        for (int conn = 0; conn < UIP_CONNS; conn++) {
+            
+            /** Verificar que alguna tarea quiere enviar algo (poll) o reitentar 
+             * un envío fallido (rexmit) */
+            uip_periodic(conn);
+
+            /** Si hubieran datos a enviar, uip_process escribe el frame en uip_buf
+             * con uip_len de largo. uip_len == 0 implica que no hay nada que enviar */
+            if (uip_len > 0) {
+
+                #if NET_DEBUG >= 3
+                printf("App tcp resp to: %d.%d.%d.%d:%u len: %u\r\n",
+                        hdr_ip_tcp->destipaddr[0] & 0xff,
+                        (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
+                        hdr_ip_tcp->destipaddr[1] & 0xff,
+                        (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
+                        ip_htons(hdr_ip_tcp->destport), 
+                        uip_len);
+                #endif
+
+                /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
+                y pone el encabezado LLH (Eth) completo */
+                uip_arp_out();
+                /* Enviar frame */
+                mac_send((uint8_t * )uip_buf, uip_len);
+            
+            }
+        }
+        #if UIP_UDP
+        for (int udp_conn = 0; udp_conn < UIP_UDP_CONNS; udp_conn++) {
+            uip_udp_periodic(udp_conn);
+            // If the above function invocation resulted in data that
+            // uip_len is set to a value > 0.
+            if (uip_len > 0) {
+
+                /* Limpiar el remoto para que pueda aceptar una nueva pseudoconexión */
+                udp_remove_remote(uip_udp_conn);
+
+                #if NET_DEBUG >= 2
+                printf("-> udp send msg to: %d.%d.%d.%d:%u len: %u\r\n",
+                        hdr_ip_tcp->destipaddr[0] & 0xff,
+                        (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
+                        hdr_ip_tcp->destipaddr[1] & 0xff,
+                        (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
+                        ip_htons(hdr_ip_tcp->destport), 
+                        uip_len);
+                #endif
+
+                /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
+                y pone el encabezado LLH (Eth) completo */
+                uip_arp_out();
+                /* Enviar frame */
+                mac_send((uint8_t * )uip_buf, uip_len);
+            }
+        }
+        #endif  /* UIP_UDP */
+    #ifdef UIP_PERIODIC_TIMER
+    }
+    #endif /* UIP_PERIODIC_TIMER */
+
+
+    /** ------------------------- Recibir datos desde la red -------------------------- */
 
     /* Hacemos un poll a la interface... */
     uip_len = mac_poll((uint8_t * )uip_buf);
@@ -223,78 +295,6 @@ void net_tick(void) {
             }
         }
     }
-
-    /** -------------------------------- Enviar datos a la red --------------------------------  */
-
-    #ifdef UIP_PERIODIC_TIMER
-    unsigned long now = msec_now();
-
-    /* Si periodic_timer expiró */
-    if ((long)( now - periodic_timer ) >= 0) {
-        
-        /* Reiniciar periodic_timer */
-        periodic_timer = now + UIP_PERIODIC_TIMER;
-    #endif /* UIP_PERIODIC_TIMER */
-
-        for (int conn = 0; conn < UIP_CONNS; conn++) {
-            
-            /** Verificar que alguna tarea quiere enviar algo (poll) o reitentar 
-             * un envío fallido (rexmit) */
-            uip_periodic(conn);
-
-            /** Si hubieran datos a enviar, uip_process escribe el frame en uip_buf
-             * con uip_len de largo. uip_len == 0 implica que no hay nada que enviar */
-            if (uip_len > 0) {
-
-                #if NET_DEBUG >= 3
-                printf("App tcp resp to: %d.%d.%d.%d:%u len: %u\r\n",
-                        hdr_ip_tcp->destipaddr[0] & 0xff,
-                        (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
-                        hdr_ip_tcp->destipaddr[1] & 0xff,
-                        (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
-                        ip_htons(hdr_ip_tcp->destport), 
-                        uip_len);
-                #endif
-
-                /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
-                y pone el encabezado LLH (Eth) completo */
-                uip_arp_out();
-                /* Enviar frame */
-                mac_send((uint8_t * )uip_buf, uip_len);
-            
-            }
-        }
-        #if UIP_UDP
-        for (int udp_conn = 0; udp_conn < UIP_UDP_CONNS; udp_conn++) {
-            uip_udp_periodic(udp_conn);
-            // If the above function invocation resulted in data that
-            // uip_len is set to a value > 0.
-            if (uip_len > 0) {
-
-                /* Limpiar el remoto para que pueda aceptar una nueva pseudoconexión */
-                udp_remove_remote(uip_udp_conn);
-
-                #if NET_DEBUG >= 3
-                printf("App resp to: %d.%d.%d.%d:%u len: %u\r\n",
-                        hdr_ip_tcp->destipaddr[0] & 0xff,
-                        (hdr_ip_tcp->destipaddr[0] >> 8) & 0xff,
-                        hdr_ip_tcp->destipaddr[1] & 0xff,
-                        (hdr_ip_tcp->destipaddr[1] >> 8) & 0xff,
-                        ip_htons(hdr_ip_tcp->destport), 
-                        uip_len);
-                #endif
-
-                /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
-                y pone el encabezado LLH (Eth) completo */
-                uip_arp_out();
-                /* Enviar frame */
-                mac_send((uint8_t * )uip_buf, uip_len);
-            }
-        }
-        #endif  /* UIP_UDP */
-    #ifdef UIP_PERIODIC_TIMER
-    }
-    #endif /* UIP_PERIODIC_TIMER */
 
     #endif /* UIP_STACK */
 
