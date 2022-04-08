@@ -8,12 +8,16 @@
 
 
 
-#define COAP_DEFAULT_PORT           5683
+#define COAP_SERVER_PORT           	5683
 #define COAP_DEFAULT_SECURE_PORT    5684
 
 #define COAP_HEADER_LEN     4  /* | version:0x03 type:0x0C tkl:0xF0 | code | mid:0x00FF | mid:0xFF00 | */
-#define COAP_MAX_TOKEN_LEN  8 
+#define COAP_MAX_TOKEN_LEN  8
+#define COAP_TOKEN_LEN		2	/* Revisar que los valores del token coincidan con los de la máscara */
 #define COAP_ETAG_LEN       8
+
+#define COAP_CLIENT_BACK_OFF 	5
+#define COAP_CLIENT_RESEND_MS	100	
 
 //#define COAP_PHYN_LEN UIP_UDP_PHYH_LEN + COAP_HEADER_LEN
 
