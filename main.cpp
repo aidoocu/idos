@@ -1,6 +1,6 @@
 
 /* Incluir idOS ++ */
-#include "../../../src/os/idos.h"
+#include "os/idos.h"
 #include <stdio.h>
 
 
