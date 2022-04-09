@@ -62,7 +62,7 @@ struct coap_payload_st {
 /** 
  * \brief Optiene el ID del mensaje
  */
-#define coap_msg_id(coap_hdr) (uip_htons(coap_hdr->msg_id))
+#define coap_msg_id(coap_hdr) (ip_htons(coap_hdr->msg_id))
 
 /** 
  * \brief Optener el option number
