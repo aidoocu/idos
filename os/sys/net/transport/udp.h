@@ -36,12 +36,12 @@ struct udp_listener_st {
     uint8_t msg_in[MAX_UDP_MSG_SIZE];   /**< Buffer que contendrá el mensaje de la red */
     uint8_t msg_out[MAX_UDP_MSG_SIZE];  /**< Buffer que contendrá el mensaje de la red */
 
-//#ifdef UIP_STACK
+#ifdef UIP_STACK
 	struct uip_udp_conn * udp_conn;		/**< Estructura a la conexión que maneja uIP */
 	//ipaddr_t ripaddr;					/**< IP remoto desde donde hay una conexión >*/
 	//uint16_t rport;						/**< Puerto remoto desde donde hay una conexión >*/
 	//uint16_t lport;						/**< Puerto local >*/
-//#endif /* UIP_STACK */
+#endif /* UIP_STACK */
 
 #ifdef ESP_NET_STACK
 	WiFiUDP udp_conn;
@@ -134,6 +134,11 @@ bool udp_send_from(struct udp_listener_st * listener, ip_address_t dst_addr, uin
 bool udp_response_to(struct udp_listener_st * listener, uint8_t * msg, uint16_t len);
 
 
+
+/* ------------------------------- Macros propios ------------------------------- */
+
+#ifdef UIP_STACK
+
 /** 
  * \brief Obtener la dirección ip del remoto
  * \param listener Puntero al listerner del que vamos a extraer el ip del remoto
@@ -163,6 +168,34 @@ bool udp_response_to(struct udp_listener_st * listener, uint8_t * msg, uint16_t 
 			udp_conn->ripaddr[1] = 0;	\
 		} while (0)
 
+#endif /* UIP_STACK */
 
+#ifdef ESP_NET_STACK
+
+/** 
+ * \brief Obtener la dirección ip del remoto
+ * \param listener Puntero al listerner del que vamos a extraer el ip del remoto
+ * \param ipaddr Puntero al arreglo donde vamos a poner la ip del remoto
+ */
+#define udp_remote_addr(listener, ip_addr)			\
+	ip_addr[0] = listener.udp_conn.remoteIP()[0];	\
+	ip_addr[1] = listener.udp_conn.remoteIP()[1];	\
+	ip_addr[2] = listener.udp_conn.remoteIP()[2];	\
+	ip_addr[3] = listener.udp_conn.remoteIP()[3]	
+
+
+/** 
+ * \brief Obtener el puerto de origen en el remoto
+ * \param listener Puntero al listerner del que vamos a extraer el puerto
+ */
+#define udp_remote_port(listener) listener.udp_conn.localPort()
+	
+
+/** 
+ * 
+ */
+#define udp_remove_remote(udp_conn)
+
+#endif /* ESP_NET_STACK */
 
 #endif /* _UDP_H_ */

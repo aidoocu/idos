@@ -56,7 +56,7 @@ bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
 
 	listener->udp_conn.begin(port);
 	
-	#if NET_DEBUG >= 3
+	#if NET_DEBUG >= 2
 	printf("UDP listener initialized on port %d\n", listener->udp_conn.localPort());
 	#endif
 
@@ -141,7 +141,7 @@ bool udp_send_from(udp_listener_st * listener, ip_address_t dst_addr, uint16_t p
 
 	if(!udp_sender.send && !udp_sender.response){
 
-		//#ifdef UIP_STACK
+		#ifdef UIP_STACK
 
 
 
@@ -160,7 +160,7 @@ bool udp_send_from(udp_listener_st * listener, ip_address_t dst_addr, uint16_t p
 			return true;
 
 
-		//#endif /* UIP_STACK */		
+		#endif /* UIP_STACK */		
 
 		return true;
 
