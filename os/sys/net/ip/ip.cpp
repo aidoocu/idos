@@ -92,19 +92,26 @@ void ip_get_address(uint8_t * address, uint8_t option){
     struct ip_info esp_ip_address;
     wifi_get_ip_info(STATION_IF, &esp_ip_address);
 
+    uint8_t * ip_address = NULL;
+
     switch (option) {
         case ADDR_HOST:
-            address = (uint8_t *)&esp_ip_address.ip;
+            ip_address = (uint8_t *)&esp_ip_address.ip;
             break;
         case ADDR_GATEWAY:
-            address = (uint8_t *)&esp_ip_address.gw;
+            ip_address = (uint8_t *)&esp_ip_address.gw;
             break;
         case MASK_SUBNET:
-            address = (uint8_t *)&esp_ip_address.netmask;
+            ip_address = (uint8_t *)&esp_ip_address.netmask;
             break;      
         default:
             break;
     }
+
+    address[0] = ip_address[0];
+    address[1] = ip_address[1];
+    address[2] = ip_address[2];
+    address[3] = ip_address[3];  
 
     #endif /* ESP_NET_STACK */
 

@@ -42,35 +42,6 @@ void net_stack_init(void) {
     #endif /* NET_STATIC */
 
 
-
-    #if NET_DEBUG >= 2
-
-    /* Se sustituyen las direcciones de configuración por las
-    que efectivamente se han configurado */
-    ip_get_address(host, ADDR_HOST);
-    ip_get_address(gateway, ADDR_GATEWAY);
-    ip_get_address(subnet_mask, MASK_SUBNET);
-
-    /* Se imprime la dirección IP configurada */
-    printf("\n ...\n");
-    printf ("IP address: %d.%d.%d.%d \r\n", 
-                        host[0],
-                        host[1],
-                        host[2],
-                        host[3]);
-    printf ("Gateway address: %d.%d.%d.%d \r\n", 
-                        gateway[0],
-                        gateway[1],
-                        gateway[2],
-                        gateway[3]);
-    printf ("Subnet_mask address: %d.%d.%d.%d \r\n", 
-                    subnet_mask[0],
-                    subnet_mask[1],
-                    subnet_mask[2],
-                    subnet_mask[3]);
-
-    #endif /* NET_DEBUG */
-
     /* ------------------------------ MAC Init ------------------------------- */
 
     #ifdef MAC_ADDRESS
@@ -127,7 +98,32 @@ void net_stack_init(void) {
                         mac_address[3], 
                         mac_address[4], 
                         mac_address[5]);
-    #endif
+
+    /* Se sustituyen las direcciones de configuración por las
+    que efectivamente se han configurado */
+    ip_get_address(host, ADDR_HOST);
+    ip_get_address(gateway, ADDR_GATEWAY);
+    ip_get_address(subnet_mask, MASK_SUBNET);
+
+    /* Se imprime la dirección IP configurada */
+    printf("\n ...\n");
+    printf ("IP address: %d.%d.%d.%d \r\n", 
+                        host[0],
+                        host[1],
+                        host[2],
+                        host[3]);
+    printf ("Gateway address: %d.%d.%d.%d \r\n", 
+                        gateway[0],
+                        gateway[1],
+                        gateway[2],
+                        gateway[3]);
+    printf ("Subnet_mask address: %d.%d.%d.%d \r\n", 
+                    subnet_mask[0],
+                    subnet_mask[1],
+                    subnet_mask[2],
+                    subnet_mask[3]);
+
+    #endif /* NET_DEBUG */
 
 }
 
