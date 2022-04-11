@@ -30,9 +30,12 @@ static struct udp_sender_st {
  */
 bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
 
-    /* Como el listener siempre está asociado a la pseudoconexión, no es necesario listarlo */
+	listener->msg_len_in = 0;
+	listener->msg_len_out = 0;
+	listener->status = UDP_MSG_NULL;
 
 	#ifdef UIP_STACK
+    /* Como el listener siempre está asociado a la pseudoconexión, no es necesario listarlo */
     /* Creamos un puntero temporal y lo inicializamos con una pseudoconexión */
     struct uip_udp_conn * udp_conn = uip_udp_new(NULL, 0);
 
@@ -173,7 +176,7 @@ bool udp_send_from(udp_listener_st * listener, ip_address_t dst_addr, uint16_t p
 /** 
  * 
  */
-bool udp_response_to(udp_listener_st * listener, uint8_t * msg, uint16_t len){
+bool udp_response_to(udp_listener_st * listener, uint8_t * msg, uint16_t len) {
 
 	if (!listener->msg_len_out) {
 
@@ -235,7 +238,7 @@ void esp_net_udp_appcall(void){
 		/* --------------------------------- Send/Respoce ------------------------------- */
 		// @@@!!!! aqui hay que identificar o garantizar de alguna manera que efectivamente la respuesta
 		// desde este listener y no de otro !!!
-		if(listener_index->status == UDP_MSG_RESPONSE){
+		if(listener_index->msg_len_out){
 
 			printf("Respondiendo a %s:%d desde %d\n", listener_index->udp_conn.remoteIP().toString().c_str(), 
 												listener_index->udp_conn.remotePort(),
@@ -249,8 +252,8 @@ void esp_net_udp_appcall(void){
 			listener_index->udp_conn.write(listener_index->msg_out, listener_index->msg_len_out);
 			listener_index->udp_conn.endPacket();
 
-			/* Bajar la bandera */
-			listener_index->status = UDP_MSG_NULL;
+			/* Bajar la bandera y limpiar el buffer */
+			listener_index->msg_len_out = 0;
 
 		}
 
