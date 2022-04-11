@@ -26,4 +26,8 @@ extern "C" {
 /* Definiciones globales */
 //#define NULL __null
 
+/* -------------------------- random ------------------------ */
+
+#define idos_random() random()
+
 #endif /* _ARCH_NATIVE_H_ */
