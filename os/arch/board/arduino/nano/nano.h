@@ -53,5 +53,9 @@ uint8_t spi_transfer(uint8_t data);
 void uart_init_arch(void);
 
 
+/* -------------------------- random ------------------------ */
+
+#define idos_random() random()
+
 
 #endif /* _ARDUINO_NANO_H_ */

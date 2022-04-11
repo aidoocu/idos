@@ -41,7 +41,7 @@ void coap_clients_init(struct task_st * task) {
     #if COAP_TOKEN_LEN == 2
     message_token_seq = (uint16_t)idos_random();
     #elif COAP_TOKEN_LEN == 1
-    message_token_seq = (uint8_t)random();
+    message_token_seq = (uint8_t)idos_random();
     #endif
 
 }
