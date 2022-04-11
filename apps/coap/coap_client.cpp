@@ -36,10 +36,10 @@ static struct coap_client_st * coap_clients = NULL;
 void coap_clients_init(struct task_st * task) {
 
     coap_task = task;
-    message_id = (uint16_t)random();
+    message_id = (uint16_t)idos_random();
 
     #if COAP_TOKEN_LEN == 2
-    message_token_seq = (uint16_t)random();
+    message_token_seq = (uint16_t)idos_random();
     #elif COAP_TOKEN_LEN == 1
     message_token_seq = (uint8_t)random();
     #endif
