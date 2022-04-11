@@ -22,9 +22,14 @@
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 #define LWIP_STACK
 #define ESP_NET_STACK
+#ifdef ESP32
+#include <WiFi.h>
+#else
 #include <ESP8266WiFi.h>
+//#include <user_interface.h> /* sdk de base */
+#endif /* ESP32 */
 //#define LWIP_INTERNAL
-#endif
+#endif /* ARDUINO_ARCH_ESP8266/ESP32 */
 
 #ifdef NATIVE
 /* Por ahora NATIVE usara uIP */
