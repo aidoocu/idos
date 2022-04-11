@@ -17,7 +17,7 @@
 #include "board/arduino/arduino.h"
 #endif /* ARDUINO */
 
-#ifdef ARDUINO_ARCH_ESP8266
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 #include "board/esp/esp.h"
 #endif
 

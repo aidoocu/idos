@@ -16,12 +16,7 @@
 #include "../../arch.h"
 
 
-#ifdef ESP32
-#include <WiFi.h>
-#else
-#include <ESP8266WiFi.h>
-//#include <user_interface.h> /* sdk de base */
-#endif
+#include "esp.h"
 
 /* Cantidad de intentos de reconectarse */
 #ifndef WIFI_CONN_RETRY

@@ -16,6 +16,12 @@
 #include <Arduino.h>
 #endif /* ARDUINO */
 
+#ifdef ESP32
+#include "esp32.h"
+#else
+#include "esp8266.h"
+#endif /* ESP32 */
+
 /* -------------------------- Timer ------------------------- */
 
 /** 
@@ -64,12 +70,5 @@ void sleep_arch(void);
 
 void sleep_init_arch(void);
 
-/* -------------------------- random ------------------------ */
-
-#ifdef ESP32
-#define idos_random() esp_random()
-#else
-#define idos_random() random()
-#endif /* ESP32 */
 
 #endif /* _ESP_H_ */
