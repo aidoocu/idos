@@ -7,7 +7,11 @@ IDOS_PROJECT = coap_server
 # Declarar dónde está IDOS
 IDOS = ../..
 
+# Cargamos el módulo de CoAP
 APPS += coap
+
+# Configuramos ip como estático
+CFLAGS += -DNET_STATIC
 
 # Regla por defecto
 all: $(IDOS_PROJECT)
