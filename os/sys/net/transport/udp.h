@@ -188,7 +188,7 @@ bool udp_response_to(struct udp_listener_st * listener, uint8_t * msg, uint16_t 
  * \brief Obtener el puerto de origen en el remoto
  * \param listener Puntero al listerner del que vamos a extraer el puerto
  */
-#define udp_remote_port(listener) listener.udp_conn.localPort()
+#define udp_remote_port(listener) listener.udp_conn.remotePort()
 	
 
 /** 
