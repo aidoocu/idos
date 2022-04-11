@@ -203,7 +203,7 @@ respose_coap_message:
         // Si no se puede enviar algo tiene que pasar?
         
         #if defined(COAP_DEBUG_NOTICE)
-        printf("error\n");
+        printf("CoAP error: Fail sending packet\n");
         #endif
 
         return false;
@@ -211,7 +211,7 @@ respose_coap_message:
     }
 
     #if defined(COAP_DEBUG_NOTICE)
-    printf("Response: ");
+    printf("Response length: %d and packet: ", cp);
     for (int i = 0; i < cp; i++){
         printf("%02x ", coap_send_buf[i]);
     }
