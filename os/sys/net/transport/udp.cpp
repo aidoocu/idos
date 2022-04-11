@@ -60,7 +60,7 @@ bool udp_listener_begin(udp_listener_st * listener, uint16_t port) {
 	listener->udp_conn.begin(port);
 	
 	#if NET_DEBUG >= 2
-	printf("UDP listener initialized on port %d\n", listener->udp_conn.localPort());
+	printf("UDP listener initialized on port %d\n", port);
 	#endif
 
 	/* En este caso los listeners se listarán pues deberán ser chequeados
@@ -240,9 +240,8 @@ void esp_net_udp_appcall(void){
 		// desde este listener y no de otro !!!
 		if(listener_index->msg_len_out){
 
-			printf("Respondiendo a %s:%d desde %d\n", listener_index->udp_conn.remoteIP().toString().c_str(), 
-												listener_index->udp_conn.remotePort(),
-												listener_index->udp_conn.localPort());
+			printf("Respondiendo a %s:%d\n", listener_index->udp_conn.remoteIP().toString().c_str(), 
+												listener_index->udp_conn.remotePort());
 
 			/* Situar puerto e IP del remoto en el datagrama de respuesta */
 			listener_index->udp_conn.beginPacket(listener_index->udp_conn.remoteIP(), 

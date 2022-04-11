@@ -89,20 +89,19 @@ void ip_get_address(uint8_t * address, uint8_t option){
     #ifdef ESP_NET_STACK
 
     /* Obtener la estructura con la configuración de IP */
-    struct ip_info esp_ip_address;
-    wifi_get_ip_info(STATION_IF, &esp_ip_address);
+    IPAddress ip_address;
 
-    uint8_t * ip_address = NULL;
+    WiFi.localIP();
 
     switch (option) {
         case ADDR_HOST:
-            ip_address = (uint8_t *)&esp_ip_address.ip;
+            ip_address = WiFi.localIP();
             break;
         case ADDR_GATEWAY:
-            ip_address = (uint8_t *)&esp_ip_address.gw;
+            ip_address = WiFi.gatewayIP();
             break;
         case MASK_SUBNET:
-            ip_address = (uint8_t *)&esp_ip_address.netmask;
+            ip_address = WiFi.subnetMask();
             break;      
         default:
             break;

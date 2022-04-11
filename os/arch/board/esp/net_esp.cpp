@@ -12,7 +12,7 @@
 /** 
  * 
  */
-bool mac_init(uint8_t * mac){
+bool mac_init(uint8_t * mac) {
     
     #if NET_DEBUG >= 2
     printf("ESP WiFi starting \r\n");
@@ -35,7 +35,6 @@ bool mac_init(uint8_t * mac){
     hasta WIFI_CONN_RETRY veces */
     #if NET_DEBUG >= 2
     int8_t conn_result;
-
     while ((conn_result = WiFi.waitForConnectResult()) != WL_CONNECTED) {
     #else /* NET_DEBUG */
     while ((WiFi.waitForConnectResult()) != WL_CONNECTED) {
@@ -97,8 +96,10 @@ bool mac_init(uint8_t * mac){
 }
 
 
-void mac_get_address(uint8_t * mac){
-    wifi_get_macaddr(STATION_IF, mac);    
+void mac_get_address(uint8_t * mac) {
+
+    WiFi.macAddress(mac);
+   
 }
 
 

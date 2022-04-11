@@ -50,10 +50,6 @@
 /** \note En caso de que la BOARD sea NATIVE se asume que no tendrá dev  */
 #ifndef NATIVE
 
-#ifdef ARDUINO_ARCH_ESP8266
-#include "board/esp/net_esp.h"
-#endif /* ARDUINO_ARCH_ESP8266 */
-
 /* Interface Ethernet */
 #ifdef ENC28J60
 #include "dev/net/enc28j60/enc28j60_arch.h"

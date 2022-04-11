@@ -3,7 +3,6 @@
  * 
  */
 
-#ifdef ARDUINO_ARCH_ESP8266
 
 #include <Arduino.h>
 #include "esp.h"
@@ -77,6 +76,3 @@ void sleep_arch(void){
 
 }
 
-
-
-#endif /* ARDUINO_ARCH_ESP8266 */

@@ -10,13 +10,11 @@
  * 
  */
 
-#ifndef _ESP8266_WIFI_H_
-#define _ESP8266_WIFI_H_
+#ifndef _ESP_WIFI_H_
+#define _ESP_WIFI_H_
 
 #include "../../arch.h"
 
-
-#include "esp.h"
 
 /* Cantidad de intentos de reconectarse */
 #ifndef WIFI_CONN_RETRY
@@ -41,4 +39,4 @@ bool mac_init(uint8_t * mac);
 void mac_get_address(uint8_t * mac);
 
 
-#endif /* _ESP8266_WIFI_H_ */
+#endif /* _ESP_WIFI_H_ */
