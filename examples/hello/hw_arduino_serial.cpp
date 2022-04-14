@@ -2,7 +2,8 @@
  *  En este es un ejemplo para Arduino. Aquí mostramos "hello" por consola 
  *  a 1Hz.
  */
-#include "os/idos.h"
+#include "../../../src/os/idos.h"
+#include <stdio.h>
 
 /* Declaro dos protohilos */
 TASK(task_uno, "primera tarea");
@@ -15,7 +16,7 @@ TASKS_AUTO_START(&task_uno)
 TASK_PT(task_uno){
 
   TASK_BEGIN
-    pinMode(13, OUTPUT);
+    //pinMode(13, OUTPUT);
     timer_set(timer_a, 1000);
 
     while (1)

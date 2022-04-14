@@ -11,78 +11,58 @@ TASK(task_uno, "primera tarea");
 TASKS_AUTO_START(&task_uno)
 
 /*  */
-#define ULTRASONIC_PIN 5
-#define MAX_DISTANCE 200
-
-/* Sonar */
-//NewPing sonar(ULTRASONIC_PIN, ULTRASONIC_PIN, MAX_DISTANCE);
-
-/*  */
-static uint8_t dstc;
+static uint16_t battery_level;
 
 /* defiendo los callbacks de los recursos coap */
 
-/*  ---------- Doppler ---------- */
+/*  ---------- Battery ---------- */
 
 /* GET */
-static uint8_t doppler_get(coap_payload_st * payload) {
+static uint8_t battery_get(coap_payload_st * payload) {
   
-  printf("Doppler GET!!!\n");
+	printf("battery GET, value: %u\n", battery_level);
 
-    char dstc_char[4];
+	char dstc_char[6];
 
-    sprintf(dstc_char, "%d", dstc);
 
-    payload->send_len = 4;
+    sprintf(dstc_char, "%u", battery_level);
+
+    payload->send_len = 6;
     memcpy(payload->send, dstc_char, payload->send_len);
  
-
-  return 1;
-
+  	return 1;
 }
 
 
 
 TASK_PT(task_uno){
 
-  TASK_BEGIN
-    timer_set(timer_a, 5000);
+  	TASK_BEGIN
 
-    coap_resource(doppler, "doppler", NULL);
-    doppler.get = * doppler_get;
+    timer_set(timer_a, 2000);
 
-    static ip_address_t ip_remoto = {172, 18, 0, 1};
-    coap_link(remoto, ip_remoto, 5683, "hello", __null);
+    coap_resource(battery, "battery", NULL);
+    battery.get = * battery_get;
 
-    coap_client(coap_cliente);
+    while (1) {
 
-    while (1)
-    {
+      	TASK_YIELD
 
-      //printf("%s\n", pepe.name);
-      TASK_YIELD
+      	/* Si el timer ha expirado... */
+ 		if (timer_expired(&timer_a)) {
+
+			/* Se lee el nivel de la batería */
+      		battery_level = (uint16_t)idos_random();
 
 
-      /* Si el timer ha expirado, lo reseteamos */
- 			if (timer_expired(&timer_a)) {
 
-         /* Valor del sonar */
-         //dstc = sonar.ping_cm();
-         dstc = 5;
-      
-        //printf("Distancia: %d\n", dstc);
+			printf("nivel: %u \n\r", battery_level);
 
-        //coap_put_non(&remoto, "hola", 4);
-        coap_get(&remoto, &coap_cliente);
+			/* Se resetea el time */
+        	timer_reset(&timer_a);
+		}
+	}
 
-        timer_reset(&timer_a);
-			}
+	TASK_END
 
-      if(coap_received(&coap_cliente)){
-        printf("%s\n", (char *)(task->msg->data));
-      }
-
-    }
-    
-  TASK_END
 }
