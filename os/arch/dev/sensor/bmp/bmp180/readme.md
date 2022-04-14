@@ -21,6 +21,15 @@ Lo que mide el sensor BMP180 es la presión absoluta (Barométrica) y la tempera
 
 Para IdOS se ha seeccionado la biblioteca [SparkFun BMP180_Breakout Arduino Library](https://github.com/adafruit/Adafruit-BMP085-Library) en su versión 1.2.1, por ser la más extendida en los diferentes proyectos.
 
+Cuenta con las siguientes funciones para la clase SFE_BMP18:
 
+- *begin()*: Inicializa el sensor BMP180, nos retorna 1 si la inicialización es correcta o 0 si ha fallado.         
+- *startTemperature()*: Inicia una medición de temperatura y nos retorna el tiempo en milisegundos que necesitamos esperar antes de obtener la lectura. Si nos retorna un 0, es porque ha fallado el inicio de la medición de temperatura.
+- *getTemperature(T)*: Obtener la temperatura en la variable T, antes de usar esta función es necesario llamar a la función startTemperature() y que haya transcurrido el tiempo adecuado para la lectura; retorna 1 o 0 si la lectura se ha realizado con éxito o no respectivamente.
+- *startPressure(Sobremuetreo)*: Función para iniciar una medición de presión, hay que indicar la cantidad de muestras adicionales  (de 0 a 3) que el sensor debe tomar para la lectura de la presión y nos retorna el tiempo en milisegundos que necesitamos esperar antes de obtener la lectura. Si nos retorna un 0, es porque ha fallado el inicio de la medición de presión.
+- *getPressure(P, T)*: Obtener el valor de la medición iniciado previamente con startPressure(); es necesario darle como parámetro la temperatura T el cual servirá para compensar la influencia de la temperatura en el cálculo de la presión, el valor de la presión absoluta se guarda en la variable P. Retorna 1 o 0 si la lectura se ha realizado con éxito o no respectivamente.
+- *altitude(P, Po)* Calcula la altitud entre el punto donde se ha tomado la lectura de presión P (en mbar) con respecto a un punto de referencia con presión Po (en mbar). Nos retorna el valor de la altitud en metros.
+- *sealevel(P, A)*: Realiza el cálculo inverso a altitude(P, Po) , Dado una presión P (en mbar) y una altitud A (en metros) calcula la presión al nivel del mar o punto desde donde se mide la altura. Retorna el valor de la presión en mbar
 
-
+## Ejemplos para idOS
+Puede encontrar los ejemplos [aquí](../../../../../../examples/sensors/bmp180/readme.md)

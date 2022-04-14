@@ -60,7 +60,7 @@
 #endif
 
 #ifdef BMP180
-#include "dev/sensor/bmp/bmp180/SFE_BMP180"
+#include "dev/sensor/bmp/bmp180/SFE_BMP180.h"
 #endif
 
 #endif /* NATIVE */
