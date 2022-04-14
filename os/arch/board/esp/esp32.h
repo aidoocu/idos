@@ -23,4 +23,13 @@
 #define idos_random() esp_random()
 
 
+/* ---------------------------- ADC ------------------------- */
+
+/* Resolución del ADC. Rango, 1 - 16 */
+#define ADC_RESOLUTION 12
+
+
+/* Inicializar el ADC */
+//void adc_init(void)
+
 #endif /* _ESP_32_H_ */
