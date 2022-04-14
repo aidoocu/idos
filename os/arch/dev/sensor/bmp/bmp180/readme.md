@@ -1,7 +1,7 @@
 # BMP180
 El BMP180 es un termómetro y barométrico digital, que emplea su sensor de temperatura para compensar sus efectos en la medición de la presión barométrica. A su vez, el BMP180 es una versión mejorada del BMP085, siendo ambos modelos compatibles entre si tanto en hardware como software. Puede encontrar su datasheet [aquí](../../../../../../docs/datasheets/bmp180_datasheet_V2.5.pdf). La tensión de alimentación debe estar en el rango de 1,8V a 3,6V. Sin embargo, los módulos suelen venir con un regulador de tensión de la serie XC6206 de 3,3V.
 
-![bmp180](../pic/bmp180.jpeg)
+![bmp180](pic/bmp180.jpeg)
 
 La presión atmosférica es la fuerza que ejerce el aire (atmósfera) sobre la superficie de la tierra. La presión atmosférica se debe al peso de la columna de aire sobre determinada área, es por esta razón que al medir la presión atmosférica en puntos con mayor altitud, el valor de la presión es menor por ser menor la cantidad de aire. La presión atmosférica también varía con el clima, principalmente con la temperatura, pues esta hace cambiar la densidad del aire, que se ve reflejado en un cambio en el peso y por consiguiente en un cambio de presión.
 
