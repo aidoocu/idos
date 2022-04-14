@@ -9,7 +9,7 @@
  * 
  */
 
-
+#ifdef ARDUINO_ARCH_ESP32
 
 #include "esp32.h"
 
@@ -128,6 +128,7 @@
   *
   * @note At 11dB attenuation the maximum voltage is limited by VDD_A, not the full scale voltage.
   */  
-}
 
 //} 
+
+#endif /* ARDUINO_ARCH_ESP8266 */
