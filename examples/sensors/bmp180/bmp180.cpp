@@ -44,7 +44,6 @@ TASK_PT(task_bmp) {
     		/* Inicio de lectura de temperatura. Si estatus es 0 
             es que huvo un fallo al leer la temperatura */
     		status = bmp180.startTemperature();
-			printf("status: %d\n", status);
 
             /* Si hay un valor en estatus es la cantidad de milisegundos
             que deberá tomar en tener una lectura de temperatura. El valor
