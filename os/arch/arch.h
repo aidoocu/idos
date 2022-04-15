@@ -55,12 +55,20 @@
 #include "dev/net/enc28j60/enc28j60_arch.h"
 #endif /* ENC28J60 */
 
+/* Sensor de distancia a partir de ultrasonido */
 #ifdef ULTRASONIC
 #include "dev/sensor/new_ping/NewPing.h"
 #endif
 
+/* Sensor de presión barométrica y temperatura */
 #ifdef BMP180
 #include "dev/sensor/bmp/bmp180/SFE_BMP180.h"
+#endif
+
+/* Sensor de temperatura */
+#ifdef DS18B20
+#include "dev/sensor/one_wire/OneWire.h"
+#include "dev/sensor/one_wire/18x20/DallasTemperature.h"
 #endif
 
 #endif /* NATIVE */
