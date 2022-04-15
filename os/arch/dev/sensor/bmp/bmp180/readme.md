@@ -19,7 +19,7 @@ Lo que mide el sensor BMP180 es la presión absoluta (Barométrica) y la tempera
 
 ## Biblioteca SparkFun BMP180_Breakout
 
-Para IdOS se ha seeccionado la biblioteca [SparkFun BMP180_Breakout Arduino Library](https://github.com/adafruit/Adafruit-BMP085-Library) en su versión 1.2.1, por ser la más extendida en los diferentes proyectos.
+Para IdOS se ha seleccionado la biblioteca [SparkFun BMP180_Breakout Arduino Library](https://github.com/sparkfun/BMP180_Breakout) en su versión 1.1.2, por ser la más extendida en los diferentes proyectos.
 
 Cuenta con las siguientes funciones para la clase SFE_BMP18:
 
