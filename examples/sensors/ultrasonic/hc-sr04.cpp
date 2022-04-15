@@ -16,8 +16,8 @@ TASKS_AUTO_START(&task_sr04)
 /* Sonar */
 NewPing sonar(ULTRASONIC_PIN, ULTRASONIC_PIN, MAX_DISTANCE);
 
-/*  */
-static uint8_t dstc;
+/* Distancia */
+uint8_t dstc;
 
 
 TASK_PT(task_sr04) {
