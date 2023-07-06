@@ -3,6 +3,8 @@
 .vscode/*.json
 .vscode/*.log
 
+.pio/build/project.checksum
+
 .DS_Store
 
 # Prerequisites
