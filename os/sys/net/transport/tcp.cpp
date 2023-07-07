@@ -93,8 +93,10 @@ bool tcp_open(tcp_listener_st * listener, ip_address_t ip_addr, uint16_t port){
 
 		/* Poniendo el estado a conectando */
 		listener->state = LISTENER_CONNECTING;
-
+		
+		#if NET_DEBUG >= 3 
 		printf("Connecting...\n");
+		#endif
 
 		/* Asignamos el listener a la conexión que se intenta establecer */
 		conn->appstate = listener;
