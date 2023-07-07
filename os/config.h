@@ -52,7 +52,7 @@
 #define NET_DEBUG_3 3
 
 
-#define NET_DEBUG   2
+#define NET_DEBUG   0
 
 
 /** -------------------- Dispositivos (dev) -------------------- */
