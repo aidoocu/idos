@@ -738,11 +738,13 @@ TASK_PT(coap_task){
                     }
                     /* Block2 - 23 */
                     else if(option_delta == COAP_OPTION_BLOCK2){
+                        #if defined(COAP_DEBUG_NOTICE)
                         printf("Block2: ");
                         for(int i=1; i == (coap_listener.msg_in[cp] & 0x0F); i++){
                             printf("%d", coap_listener.msg_in[cp + i]);
                         }
                         printf("\n");
+                        #endif
                     }
                     /* Si no ha macheado ninguna de las opciones, pues o no es correcta o 
                     no la tenemos implementada, así que... */
@@ -792,7 +794,9 @@ TASK_PT(coap_task){
                     coap_payload.rcvd_len ++;
                 }
 
+                #if defined(COAP_DEBUG_NOTICE)
                 printf("payload\n");
+                #endif
 
                 /* ----------------------- process code ---------------------- */
 
@@ -802,8 +806,10 @@ TASK_PT(coap_task){
 
                 /* Si hay un recurso */
                 if(resource_demanded) {
-
+                    
+                    #if defined(COAP_DEBUG_NOTICE)
                     printf("resource demanded: %s\n", resource_demanded->uri_path);
+                    #endif
 
                     /** \attention Esta forma de implementar el get/put hace recaer en el callback
                      * la seguridad de la operación. Note que cualquier solicitud de PUT será
@@ -816,8 +822,10 @@ TASK_PT(coap_task){
 
                     /* GET */
                     if(coap_hdr_in->code == COAP_GET && resource_demanded->get != NULL){
-                        
+
+                        #if defined(COAP_DEBUG_NOTICE)    
                         printf("Call GET\n");
+                        #endif
 
                         /** \todo Aquí falta el mecanismo para atender a los recursos que son
                         separados, o sea, este get no tiene la respuesta, así que la enviará
@@ -843,7 +851,9 @@ TASK_PT(coap_task){
                     /* PUT */
                     if (coap_hdr_in->code == COAP_PUT && resource_demanded->put != NULL){
                         
+                        #if defined(COAP_DEBUG_NOTICE)
                         printf("Call PUT\n");
+                        #endif
 
                         /* Se llama al callback PUT de recurso */
                         uint8_t put = resource_demanded->put(&coap_payload);
@@ -876,7 +886,11 @@ TASK_PT(coap_task){
                 }
 
                 end_coap_process:
+                
+                #if defined(COAP_DEBUG_NOTICE)
                 printf("   < ------------------ >\n\r");
+                #endif
+                asm("NOP");
             }
         }
 
