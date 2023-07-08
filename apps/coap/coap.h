@@ -8,7 +8,7 @@
 #include "../../os/idos.h"
 
 /* CoAP debugger */
-#define COAP_DEBUG_NOTICE
+//#define COAP_DEBUG_NOTICE
 //#define COAP_DEBUG_WARNING
 //#define COAP_DEBUG_ERROR
 
