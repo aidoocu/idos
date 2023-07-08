@@ -859,6 +859,9 @@ TASK_PT(coap_task){
                         uint8_t put = resource_demanded->put(&coap_payload);
 
                         if(put && coap_type(coap_hdr_in) == COAP_TYPE_CON){
+                            
+                            /* ToDo !!! que pasa cuado el recurso no se pudo cambiar y hay conexion */
+                            
                             coap_respond(COAP_TYPE_ACK, CHANGED_2_04);
                         } else if(!put){
                             
