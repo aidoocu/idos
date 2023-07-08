@@ -1,64 +1,49 @@
-
-/* Incluir idOS ++ */
+/** 
+ *  En este es un ejemplo para Arduino. Aquí mostramos un LED parpadeando 
+ *  a 1Hz. Note que la variable toggle ha sido declarada como static. Esto
+ *  es debido a que cada que un protohilo cede el CPU se avandona el contexto
+ *  y se destruyen todas sus variables. En el caso de toggle (y de todas las)
+ *  variables que se espere que sobrevivan a un YIELD deben ser o declaradas
+ *  static o declaradas de forma global, por ejemplo justo después de declarar
+ *  la tarea
+ */
 #include "os/idos.h"
-#include <stdio.h>
 
+/* Declaro dos protohilos */
+TASK(task_led, "Task LED");
 
-/*  */
-TASK(task_uno, "primera tarea");
-
-/*  */
-TASKS_AUTO_START(&task_uno)
-
-/*  */
-static uint16_t battery_level;
-
-/* defiendo los callbacks de los recursos coap */
-
-/*  ---------- Battery ---------- */
-
-/* GET */
-static uint8_t battery_get(coap_payload_st * payload) {
-  
-	printf("battery GET, value: %u\n", battery_level);
-
-	char dstc_char[6];
-
-
-    sprintf(dstc_char, "%u", battery_level);
-
-    payload->send_len = 6;
-    memcpy(payload->send, dstc_char, payload->send_len);
- 
-  	return 1;
-}
+/* Arranco el primer protohilo al inicio */
+TASKS_AUTO_START(&task_led)
 
 
 
-TASK_PT(task_uno){
+/* Defino el comportamiento de ambos protohilo */
 
-  	TASK_BEGIN
+TASK_PT(task_led){
 
-    timer_set(timer_a, 1000);
+  /* Comienza la tarea, no debe haber nada escrito antes */
+  TASK_BEGIN
+    /* Seteo led de placa arduino */
+    pinMode(LED_BUILTIN, OUTPUT);
 
-    coap_resource(battery, "battery", NULL);
-    battery.get = * battery_get;
+    /* Estado del LED */
+    static bool toggle = 0;
 
-    while (1) {
+    /* Seteamos creamos un timer y lo seteamos a 0,5 seg */
+    timer_set(timer_a, 500);
 
-      	TASK_YIELD
+    while (1)
+    {
+      toggle = !toggle;
+      digitalWrite(13, toggle);
 
-      	/* Si el timer ha expirado... */
- 		if (timer_expired(&timer_a)) {
+      /* Cedemos la CPU hasta el expire el timer */
+      TASK_YIELD
 
-			/* Se lee el nivel de la batería */
-        	battery_level = analogRead(A0);
+      /* El timer ha expirado, así que lo reseteamos */
+      timer_reset(&timer_a);
+    }
 
-			/* Se resetea el time */
-        	timer_reset(&timer_a);
-		}
-	}
-
-	TASK_END
-
+  /* Finalizamos la tarea, no debe habe nada escrito después */
+  TASK_END
 }
