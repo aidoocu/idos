@@ -2,7 +2,7 @@
 
 # Declarar el nombre del proyecto que será construido que tiene que
 # ser igual que el archivo de código sin extensión
-IDOS_PROJECT = coap_server
+IDOS_PROJECT = stp_motor_coap
 
 # Declarar dónde está IDOS
 IDOS = ../..
