@@ -79,11 +79,13 @@ void timer_exec(void){
                     timer_index->active = false;
                 }
             }
-            /* Cargo el próximo timer si existe */
+            /* Cargo el próximo timer si existe, si no hay, termino el ciclo */
             if (timer_index->next){
                 timer_index = timer_index->next;
+            } else {
+                break;
             }
-        } while (timer_index->next != NULL);
+        } while (1);
     }
 
     return; 
