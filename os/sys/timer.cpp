@@ -73,7 +73,7 @@ void timer_exec(void){
                 /* Si este timer está activo se verifica si su tiempo llegó */
                 if(timer_index->msec_time <= msec_now()){
                     /* Le envío el mensaje a la tarea que setea el timer */
-                    ipc_msg_timer(timer_list);
+                    ipc_msg_timer(timer_index);
                                         
                     /* Se baja la bandera de active a este timer que se acaba de ejecutar */
                     timer_index->active = false;
