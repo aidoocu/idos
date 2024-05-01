@@ -55,6 +55,11 @@
 #include "dev/net/enc28j60/enc28j60_arch.h"
 #endif /* ENC28J60 */
 
+/* Interface RF24 */
+#ifdef NRF24L01
+#include "dev/net/nrf2401/nrf24l01_arch.h"
+#endif /* NRF24L01 */
+
 /* Sensor de distancia a partir de ultrasonido */
 #ifdef ULTRASONIC
 #include "dev/sensor/new_ping/NewPing.h"
