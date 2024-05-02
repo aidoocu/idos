@@ -9,8 +9,20 @@
 
 #include "nrf24l01_arch.h"
 
+/**
+ * @brief Class representing the NRF24L01 radio module.
+ *
+ * This class provides an interface to control and communicate with the NRF24L01 radio module.
+ * It uses the NRF24L01_CE and NRF24L01_CSN pins for communication.
+ */
 static RF24 radio(NRF24L01_CE, NRF24L01_CSN);
 
+/**
+ * @brief The destination address for the NRF24L01 module.
+ *
+ * This variable stores the destination address used by the NRF24L01 module.
+ * The address width is defined by NRF_ADDR_WIDTH.
+ */
 static uint8_t nrf_dst_addr[NRF_ADDR_WIDTH];
 
 bool nrf_init(uint8_t * mac) {
