@@ -90,18 +90,18 @@ struct task_st{
 /**
  * \brief   Primero define el prototipo de la función cuerpo del pt con la macro 
  *          TASK_PT y define la tarea completa en una estructura tipo task.
- *          La tarea (task) utiliza como handle task_mane que es el monbre de la 
+ *          La tarea (task) utiliza como handle task_name que es el monbre de la 
  *          estructura.
  * \param   task_name Nombre de la tarea. Refere a toda la tarea y el protohilo.
  * \param   task_strname Nombre humano o descripción de la tarea.
  * \note    La estructura incluye un puntero al protohilo.
 * */
-#define TASK(task_name, task_strmane)                   \
+#define TASK(task_name, task_strname)                   \
             TASK_PT(task_name);                         \
             TASK_MSG(task_name);                        \
             static struct task_st task_name = {         \
                 __null,                                 \
-                task_strmane,                           \
+                task_strname,                           \
                 NORMAL,                                 \
                 INACTIVE,                               \
                 0,                                      \
