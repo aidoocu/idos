@@ -66,13 +66,13 @@
 
 
 /** Configuraciones por defecto */
-#ifdef ENC28J60
+#if defined(ENC28J60) || defined(NRF24L01)
 
 #ifndef SPI_ARCH
 #define SPI_ARCH
 #endif
 
-#endif /* ENC28J60 */
+#endif /* ENC28J60 || NRF24L01 */
 
 
 
