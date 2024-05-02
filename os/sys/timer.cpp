@@ -73,17 +73,19 @@ void timer_exec(void){
                 /* Si este timer está activo se verifica si su tiempo llegó */
                 if(timer_index->msec_time <= msec_now()){
                     /* Le envío el mensaje a la tarea que setea el timer */
-                    ipc_msg_timer(timer_list);
+                    ipc_msg_timer(timer_index);
                                         
                     /* Se baja la bandera de active a este timer que se acaba de ejecutar */
                     timer_index->active = false;
                 }
             }
-            /* Cargo el próximo timer si existe */
+            /* Cargo el próximo timer si existe, si no hay, termino el ciclo */
             if (timer_index->next){
                 timer_index = timer_index->next;
+            } else {
+                break;
             }
-        } while (timer_index->next != NULL);
+        } while (1);
     }
 
     return; 

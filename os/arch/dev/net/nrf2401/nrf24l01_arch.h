@@ -1,3 +1,9 @@
+/** 
+ * 
+ * 
+ * 
+ * 
+ */
 
 #ifndef _NRF24L01_H_
 #define _NRF24L01_H_
@@ -7,30 +13,31 @@
 #include "RF24/RF24_config.h"
 
 /* Pone el pin CS del SPI por defecto. Cambiar esta línea en caso de utilizar otro */
-#define NRF24L01_CS SS
+#define NRF24L01_CSN SS
+#define NRF24L01_CE 9
 
 #define TX_COLLISION_RETRY_COUNT 3
 
 /** Macros para SPI */
 
 /** \brief Seleccionar el ENC */
-#define enc_select() digitalWrite(NRF24L01_CS, LOW)
+#define nrf_select() digitalWrite(NRF24L01_CSN, LOW)
 
 /** \brief Deseleccionar el ENC */
-#define enc_deselect() digitalWrite(NRF24L01_CS, HIGH)
+#define nrf_deselect() digitalWrite(NRF24L01_CSN, HIGH)
 
 
 /* ------------------------------- arch block -------------------------------- */
 
 /** 
- *  \brief Inicializar el ENC 
- *  \param mac Dirección (máscara) MAC que deberá tener el ENC
+ *  \brief Inicializar el NRF24L01 
+ *  \param mac Dirección (máscara) MAC que deberá tener el NRF24L01
  */
 bool mac_init(uint8_t * mac);
 
 /** 
  *  \brief Escribir  
- *  \param mac Dirección (máscara) MAC que deberá tener el ENC
+ *  \param mac Dirección (máscara) MAC que deberá tener el NRF24L01
 */
 void mac_get_address(uint8_t * mac);
 
