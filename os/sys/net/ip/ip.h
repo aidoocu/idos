@@ -10,8 +10,14 @@
 
 /* Definiendo el stack de IP según plataforma */
 
-/* Interface Ethernet - solo implementa ethernet */
-#ifdef ENC28J60
+/** Interfaces que no implementan IP...
+ * la gestion del MAC se hace por la 
+ * abstración de la capa MAC + la interface
+ * 
+ * ENC28J60 implementa Ethernet
+ * NRF24L01 implementa RF, el MAC se hace aparte
+ */
+#if defined(ENC28J60) || defined(NRF24L01)  
 /* Si esta placa es de 8 bits se implementa uIP */
 #ifdef ARDUINO_ARCH_AVR
 #define UIP_STACK
