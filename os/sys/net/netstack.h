@@ -42,6 +42,7 @@
 
 
 #include "netconf.h"
+#include "mac/mac.h"
 
 //#include "mac/mac.h"
 
@@ -134,8 +135,7 @@ void net_tick(void);
  * |              |              |              |                 |      +-------|--->mac_send  |              |
  * |              |              |              |                 |              |       +------|--->driver    |
  * |              |              |              |                 |              |  return ok<--|-------+      |
- * |              |              |              |                 |--------------|-------+      |              |
- * |              |              |              |    return ok<---|              |              |              |
+ * |              |              |              |    return ok<---|--------------|-------+      |              |
  * |              |    return<---|--------------|---------+       |              |              |              |
 
 */
