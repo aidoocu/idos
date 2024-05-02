@@ -54,6 +54,8 @@
 
 #define NET_DEBUG   0
 
+#define DEBUG_MAIN
+
 
 /** -------------------- Dispositivos (dev) -------------------- */
 /** \brief Se defininen los dispositivos y forma de conectarse   */
