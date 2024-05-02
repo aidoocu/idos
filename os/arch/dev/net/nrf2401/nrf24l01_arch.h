@@ -1,8 +1,10 @@
-/** 
- * 
- * 
- * 
- * 
+/**
+ * @file nrf24l01_arch.h
+ * @brief Header file for NRF24L01 driver architecture.
+ *
+ * This file contains the declarations and definitions for the NRF24L01 driver architecture.
+ * It provides functions for initializing the NRF24L01, setting MAC address, sending and receiving frames,
+ * and controlling power state of the interface.
  */
 
 #ifndef _NRF24L01_H_
@@ -18,13 +20,22 @@
 #define NRF24L01_CSN SS
 #define NRF24L01_CE 9
 
+/* Open Pipe */
+#define NRF_PIPE_0 0
+#define NRF_PIPE_1 1
+#define NRF_PIPE_2 2
+#define NRF_PIPE_3 3
+#define NRF_PIPE_4 4
+#define NRF_PIPE_5 5
+
 /* MAC address */
-#define ADDR_5 0x49     /* I */
-#define ADDR_4 0x44     /* D */
-#define ADDR_3 0x4F     /* O */
-#define ADDR_2 0x53     /* S */
-#define ADDR_1 0x00     /* 0 */
-#define ADDR_0 0x00     /* 0 */
+#define NRF_ADDR_WIDTH 5
+#define NRF_ADDR_5 0x49     /* I */
+#define NRF_ADDR_4 0x44     /* D */
+#define NRF_ADDR_3 0x4F     /* O */
+#define NRF_ADDR_2 0x53     /* S */
+#define NRF_ADDR_1 0x00     /* 0 */
+#define NRF_ADDR_0 0x00     /* 0 */
 
 #define NRF24L01_CHANNEL 90
 #define NRF24L01_PAYLOAD_SIZE 32
@@ -50,43 +61,58 @@
 /** 
  *  \brief Inicializar el NRF24L01 
  *  \param mac Dirección (máscara) MAC que deberá tener el NRF24L01
+ *  \return True if initialization is successful, false otherwise.
  */
 bool nrf_init(uint8_t * mac);
 
 /** 
- *  \brief Escribir  
- *  \param mac Dirección (máscara) MAC que deberá tener el NRF24L01
-*/
+ *  \brief Obtener la dirección MAC del NRF24L01
+ *  \param mac Puntero al buffer donde se copiará la dirección MAC
+ */
 void nrf_get_address(uint8_t * mac);
 
 /** 
- *  \brief  Poll a la NRF para ver si ha llegado algo
- *  \param frame    Buffer donde será copiada la frame, de haber recibido una.
- *  \return Tamaño de la frame recibida. 0 si no se ha recibido nada.
+ *  \brief  Poll the NRF24L01 to check if a frame has been received
+ *  \param frame    Buffer where the received frame will be copied to, if any.
+ *  \return Size of the received frame. 0 if no frame has been received.
  */
 uint16_t nrf_poll(uint8_t * frame);
 
+/** 
+ *  \brief Set the destination address for sending frames
+ *  \param mac Pointer to the buffer containing the destination MAC address
+ */
+void set_nrf_dst_addr(uint8_t * mac);
 
 /** 
- *  \brief Escribir el frame en la NIC para que lo envie
- *  \details Funciona igual que la dupla recieve - read pero a la inversa 
- *  \param buffer Puntero al buffer donde está el frame en RAM
- *  \param len Tamaño del frame
- *  \return Tamaño del buffer enviado al ENC
+ *  \brief Send the frame to the NRF24L01 for transmission
+ *  \param frame Pointer to the buffer containing the frame in RAM
+ *  \param len Size of the frame
+ *  \return true on success, false on failure
  */
 bool nrf_send(uint8_t * frame, uint16_t len);
 
-
 /** 
- *  Estado de la interface
+ *  \brief Get the active state of the interface
+ *  \return 1 if the interface is active, 0 otherwise.
  */
 uint8_t nrf_is_active(void);
+
+/** 
+ *  \brief Get the link status of the interface
+ *  \return True if the link is active, false otherwise.
+ */
 bool nrf_link_status(void);
 
 /** 
- *  Control de encendido y apagado
+ *  \brief Power off the NRF24L01 interface
  */
 void nrf_power_off(void);
+
+/** 
+ *  \brief Power on the NRF24L01 interface
+ */
 void nrf_power_on(void);
+
 
 #endif /* _NRF24L01_H_ */

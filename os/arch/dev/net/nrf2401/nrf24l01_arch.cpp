@@ -11,10 +11,34 @@
 
 static RF24 radio(NRF24L01_CE, NRF24L01_CSN);
 
+static uint8_t nrf_dst_addr[NRF_ADDR_WIDTH];
+
 bool nrf_init(uint8_t * mac) {
 
-    radio.begin();
+    if(!radio.begin())
+        return false;
 
+    uint8_t nrf_mac[5] = {NRF_ADDR_0, 
+                            NRF_ADDR_1, 
+                            NRF_ADDR_2, 
+                            NRF_ADDR_3, 
+                            NRF_ADDR_4};
+
+/*     for(uint8_t i = 0; i <= NRF_ADDR_WIDTH; i++)
+         nrf_mac[i] = mac[i]; */
+
+    /* Abriendo el pipe de escucha, que no debe ser nunca el 0 */
+    radio.setAddressWidth(NRF_ADDR_WIDTH);
+    //radio.openReadingPipe(NRF_PIPE_1, nrf_mac);
+
+    radio.openWritingPipe(0xE8E8F0F0E1LL);
+
+    /* Aseguro el radio apagado */
+    radio.stopListening();
+    //radio.powerDown();
+
+    printf("radio ok\n");
+    
     return true;
 }
 
@@ -32,10 +56,27 @@ uint16_t nrf_poll(uint8_t * frame){
 
 }
 
+/* ---------------------------- nrf_dst_addr ------------------------------- */
+
+void set_nrf_dst_addr(uint8_t * mac) {
+    for(uint8_t i = 0; i <= NRF_ADDR_WIDTH; i++)
+        nrf_dst_addr[i] = mac[i];
+}
+
 /* ------------------------------ nrf_send --------------------------------- */
 
 bool  nrf_send(uint8_t * buffer, uint16_t len) {
-    //radio.write(buffer,len);
+
+    //radio.openWritingPipe(nrf_dst_addr);
+    
+    //radio.powerUp();
+
+    printf("Sending -->\n");
+
+    radio.write(buffer, len);
+    
+    //radio.powerDown();
+
     return true;
 }
 
