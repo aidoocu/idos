@@ -149,7 +149,7 @@ void setup(){
 
 void loop(){
     /* Esto es básicamente el planificador */    
-    /* Mientras exista una tarea en la cola será ivocado su pt */
+    /* Mientras exista una tarea en la cola será invocado su pt */
     while(task_runing() != 0x00){
         ;
     }
