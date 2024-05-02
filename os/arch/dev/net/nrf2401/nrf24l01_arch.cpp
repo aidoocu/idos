@@ -5,7 +5,8 @@
  * 
  */
 
-#include "../../../arch.h"
+
+
 #include "nrf24l01_arch.h"
 
 static RF24 radio(NRF24L01_CE, NRF24L01_CSN);
@@ -45,7 +46,7 @@ uint8_t nrf_is_active(void) {
 }
 
 bool nrf_link_status(void) {
-    //
+    return radio.isChipConnected();
 }
 
 

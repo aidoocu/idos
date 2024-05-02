@@ -8,6 +8,8 @@
 #ifndef _NRF24L01_H_
 #define _NRF24L01_H_
 
+#include "../../../arch.h"
+
 #include "RF24/nRF24L01.h"
 #include "RF24/RF24.h"
 #include "RF24/RF24_config.h"
