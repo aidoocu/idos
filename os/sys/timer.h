@@ -60,10 +60,10 @@ struct timer_st {
  */
 #define ipc_msg_timer(timer)                            \
             do {                                        \
-                timer_list->msg.status = MSG_AVAILABLE; \
-                timer_list->msg.msg_src = MSG_TIMER;    \
-                timer_list->msg.event = 0;              \
-                timer_list->msg.data = NULL;            \
+                timer->msg.status = MSG_AVAILABLE; \
+                timer->msg.msg_src = MSG_TIMER;    \
+                timer->msg.event = 0;              \
+                timer->msg.data = NULL;            \
                 task_set_ready(timer->task);            \
             } while (0)
 
