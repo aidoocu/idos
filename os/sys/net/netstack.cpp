@@ -50,6 +50,9 @@ void net_stack_init(void) {
     static uint8_t mac_address[6];
     #endif /* MAC_ADDRESS */
 
+    /** \todo yo creo que no deberia ser asi, creo la MAC no deberia pasarse por parametro
+     * arreglar esto
+     */
     /* Inicializar la interface de red con la dirección mac si hubiera */
     nic_initialized = mac_init(mac_address);
 
