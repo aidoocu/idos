@@ -62,7 +62,13 @@
 
 /* Sensor de presión barométrica y temperatura */
 #ifdef BMP180
-#include "dev/sensor/bmp/bmp180/SFE_BMP180.h"
+#include "dev/sensor/bosh/bmp180/SFE_BMP180.h"
+#endif
+
+/* Sensor de humedad y temperatura */
+#ifdef BME280
+#include "dev/sensor/bosh/bme280/BME280I2C.h"
+#include <Wire.h>
 #endif
 
 /* Sensor de temperatura */
@@ -70,6 +76,7 @@
 #include "dev/sensor/one_wire/OneWire.h"
 #include "dev/sensor/one_wire/18x20/DallasTemperature.h"
 #endif
+
 
 #endif /* NATIVE */
 
