@@ -30,12 +30,11 @@
 
 /* MAC address */
 #define NRF_ADDR_WIDTH 5
-#define NRF_ADDR_5 0x49     /* I */
-#define NRF_ADDR_4 0x44     /* D */
-#define NRF_ADDR_3 0x4F     /* O */
-#define NRF_ADDR_2 0x53     /* S */
-#define NRF_ADDR_1 0x00     /* 0 */
-#define NRF_ADDR_0 0x00     /* 0 */
+#define NRF_ADDR_0 0x49     /* I */
+#define NRF_ADDR_1 0x44     /* D */
+#define NRF_ADDR_2 0x4F     /* O */
+#define NRF_ADDR_3 0x53     /* S */
+#define NRF_ADDR_4 0x00     /* 0 */
 
 #define NRF24L01_CHANNEL 90
 #define NRF24L01_PAYLOAD_SIZE 32

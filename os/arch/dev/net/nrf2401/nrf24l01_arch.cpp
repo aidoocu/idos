@@ -25,32 +25,63 @@ static RF24 radio(NRF24L01_CE, NRF24L01_CSN);
  */
 static uint8_t nrf_dst_addr[NRF_ADDR_WIDTH];
 
+/**
+ * @brief Initializes the NRF24L01 module with the given MAC address.
+ * 
+ * @param mac The MAC address to be used for communication.
+ * @return True if the initialization is successful, false otherwise.
+ */
 bool nrf_init(uint8_t * mac) {
+
+    /** Setting the MAC address, width first */
+    radio.setAddressWidth(NRF_ADDR_WIDTH);
+    /** A diferencia de ethernet, wifi, etc, nrf tiene solo 5 bytes,
+     * por lo que hay que ajustar la dirección MAC a 5 bytes
+     */
+    uint8_t nrf_mac[NRF_ADDR_WIDTH];
+
+    /* Si la MAC entra por parametro (que no creo correcto) */
+    #ifdef MAC_ADDRESS
+
+    for(uint8_t i = 0; i < NRF_ADDR_WIDTH; i++)
+         nrf_mac[i] = mac[i];
+    
+    #else
+    /* Si no hay que poner una nueva MAC */
+
+    nrf_mac[0] = NRF_ADDR_0;
+    nrf_mac[1] = NRF_ADDR_1;
+    nrf_mac[2] = NRF_ADDR_2;
+    nrf_mac[3] = NRF_ADDR_3;
+
+    /** Si no esta definida en la configuracion se pondra un 
+     * numero aleatorio */
+    if (NRF_ADDR_0 == 0) {
+        nrf_mac[4] = (uint8_t)analogRead(A0);
+    } else {
+        nrf_mac[4] = NRF_ADDR_4;
+    }
+                      
+    #endif
 
     if(!radio.begin())
         return false;
 
-    uint8_t nrf_mac[5] = {NRF_ADDR_0, 
-                            NRF_ADDR_1, 
-                            NRF_ADDR_2, 
-                            NRF_ADDR_3, 
-                            NRF_ADDR_4};
-
-/*     for(uint8_t i = 0; i <= NRF_ADDR_WIDTH; i++)
-         nrf_mac[i] = mac[i]; */
-
-    /* Abriendo el pipe de escucha, que no debe ser nunca el 0 */
-    radio.setAddressWidth(NRF_ADDR_WIDTH);
-    //radio.openReadingPipe(NRF_PIPE_1, nrf_mac);
-
-    radio.openWritingPipe(0xE8E8F0F0E1LL);
-
-    /* Aseguro el radio apagado */
-    radio.stopListening();
-    //radio.powerDown();
-
-    printf("radio ok\n");
+    /** Abriendo el pipe de escucha, que no debe ser nunca el Pipe 0
+     * porque lo utiliza el transmisor, y la funcion openWritePipe
+     * lo sobreescribe cuando es llamada.
+     */
+    radio.openReadingPipe(NRF_PIPE_1, nrf_mac);
     
+    /* y mantenerlo apagado */
+    radio.stopListening();
+    /* Aseguro el radio apagado */
+    radio.powerDown();
+
+    #ifdef NET_DEBUG >= 1
+    printf("NRF radio ok\n");
+    #endif
+
     return true;
 }
 
@@ -71,25 +102,31 @@ uint16_t nrf_poll(uint8_t * frame){
 /* ---------------------------- nrf_dst_addr ------------------------------- */
 
 void set_nrf_dst_addr(uint8_t * mac) {
-    for(uint8_t i = 0; i <= NRF_ADDR_WIDTH; i++)
+    
+    for(uint8_t i = 0; i < NRF_ADDR_WIDTH; i++)
         nrf_dst_addr[i] = mac[i];
+
 }
 
 /* ------------------------------ nrf_send --------------------------------- */
 
 bool  nrf_send(uint8_t * buffer, uint16_t len) {
 
-    //radio.openWritingPipe(nrf_dst_addr);
-    
-    //radio.powerUp();
+    /** Power up will take up to 5ms for maximum compatibility, the delay is 
+     * implicit in the write function
+    */
+    radio.powerUp();
+    radio.openWritingPipe(nrf_dst_addr);
 
+    #ifdef NET_DEBUG >= 1
     printf("Sending -->\n");
+    #endif
 
-    radio.write(buffer, len);
+    bool tx_sucess = radio.write(buffer, len);
     
-    //radio.powerDown();
+    radio.powerDown();
 
-    return true;
+    return tx_sucess;
 }
 
 /* ----------------------------- nic_status ---------------------------------- */
