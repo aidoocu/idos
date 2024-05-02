@@ -66,7 +66,6 @@ void task_set_ready(struct task_st * task);
  * \brief   Le otorga la CPU la primera tarea de la cola. Esta función llama
  *          directamente al protohilo de la tarea y espera su retorno, luego
  *          planifica la próxima tarea. 
- * \param   task  Un puntero a la tarea a correr
  * \return  Estado de la cola.
  * \retval  0x00 Si no hay ninguna tarea lista en la cola
  *          0x10 Si la tarea retornó correctamente y no hay una próxima tarea 
