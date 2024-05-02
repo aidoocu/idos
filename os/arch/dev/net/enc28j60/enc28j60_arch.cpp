@@ -215,7 +215,7 @@ void write_byte(uint16_t addr, uint8_t data){
  *  \note   Lo primero debería ser configurar el SPI pero este 
  *          debió haber sido inicializado por el sistema. 
 */
-bool mac_init(uint8_t * macaddr) {
+bool enc_init(uint8_t * macaddr) {
 
     enc_spi_enable();
 
@@ -295,7 +295,7 @@ bool mac_init(uint8_t * macaddr) {
 
 /*-------------------------- mac_get_address() ------------------------------*/
 
-void mac_get_address(uint8_t * macaddr){
+void enc_get_address(uint8_t * macaddr){
 
     enc_spi_enable();
 
@@ -313,7 +313,7 @@ void mac_get_address(uint8_t * macaddr){
 
 /*----------------------------- mac_poll() ----------------------------------*/
 
-uint16_t mac_poll(uint8_t * frame) {
+uint16_t enc_poll(uint8_t * frame) {
 
     uint8_t rxstat;
     uint16_t len;
@@ -417,7 +417,7 @@ uint16_t mac_poll(uint8_t * frame) {
 
 /* ------------------------------ mac_send() --------------------------------- */
 
-bool  mac_send(uint8_t * buffer, uint16_t len) {
+bool  enc_send(uint8_t * buffer, uint16_t len) {
 
     /* Habilitar el SPI para el ENC */
     enc_spi_enable();
@@ -501,7 +501,7 @@ bool  mac_send(uint8_t * buffer, uint16_t len) {
 
 /* --------------------------- power and status ------------------------------ */
 
-void nic_power_off(void) {
+void enc_power_off(void) {
 
     /* Habilitar el SPI para el ENC */
     enc_spi_enable();
@@ -520,7 +520,7 @@ void nic_power_off(void) {
     enc_spi_disable(); 
 }
 
-void nic_power_on() {
+void enc_power_on() {
     
     /* Habilitar el SPI para el ENC */
     enc_spi_enable();
@@ -542,14 +542,14 @@ void nic_power_on() {
 /** 
  * 
  */
-uint8_t nic_is_active(void) {
+uint8_t enc_is_active(void) {
     return get_rev();
 }
 
 /** 
  * 
  */
-bool nic_link_status() {
+bool enc_link_status() {
 
     /* Habilitar el SPI para el ENC */
     enc_spi_enable();

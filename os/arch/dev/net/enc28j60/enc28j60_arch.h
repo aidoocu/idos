@@ -44,13 +44,13 @@
  *  \brief Inicializar el ENC 
  *  \param mac Dirección (máscara) MAC que deberá tener el ENC
  */
-bool mac_init(uint8_t * mac);
+bool enc_init(uint8_t * mac);
 
 /** 
  *  \brief Escribir  
  *  \param mac Dirección (máscara) MAC que deberá tener el ENC
 */
-void mac_get_address(uint8_t * mac);
+void enc_get_address(uint8_t * mac);
 
 /** 
  *  \brief  Poll a la ENC para ver si ha llegado algo
@@ -60,7 +60,7 @@ void mac_get_address(uint8_t * mac);
  *  \param frame    Buffer donde será copiada la frame, de haber recibido una.
  *  \return Tamaño de la frame recibida. 0 si no se ha recibido nada.
  */
-uint16_t mac_poll(uint8_t * frame);
+uint16_t enc_poll(uint8_t * frame);
 
 
 /** 
@@ -70,19 +70,19 @@ uint16_t mac_poll(uint8_t * frame);
  *  \param len Tamaño del frame
  *  \return Tamaño del buffer enviado al ENC
  */
-bool mac_send(uint8_t * frame, uint16_t len);
+bool enc_send(uint8_t * frame, uint16_t len);
 
 
 /** 
  *  Estado de la interface
  */
-uint8_t nic_is_active(void);
-bool nic_link_status(void);
+uint8_t enc_is_active(void);
+bool enc_link_status(void);
 
 /** 
  *  Control de encendido y apagado
  */
-void nic_power_off(void);
-void nic_power_on(void);
+void enc_power_off(void);
+void enc_power_on(void);
 
 #endif /* _ENC28J60_H_ */
