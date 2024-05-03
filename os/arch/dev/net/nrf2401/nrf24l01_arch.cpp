@@ -6,7 +6,7 @@
  */
 
 
-
+#include "../../../arch.h"
 #include "nrf24l01_arch.h"
 
 /**
@@ -78,9 +78,7 @@ bool nrf_init(uint8_t * mac) {
     /* Aseguro el radio apagado */
     radio.powerDown();
 
-    #ifdef NET_DEBUG >= 1
     printf("NRF radio ok\n");
-    #endif
 
     return true;
 }
@@ -118,9 +116,7 @@ bool  nrf_send(uint8_t * buffer, uint16_t len) {
     radio.powerUp();
     radio.openWritingPipe(nrf_dst_addr);
 
-    #ifdef NET_DEBUG >= 1
     printf("Sending -->\n");
-    #endif
 
     bool tx_sucess = radio.write(buffer, len);
     
