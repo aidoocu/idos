@@ -54,7 +54,7 @@
 
 #define NET_DEBUG   0
 
-#define DEBUG_MAIN
+//#define DEBUG_MAIN
 
 
 /** -------------------- Dispositivos (dev) -------------------- */
