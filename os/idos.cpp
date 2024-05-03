@@ -67,7 +67,7 @@ uint8_t idos_init(void){
     spi_init();
     #endif
 
-    #if SLEEP_MODE
+    #ifdef SLEEP_MODE
     sleep_mode_init();
     #endif
 
@@ -155,7 +155,7 @@ void loop(){
     }
 
     /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
-    #if SLEEP_MODE
+    #ifdef SLEEP_MODE
     deep_sleep();
     #endif
 
