@@ -78,7 +78,7 @@ bool nrf_init(uint8_t * mac) {
     /* Aseguro el radio apagado */
     radio.powerDown();
 
-    printf("NRF radio ok\n");
+    //printf("R\n");
 
     return true;
 }
@@ -116,7 +116,7 @@ bool  nrf_send(uint8_t * buffer, uint16_t len) {
     radio.powerUp();
     radio.openWritingPipe(nrf_dst_addr);
 
-    printf("Sending -->\n");
+    //printf("->\n");
 
     bool tx_sucess = radio.write(buffer, len);
     
