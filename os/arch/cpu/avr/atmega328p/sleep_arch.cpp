@@ -24,7 +24,7 @@
  */
 extern unsigned long timer0_millis;
 
-#define SLEEP_TIME SLEEP_2S
+#define SLEEP_TIME SLEEP_15MS
 
 /**
  * @brief Initializes the sleep architecture.
