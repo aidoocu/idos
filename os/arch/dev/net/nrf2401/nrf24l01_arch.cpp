@@ -112,6 +112,10 @@ bool  nrf_send(uint8_t * buffer, uint16_t len) {
 
     /** Power up will take up to 5ms for maximum compatibility, the delay is 
      * implicit in the write function
+     * @note This function is implemented by the RF24 library, and the previous
+     * comment is from the library documentation. In datasheet is declared
+     * that the time from power down to power up (standby I) is 1.5ms + 130us
+     * to Tx or Rx mode. This is somewhat to take into account for future impelemtations.
     */
     radio.powerUp();
     radio.openWritingPipe(nrf_dst_addr);
