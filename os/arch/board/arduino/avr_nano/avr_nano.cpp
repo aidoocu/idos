@@ -6,7 +6,7 @@
 #ifdef ARDUINO_AVR_NANO
 
 #include <Arduino.h>
-#include "nano.h"
+#include "avr_nano.h"
 
 /* ----------------------- Interrupts ----------------------- */
 

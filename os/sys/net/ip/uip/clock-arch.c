@@ -28,6 +28,10 @@
 #include "../../../../arch/timer.h"
 #endif
 
+#ifdef ARDUINO_AVR_PRO
+#include "../../../../arch/timer.h"
+#endif
+
 /* #ifdef ARDUINO_ARCH_ESP8266 
 #include "../../../arch/board/esp/timer_esp.h"
 #endif  */

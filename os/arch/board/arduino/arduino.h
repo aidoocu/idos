@@ -8,5 +8,9 @@
 
 /* Arduino hasta ahora es definido por el platformio */
 #ifdef ARDUINO_AVR_NANO
-#include "nano/nano.h"
+#include "avr_nano/avr_nano.h"
+#endif
+
+#ifdef ARDUINO_AVR_PRO
+#include "avr_pro/avr_pro.h"
 #endif
