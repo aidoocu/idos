@@ -3,3 +3,6 @@ o puedan entrar en comfligto con otros por utilizar los mismos recursos, por eje
 serial usandolo como salida estándar de printf cuesta más de un valioso 10% en flash y en RAM respectivamente que si la 
 aplicación no necesitase se podría reaprovechar.
 
+
+Si no hace falta el UART no deberia inicializarse asi que hay que poner esto en la configuracion para que se pueda desactivar el UART
+
