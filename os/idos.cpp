@@ -59,6 +59,10 @@ uint8_t idos_init(void){
     /* La inicialización del idOS no debe ser interrumpida */
     uint8_t cSREG = inte_fall();
 
+    // ---- ToDo: Si no hace falta el UART no deberia inicializarse ---- //
+    // ---- asi que hay que poner esto en la configuracion para que 
+    // ---- se pueda desactivar el UART
+    // ----------------------------------------------------------------- //
     /* Inicializar el UART como salida estándar de printf */
     uart_init();
 
