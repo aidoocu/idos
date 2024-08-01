@@ -1,15 +1,15 @@
 /**
  * \file    timer.c
- * \brief   Implementación del rtimer en idOS.
+ * \brief   Implementación del timer en idOS.
  * \author  Bernardo Yaser León Ávila <bernardoyla@gmail.com>
  *
  *          El timer se implementa como una estructura que debe ser declarada antes del pt, un
- *          buen momento es al momento de declarar la tarea. Un timer puede puede ser utilizado
- *          de forma inmedita (rtimer) o para disparar un evento del timer (timer). El timer 
- *          siempre es disparado por una interrupción. Cuando se ha seteado como timer, la interrupción
- *          le pasa un mensaje a la tarea que ha seteado el timer (simplemente la despierta) 
- *          pasándole MSG_TIMER como tipo de mensaje. Cuando se setea como rtimer, se llama a la
- *          función callback asociada al timer.
+ *          buen momento es al momento de declarar la tarea.
+ *          El timer se activa con la función timer_set_sys(timer_st * timer, time_t msec, task_st * task)
+ *          y se verifica si ha expirado con la función timer_expired(timer_st * timer) en ciclo del planificador
+ *          de tareas. Si el timer ha expirado se le envia un mensaje a la tarea que seteó el timer despertandola, 
+ *          y luego el timer se desactiva con la función timer_disable(timer_st * timer) o se resetea con la función  
+ *          timer_reset(timer_st * timer).
  */
 
 #include "../idos.h"
