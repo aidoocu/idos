@@ -71,10 +71,6 @@ uint8_t idos_init(void){
     spi_init();
     #endif
 
-    #ifdef SLEEP_MODE
-    sleep_mode_init();
-    #endif
-
     /* Una vez iniciado todo se reactivan las interrupciones y todo el SREG */
     inte_raise(cSREG);
 
@@ -101,6 +97,13 @@ uint8_t idos_init(void){
     #ifdef BUILD_COAP
     #include "../apps/coap/coap.h"
     coap_start();
+    #endif
+
+    /* ------------------------------ sleep mode ------------------------------ */
+
+    /* A pertir de aqui el WDT empezara a correr y disparara a los WDT_TIME */
+    #ifdef SLEEP_MODE
+    sleep_mode_init();
     #endif
     
     return INIT_SUCCESS;

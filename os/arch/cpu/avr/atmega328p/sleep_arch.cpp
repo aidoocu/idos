@@ -13,8 +13,6 @@
  */
 
 #include "sleep_arch.h"
-#include "../lib/low_power/LowPower.h"
-
 /**
  * @brief External variable representing the value of the timer0 milliseconds counter.
  * 
@@ -24,7 +22,8 @@
  */
 extern unsigned long timer0_millis;
 
-#define SLEEP_TIME SLEEP_15MS
+volatile unsigned long wdt_duration = 0;
+volatile unsigned long wdt_init_time = 0;
 
 /**
  * @brief Initializes the sleep architecture.
@@ -35,15 +34,33 @@ extern unsigned long timer0_millis;
  */
 void sleep_init_arch(void){
 
-    /*  SLEEP_MODE_PWR_DOWN
-        SLEEP_MODE_PWR_SAVE
-        SLEEP_MODE_STANDBY
-        SLEEP_MODE_EXT_STANDBY
-        SLEEP_MODE_IDLE
-        SLEEP_MODE_ADC
-    */
-    //set_sleep_mode(SLEEP_MODE_IDLE);
+   // Disable interrupts
+    cli();
 
+    wdt_init_time = millis();
+    
+    /* start wdt */
+    wdt_enable(WDT_TIME);
+    /* Enable the WDT interrupt (no reset). */
+	WDTCSR |= (1 << WDIE);
+    WDTCSR |= ~(1 << WDE);
+
+    //Enable global interrupts
+    sei();
+
+    wdt_duration = 0;
+
+    int i = 0;
+    
+    while (1) {
+        if (wdt_duration == 1) {
+            break;
+        }
+    }
+    
+    // wait for interrupt
+    wdt_duration = millis() - wdt_init_time;
+    
 }
 
 /**
@@ -60,140 +77,49 @@ void sleep_arch(void){
     //Serial.print("S: ");
     //Serial.println(millis());
 
-    //delay(10);
+    /* Disable ADC */
+    ADCSRA &= ~(1 << ADEN);
 
-    LowPower.powerDown(SLEEP_TIME, ADC_OFF, BOD_OFF);
+    /* Enable the sleep mode */
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    cli();
+    sleep_enable();
+	sleep_bod_disable();
+
+    /* Enable int... */
+    sei();
+    /* ...and go to sleep */
+    sleep_cpu();
+
+    /* The program will continue from here after the WDT timeout */
+    sleep_disable();
+    /* Enable ADC */
+    ADCSRA |= (1 << ADEN);
 
     /** Cuando se va a dormir los temporizadores se duermen y se deja de contar 
      * el tiempo por lo que hay que "poner en hora" los registros de millis().
      * para ello se ha declado como extern en este archivo la variable timer0_millis
      * que es la que lleva la cuenta de los milisegundos del sistema.
     **/
-    uint8_t oldSREG = SREG;
-	// disable interrupts while we read timer0_millis or we might get an
+   	// disable interrupts while we read timer0_millis or we might get an
 	// inconsistent value (e.g. in the middle of a write to timer0_millis)
+    uint8_t oldSREG = SREG;
 	cli();
-    
-    /** @todo esto hay que hacerlo funcionar bien    */
-    /*#if SLEEP_TIME == SLEEP_15MS
-    timer0_millis = timer0_millis + 15;
-    #elif SLEEP_TIME == SLEEP_30MS
-    timer0_millis = timer0_millis + 30;
-    #elif SLEEP_TIME == SLEEP_60MS
-    timer0_millis = timer0_millis + 60;
-    #elif SLEEP_TIME == SLEEP_120MS
-    timer0_millis = timer0_millis + 120;
-    #elif SLEEP_TIME == SLEEP_250MS
-    timer0_millis = timer0_millis + 250;
-    #elif SLEEP_TIME == SLEEP_500MS
-    timer0_millis = timer0_millis + 500;
-    #elif SLEEP_TIME == SLEEP_1S
-    timer0_millis = timer0_millis + 1000;
-    #elif SLEEP_TIME == SLEEP_2S
-    timer0_millis = timer0_millis + 2000;
-    #elif SLEEP_TIME == SLEEP_4S
-    timer0_millis = timer0_millis + 4000;
-    #elif SLEEP_TIME == SLEEP_8S
-    timer0_millis = timer0_millis + 8000;
-    #endif */
 
-    if(SLEEP_TIME == SLEEP_15MS)
-        timer0_millis = timer0_millis + 15;
-    else if(SLEEP_TIME == SLEEP_30MS)
-        timer0_millis = timer0_millis + 30;
-    else if(SLEEP_TIME == SLEEP_60MS)
-        timer0_millis = timer0_millis + 60;
-    else if(SLEEP_TIME == SLEEP_120MS)
-        timer0_millis = timer0_millis + 120;
-    else if(SLEEP_TIME == SLEEP_250MS)
-        timer0_millis = timer0_millis + 250;
-    else if(SLEEP_TIME == SLEEP_500MS)
-        timer0_millis = timer0_millis + 500;
-    else if(SLEEP_TIME == SLEEP_1S)
-        timer0_millis = timer0_millis + 1000;
-    else if(SLEEP_TIME == SLEEP_2S)
-        timer0_millis = timer0_millis + 2000;
-    else if(SLEEP_TIME == SLEEP_4S)
-        timer0_millis = timer0_millis + 4000;
-    else if(SLEEP_TIME == SLEEP_8S)
-        timer0_millis = timer0_millis + 8000;
+    timer0_millis = timer0_millis + wdt_duration;
         
-
 	SREG = oldSREG;
-
-    //delay(10);
-
-    //Serial.print("W: ");
-    //Serial.println(millis());
+    sei();
 }
 
-// Temporary clock source variable ¿volatile?
-unsigned char clockSource = 0;
-
-/**
- * @brief Enables power to all peripherals.
- * 
- * This function restores the previous clock source setting for Timer 2,
- * enables power to Timer 2, ADC, Timer 1, SPI, USART0, and TWI.
- * 
- * @note This function enables all peripherals without exception.
- */
-void power_enable(void){
-    // Restore previous setting
-    TCCR2B = clockSource;
-    
-    power_timer2_enable();
-
-    /* habilitar ADC */
-    power_adc_enable();
-    ADCSRA |= (1 << ADEN);
-
-    power_timer1_enable();
-    power_spi_enable();
-    power_usart0_enable();
-    power_twi_enable();    
-}
-
-/**
- * @brief Disables power to all peripherals.
- * 
- * This function stores the current clock source setting for Timer 2,
- * removes the clock source to shutdown Timer 2, disables power to Timer 2,
- * ADC, Timer 1, SPI, USART0, and TWI.
- * 
- * @note This function disables all peripherals without exception.
- */
-void power_disable(void){
-
-    // Store current setting
-    clockSource = TCCR2B;
-
-    // Remove the clock source to shutdown Timer2
-    TCCR2B &= ~(1 << CS22);
-    TCCR2B &= ~(1 << CS21);
-    TCCR2B &= ~(1 << CS20);
-
-    power_timer2_disable();
-
-    /* Desabilitar ADC */
-    ADCSRA &= ~(1 << ADEN);
-    power_adc_disable();
-
-    power_timer1_disable();
-	power_spi_disable();
-	power_usart0_disable();
-	power_twi_disable();
-}
-
-/**
- * @brief Watchdog Timer interrupt service routine.
- * 
- * This function is executed when the Watchdog Timer times out.
- * It disables the Watchdog Timer.
- */
-/* ISR (WDT_vect) {
+ISR (WDT_vect){
 	// WDIE & WDIF is cleared in hardware upon entering this ISR
-	wdt_disable();
-    //printf("WDT\n");
-    Serial.println("WDT");
-} */
+	//wdt_disable();
+
+    if(wdt_duration == 0)
+        wdt_duration = 1;
+
+    wdt_enable(WDT_TIME);
+    /* Enable the WDT interrupt (note no reset). */
+	WDTCSR |= (1 << WDIE);
+}
