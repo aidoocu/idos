@@ -110,9 +110,6 @@ uint8_t idos_init(void){
 }
 
 
-
-
-
 #ifndef ARDUINO
 
 /** 
