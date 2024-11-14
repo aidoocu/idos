@@ -72,6 +72,8 @@ bool nrf_init(uint8_t * mac) {
      * lo sobreescribe cuando es llamada.
      */
     radio.openReadingPipe(NRF_PIPE_1, nrf_mac);
+
+    radio.setPayloadSize(32);
     
     /* y mantenerlo apagado */
     radio.stopListening();
