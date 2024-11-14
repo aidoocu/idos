@@ -36,6 +36,11 @@
 #include "cpu/avr/atmega328p/sleep_arch.h"
 #endif /* __AVR_ATmega328P__ */
 
+#ifdef __AVR_ATmega328PB__
+#include <avr/io.h>
+#include "cpu/avr/atmega328p/sleep_arch.h"
+#endif /* __AVR_ATmega328P__ */
+
 
 /* ----------------------------- / cpu ----------------------------------- */
 
