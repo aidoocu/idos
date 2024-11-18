@@ -33,8 +33,8 @@ struct udp_listener_st {
 	struct msg_st ipc_msg;				/**< Mensaje a la tarea que setea el listerner */
     uint16_t msg_len_in;                /**< Tamaño del mensaje que está en el buffer de entrada */
     uint16_t msg_len_out;               /**< Tamaño del mensaje que está en el buffer de salida */
-    uint8_t msg_in[MAX_UDP_MSG_SIZE];   /**< Buffer que contendrá el mensaje de la red */
-    uint8_t msg_out[MAX_UDP_MSG_SIZE];  /**< Buffer que contendrá el mensaje de la red */
+    uint8_t msg_in[MAX_UDP_MSG_SIZE];   /**< Buffer que contendrá el mensaje que viene de la red */
+    uint8_t msg_out[MAX_UDP_MSG_SIZE];  /**< Buffer que contendrá el mensaje que va para la red */
 
 #ifdef UIP_STACK
 	struct uip_udp_conn * udp_conn;		/**< Estructura a la conexión que maneja uIP */
