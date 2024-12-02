@@ -106,6 +106,7 @@ uint8_t task_runing(void){
   if(sch_preem.first != __null){
 
     /* \TODO!! falta el mecanismo para pasar el evento y sus datos (poner en la misma estructura del proceso) */
+    /* Aqui se llama al callback del protohilo  */
     sch_preem.first->pt(sch_preem.first);
 
     /* Si hay una próxima tarea preferente se planifica */
@@ -124,7 +125,11 @@ uint8_t task_runing(void){
     sch_normal.last = __null;
     return 0x10;
   }
+  
+  /* Si hay algo en la cola normal se corre */
   if(sch_normal.first != __null){
+
+    /* Aqui se llama al callback del protohilo  */
     sch_normal.first->pt(sch_normal.first);
 
     /* Si hay una próxima tarea normal se planifica */
