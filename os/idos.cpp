@@ -152,25 +152,31 @@ void setup(){
 }
 
 void loop(){
-    /* Esto es básicamente el planificador */    
-    /* Mientras exista una tarea en la cola será invocado su pt */
-    while(task_runing() != 0x00){
-        ;
-    }
+    /* Esto es básicamente el planificador donde entre tarea y tarea 
+    se comprueban los timers y el net_tick */    
+    do {
+        timer_exec();
+
+        #ifdef NET_STACK
+        net_tick();
+        #endif
+
+    } while(task_runing() != 0x00);
 
     /* Cuando ya no queden tareas en la cola se va a dormir hasta una INT */
     #ifdef SLEEP_MODE
     deep_sleep();
     #endif
 
-    /* Cuando se despierte por el TICK verifico los timers */
-    timer_exec();
-
-    #ifdef NET_STACK
-    net_tick();
-    #endif
-
-    /* !!!! Aquí Arduino verifica si hay algún evento serial diponibles !!!! */
+    /** @note Hay que tener en cuenta que la transmisión de datos reales desde 
+     * el buffer hacia el hardware se realiza en segundo plano utilizando 
+     * interrupciones. Esto implica que las funciones Serial.print, prinft() ++ 
+     * lo que hacen es poner estos datos en un buffer de salida y luego todo el
+     * resto del proceso se hace en segundo plano mientras el programa continua 
+     * ejecutandose. Esto puede dar problemas a la hora de establecer sincronismos 
+     * de la comunicacion, falsear tiempos en el debug ++ */
+    /** @note Lo descrito anteriormente no pasa con otras comunicaciones serie
+     * como SPI o I2C que son sincronas y bloqueantes */
 }
 #endif /* ARDUINO */
 
