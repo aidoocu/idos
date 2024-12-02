@@ -13,6 +13,9 @@
 //#include <lwip/tcp.h>
 #endif /* LWIP_STACK */
 
+/** Habiblita TCP */
+//#define UIP_TCP
+
 /** 
  *  Significado de las banderas uip_conn->tcpstateflags:
  *  - UIP_CLOSED (0): La conexión se ha cerrado de consenso (el extremo ha respondido con un ack al cierre o simplemente

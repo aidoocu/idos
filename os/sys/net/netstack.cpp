@@ -143,16 +143,33 @@ void net_tick(void) {
 
     /** ---------------------------- Enviar datos a la red ---------------------------- */
 
+    /** @todo UIP_PERIODIC_TIMER esta definido en uipethernet-conf.h y evita que se llame 
+     * continuamente a las conexiones en busca de tareas periodicas, uip_periodic y uip_udp_periodic
+     * pero lo cierto es que las tareas que quieren mandar (como esta ahora) algo primero lo 
+     * escriben en la conexion y tienen que esperar por UIP_PERIODIC_TIMER de estar activo, creando
+     * problemas de concurrencia por esta espera. Por ahora tan solo esta debilidato al igual que
+     * TCP (ver el ToDo de mas abajo). Esto asi no es eficiente ni conveniente, asi que hay 
+     * que hacer que se ejecute de forma periodica sino hay tareas intentando enviar (en caso de
+     * un retransmision o lo que sea que quede pendiente) y de forma inmediata cuando una tarea
+     * lo necesite*/
     #ifdef UIP_PERIODIC_TIMER
     unsigned long now = msec_now();
 
     /* Si periodic_timer expiró */
-    if ((long)( now - periodic_timer ) >= 0) {
+    if (((long)(now - periodic_timer) >= 0)) {
         
         /* Reiniciar periodic_timer */
         periodic_timer = now + UIP_PERIODIC_TIMER;
     #endif /* UIP_PERIODIC_TIMER */
 
+        /** @todo Aqui tan solo estoy evitando que se "utilice" TCP en el net_tick
+         * pero lo cierto es que se sigue compilando y ocupando espacio en memoria
+         * todo lo que tiene que ver con TCP. Hay que hacer algo...
+         * UIP_TCP y UIP_UDP deberían ser definidos en el archivo de configuración
+         * por ahora UIP_TCP esta definido en tcp.h (sistema de idOS) y UIP_UDP si
+         * esta definido en el archivo de configuración de uIP
+         */
+        #ifdef UIP_TCP
         for (int conn = 0; conn < UIP_CONNS; conn++) {
             
             /** Verificar que alguna tarea quiere enviar algo (poll) o reitentar 
@@ -181,6 +198,9 @@ void net_tick(void) {
             
             }
         }
+        #endif  /* UIP_TCP */
+
+        /* UDP conection */
         #if UIP_UDP
         for (int udp_conn = 0; udp_conn < UIP_UDP_CONNS; udp_conn++) {
             uip_udp_periodic(udp_conn);
@@ -258,7 +278,7 @@ void net_tick(void) {
             #endif
             #endif
 
-            /* y si hay que responder, respondemos */
+            /** y si hay que responder inmediatamente (por ejemplo a un ping) respondemos */
             if (uip_len > 0) {
                 /* uip_busca en la tabla ARP la dirección MAC a partir de IP 
                 y pone el encabezado LLH (Eth) completo */
