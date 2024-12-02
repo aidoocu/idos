@@ -99,7 +99,7 @@ bool udp_recv(struct udp_listener_st * listener);
  * 	\param len Tamaño del mensaje
  * 	\return true si fue enviado exitosamente, false si no 
  * 	\attention Esta función sitúa el mensaje a enviar en una estructura que es única
- * 	para todas las tareas, así que solo se podrá alojar un mensaje por siclo del 
+ * 	para todas las tareas, así que solo se podrá alojar un mensaje por ciclo del 
  * 	planificador. Siendo así, si la tarea antecesora pide enviar un mesaje, se devolverá
  * 	un false. La tarea que optiene el false tiene dos opciones, descartar el envío o
  *  intentar el próximo ciclo.
