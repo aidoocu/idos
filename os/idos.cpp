@@ -156,6 +156,7 @@ void loop(){
     se comprueban los timers y el net_tick */    
     do {
         timer_exec();
+        autostr_exec();
 
         #ifdef NET_STACK
         net_tick();

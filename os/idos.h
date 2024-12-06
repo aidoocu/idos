@@ -21,6 +21,7 @@
 
 /** Definiciones del sistema */
 #include "sys/timer.h"
+#include "sys/autostr.h"
 #include "sys/uart.h"
 #include "sys/sleep.h"
 
