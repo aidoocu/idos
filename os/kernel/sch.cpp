@@ -55,8 +55,7 @@ void task_autostart(struct task_st * const task[]){
 
 void task_set_ready(struct task_st * task){
 
-  /*  Si de hecho la tarea ya está en cola o de hecho ya está corriendo (se llama así 
-      misma)no hay nada que hacer 
+  /*  Si de hecho la tarea ya está en cola no hay nada que hacer 
   */
   if (task->status == READY){
     return;
