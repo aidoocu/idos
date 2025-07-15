@@ -15,7 +15,7 @@ bool mac_init(void) {
     /** Si la MAC entra por parametro (que no creo correcto) */
     /* pero por ahora se hará así, hay que arreglarlo */
     #define MAC_ADDRESS 0xde, 0xad, 0xbe, 0xef, 0xfe, 0xed
-    return enc_init((uint8_t *) &MAC_ADDRESS);
+    return enc_init((uint8_t *) &MAC_ADDRESS); //esto no parece correcto, revisar
     #endif
 
 

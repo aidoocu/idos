@@ -63,6 +63,8 @@ bool nrf_init(void);
 /** 
  *  \brief Obtener la dirección MAC del NRF24L01
  *  \param mac Puntero al buffer donde se copiará la dirección MAC
+ *  \note La dirección MAC se define como un arreglo de 5 bytes, por lo que
+ *        el buffer debe tener al menos 5 bytes de tamaño.
  */
 void nrf_get_address(uint8_t * mac);
 

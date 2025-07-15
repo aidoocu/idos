@@ -35,18 +35,11 @@ bool nrf_init(void) {
 
     /** Setting the MAC address, width first */
     radio.setAddressWidth(NRF_ADDR_WIDTH);
+    
     /** A diferencia de ethernet, wifi, etc, nrf tiene solo 5 bytes,
      * por lo que hay que ajustar la dirección MAC a 5 bytes
      */
     uint8_t nrf_mac[NRF_ADDR_WIDTH] = {NRF_ADDR_DEFAULT};
-
-    /* Si la MAC entra por parametro (que no creo correcto) */
-    #ifdef MAC_ADDRESS
-
-    for(uint8_t i = 0; i < NRF_ADDR_WIDTH; i++)
-         nrf_mac[i] = mac[i];
-    
-    #endif
 
     if(!radio.begin())
         return false;
