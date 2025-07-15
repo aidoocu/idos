@@ -12,7 +12,7 @@
 /** 
  * 
  */
-bool mac_init(uint8_t * mac) {
+bool mac_init(void) {
     
     #if NET_DEBUG >= 2
     printf("ESP WiFi starting \r\n");
@@ -20,11 +20,6 @@ bool mac_init(uint8_t * mac) {
 
     /* Modo de estación */
     WiFi.mode(WIFI_STA);
-
-    /* Si hay una dirección mac declarada se inicializa */
-    #ifdef MAC_ADDRESS
-    wifi_set_macaddr(STATION_IF, mac);
-    #endif
 
     /*  */
     WiFi.begin(WIFI_SSID, WIFI_PASS);

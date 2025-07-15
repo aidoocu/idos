@@ -31,14 +31,14 @@ static uint8_t nrf_dst_addr[NRF_ADDR_WIDTH];
  * @param mac The MAC address to be used for communication.
  * @return True if the initialization is successful, false otherwise.
  */
-bool nrf_init(uint8_t * mac) {
+bool nrf_init(void) {
 
     /** Setting the MAC address, width first */
     radio.setAddressWidth(NRF_ADDR_WIDTH);
     /** A diferencia de ethernet, wifi, etc, nrf tiene solo 5 bytes,
      * por lo que hay que ajustar la dirección MAC a 5 bytes
      */
-    uint8_t nrf_mac[NRF_ADDR_WIDTH];
+    uint8_t nrf_mac[NRF_ADDR_WIDTH] = {NRF_ADDR_DEFAULT};
 
     /* Si la MAC entra por parametro (que no creo correcto) */
     #ifdef MAC_ADDRESS
@@ -46,22 +46,6 @@ bool nrf_init(uint8_t * mac) {
     for(uint8_t i = 0; i < NRF_ADDR_WIDTH; i++)
          nrf_mac[i] = mac[i];
     
-    #else
-    /* Si no hay que poner una nueva MAC */
-
-    nrf_mac[0] = NRF_ADDR_0;
-    nrf_mac[1] = NRF_ADDR_1;
-    nrf_mac[2] = NRF_ADDR_2;
-    nrf_mac[3] = NRF_ADDR_3;
-
-    /** Si no esta definida en la configuracion se pondra un 
-     * numero aleatorio */
-    if (NRF_ADDR_0 == 0) {
-        nrf_mac[4] = (uint8_t)analogRead(A0);
-    } else {
-        nrf_mac[4] = NRF_ADDR_4;
-    }
-                      
     #endif
 
     if(!radio.begin())

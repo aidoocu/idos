@@ -39,8 +39,4 @@
 #endif
 
 
-
-
-
-
 #endif  /* _NETCONF_H_ */

@@ -7,22 +7,42 @@
 #include "mac.h"
 
 
-bool mac_init(uint8_t * mac) {
+bool mac_init(void) {
     
     /* --------------------- ENC28J60 --------------------- */
 
     #ifdef ENC28J60
-    return enc_init(mac);
+    /** Si la MAC entra por parametro (que no creo correcto) */
+    /* pero por ahora se hará así, hay que arreglarlo */
+    #define MAC_ADDRESS 0xde, 0xad, 0xbe, 0xef, 0xfe, 0xed
+    return enc_init((uint8_t *) &MAC_ADDRESS);
     #endif
 
 
     /* --------------------- NRF24L01 --------------------- */
 
     #ifdef NRF24L01
-    return nrf_init(mac);
+    return nrf_init();
     #endif
 
 }
+
+void mac_get_address(uint8_t * mac) {
+    
+    /* --------------------- ENC28J60 --------------------- */
+
+    #ifdef ENC28J60
+    enc_get_address(mac);
+    #endif
+
+    /* --------------------- NRF24L01 --------------------- */
+
+    #ifdef NRF24L01
+    nrf_get_address(mac);
+    #endif
+
+}
+
 
 
 

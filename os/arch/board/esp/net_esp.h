@@ -33,7 +33,7 @@
  * \todo Hay que valorar si fuera necesario que el modo sea AP_STA o hacer
  * que sea configurable o .......
 */
-bool mac_init(uint8_t * mac);
+bool mac_init(void);
 
 
 void mac_get_address(uint8_t * mac);

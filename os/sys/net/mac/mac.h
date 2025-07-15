@@ -16,9 +16,8 @@
 
 /** 
  *  \brief Inicializar el ENC 
- *  \param mac Dirección (máscara) MAC que deberá tener el ENC
  */
-bool mac_init(uint8_t * mac);
+bool mac_init(void);
 
 /** 
  *  \brief Escribir  

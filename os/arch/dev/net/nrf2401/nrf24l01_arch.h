@@ -30,11 +30,7 @@
 
 /* MAC address */
 #define NRF_ADDR_WIDTH 5
-#define NRF_ADDR_0 0x49     /* I */
-#define NRF_ADDR_1 0x44     /* D */
-#define NRF_ADDR_2 0x4F     /* O */
-#define NRF_ADDR_3 0x53     /* S */
-#define NRF_ADDR_4 0x00     /* 0 */
+#define NRF_ADDR_DEFAULT 0x49, 0x44, 0x4F, 0x53, 0x00
 
 #define NRF24L01_CHANNEL 90
 #define NRF24L01_PAYLOAD_SIZE 32
@@ -62,7 +58,7 @@
  *  \param mac Dirección (máscara) MAC que deberá tener el NRF24L01
  *  \return True if initialization is successful, false otherwise.
  */
-bool nrf_init(uint8_t * mac);
+bool nrf_init(void);
 
 /** 
  *  \brief Obtener la dirección MAC del NRF24L01

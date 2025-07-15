@@ -43,18 +43,12 @@ void net_stack_init(void) {
 
 
     /* ------------------------------ MAC Init ------------------------------- */
-
-    #ifdef MAC_ADDRESS
-    uint8_t mac_address[] = {MAC_ADDRESS};
-    #else 
-    static uint8_t mac_address[6];
-    #endif /* MAC_ADDRESS */
-
+ 
     /** \todo yo creo que no deberia ser asi, creo la MAC no deberia pasarse por parametro
      * arreglar esto
      */
     /* Inicializar la interface de red con la dirección mac si hubiera */
-    nic_initialized = mac_init(mac_address);
+    nic_initialized = mac_init();
 
     if (!nic_initialized) {
 
@@ -70,6 +64,9 @@ void net_stack_init(void) {
     
     }
 
+    /* Obtener la dirección MAC de la NIC */
+    uint8_t mac_address[6];
+    mac_get_address(mac_address);
 
     /* ------------------------------ STACK UIP ------------------------------ */
 
