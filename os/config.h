@@ -75,12 +75,8 @@
 #endif /* ENC28J60 || NRF24L01 */
 
 
-
-
-
 /* Comente la linea a continuación si no tiene ninguna interface de red */
 #define NET_STACK 
-
 
 
 #endif /* _CONFIG_H_ */
