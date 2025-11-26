@@ -7,7 +7,7 @@
  *  static o declaradas de forma global, por ejemplo justo después de declarar
  *  la tarea
  */
-#include "os/idos.h"
+#include <idos.h>
 
 /* Declaro dos protohilos */
 TASK(task_uno, "primera tarea");

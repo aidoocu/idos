@@ -2,7 +2,7 @@
  *  En este es un ejemplo para Arduino. Aquí mostramos "hello" por consola 
  *  a 1Hz.
  */
-#include "../../../src/os/idos.h"
+#include <idos.h>
 #include <stdio.h>
 
 /* Declaro dos protohilos */

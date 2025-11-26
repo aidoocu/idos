@@ -4,7 +4,7 @@
  *  al otro pt y luego se va a dormir. Así cada, continuamente, pt despierta al otro
  *  y se va a dormir.
  */
-#include "os/idos.h"
+#include <idos.h>
 
 /* Declaro dos protohilos */
 TASK(task_uno, "primera tarea");
@@ -22,7 +22,7 @@ TASK_PT(task_uno){
     while (1)
     {
       printf("uno+\n");
-      task_ipc(&task_dos, NULL);
+      task_ipc(task_dos, NULL);
       TASK_YIELD
       printf("uno-\n");
 
@@ -38,7 +38,7 @@ TASK_PT(task_dos){
     while (1)
     {
       printf("dos+\n");
-      task_ipc(&task_uno, NULL);
+      task_ipc(task_uno, NULL);
       TASK_YIELD
       printf("dos-\n");
     }

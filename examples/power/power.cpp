@@ -1,7 +1,7 @@
 /** Este ejemplo nos permite ver la diferencia entre una espera pasiva entregando el CPU 
  *  y una activa con delay. Testeado en un Arduino Nano muestra unos 10mA de diferencia
  * */
-#include "os/idos.h"
+#include <idos.h>
 
 /* Declaro dos protohilos */
 TASK(task_uno, "primera tarea");
