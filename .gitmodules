@@ -4,3 +4,6 @@
 [submodule "src/os/sys/net/vamp"]
 	path = src/os/sys/net/vamp
 	url = https://github.com/aidoocu/vamp.git
+[submodule "src/os/arch/dev/net/nrf2401/RF24"]
+	path = src/os/arch/dev/net/nrf2401/RF24
+	url = https://github.com/nRF24/RF24.git

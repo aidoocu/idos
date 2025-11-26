@@ -9,6 +9,8 @@
 #include "../../../arch.h"
 #include "nrf24l01_arch.h"
 
+#include <RF24.h>
+
 /**
  * @brief Class representing the NRF24L01 radio module.
  *

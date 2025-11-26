@@ -47,10 +47,6 @@ bool mac_init(void) {
         return false; // EEPROM read not implemented for this platform  
     #endif /* AVR */
 
-    /* ToDo esto no deberia ser asi porque pudiera ser una interface diferente */
-    
-    //#include "../../../lib/idos/src/os/arch/dev/net/nrf2401/nrf24l01_arch.h"
-
     printf("ID: \n");
     for (int i = 0; i < 5; i++) {
         printf("%02X ", vamp_client_id[i]);

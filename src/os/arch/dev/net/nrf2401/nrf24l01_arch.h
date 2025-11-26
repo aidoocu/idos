@@ -12,9 +12,9 @@
 
 #include "../../../arch.h"
 
-#include "RF24/nRF24L01.h"
+/* #include "RF24/nRF24L01.h"
 #include "RF24/RF24.h"
-#include "RF24/RF24_config.h"
+#include "RF24/RF24_config.h" */
 
 /* Pone el pin CS del SPI por defecto. Cambiar esta línea en caso de utilizar otro */
 #define NRF24L01_CSN SS
