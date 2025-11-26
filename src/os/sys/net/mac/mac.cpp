@@ -24,6 +24,44 @@ bool mac_init(void) {
     #ifdef NRF24L01
     return nrf_init();
     #endif
+    
+    /* -------------------- VAMP_STACK -------------------- */
+    /* ToDo!! por un problema de orden es probable que pasar esta
+    parte para otro fichero sea mejor */
+    #ifdef VAMP_STACK
+
+    /* Creamos la variable que tendra el ID local del cliente VAMP */
+    uint8_t vamp_client_id[5] = {0};
+
+    /* VAMP client id storage address in EEPROM (change if needed) */
+    #ifndef VAMP_CLIENT_ID_EEPROM_ADDR
+    #define VAMP_CLIENT_ID_EEPROM_ADDR 0x10
+    #endif
+
+    /* Read the 5-byte VAMP client id from MCU non-volatile storage */
+    #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__)
+        #include <avr/eeprom.h>
+        eeprom_read_block((void *)vamp_client_id, (const void *)VAMP_CLIENT_ID_EEPROM_ADDR, 5);
+    #else
+        (void)vamp_client_id;
+        return false; // EEPROM read not implemented for this platform  
+    #endif /* AVR */
+
+    /* ToDo esto no deberia ser asi porque pudiera ser una interface diferente */
+    
+    //#include "../../../lib/idos/src/os/arch/dev/net/nrf2401/nrf24l01_arch.h"
+
+    printf("ID: \n");
+    for (int i = 0; i < 5; i++) {
+        printf("%02X ", vamp_client_id[i]);
+    }
+    printf("\n");
+    delay(10);
+
+    #include "../vamp/vamp_client.h"
+    vamp_client_init(vamp_client_id);
+
+    #endif /* VAMP_STACK */
 
     return false;
 

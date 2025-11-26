@@ -7,6 +7,8 @@
 
 //#include <stdint.h>
 
+#define IDOS_
+
 /** Cargar configuraciones globales */
 #include "config.h"
 
