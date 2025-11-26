@@ -25,6 +25,8 @@ bool mac_init(void) {
     return nrf_init();
     #endif
 
+    return false;
+
 }
 
 void mac_get_address(uint8_t * mac) {
@@ -59,6 +61,8 @@ uint16_t mac_poll(uint8_t * frame) {
     #ifdef NRF24L01
     return nrf_poll(frame);
     #endif
+    
+    return 0;
 
 }
 
@@ -77,6 +81,8 @@ bool mac_send(uint8_t * frame, uint16_t len){
     return nrf_send(frame, len);
     #endif
 
+    return false;
+
 }
 
 
@@ -94,7 +100,9 @@ uint8_t nic_is_active(void) {
     return nrf_is_active();
     #endif
 
+    return 0;
 }
+
 bool nic_link_status(void) {
     
     /* --------------------- ENC28J60 --------------------- */
@@ -108,6 +116,8 @@ bool nic_link_status(void) {
     #ifdef NRF24L01
     return nrf_link_status();
     #endif
+
+    return false;
 
 }
 

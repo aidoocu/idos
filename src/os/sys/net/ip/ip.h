@@ -162,8 +162,8 @@ void esp_net_udp_appcall(void);
    ... */
 #ifdef VAMP_STACK
 
-/* ESTO QUE ESTA PASANDO AQUI ES SOLO UN PARCHE, DARA MUCHOS PROBLEMAS CUANDO 
-   SE USEN DOS INTERFACES */
+/* ToDO !!! ESTO QUE ESTA PASANDO AQUI ES SOLO UN PARCHE, DARA MUCHOS PROBLEMAS 
+   CUANDO SE USEN DOS INTERFACES */
 
 #define LLH_LEN      2     /* Longitud de header de enlace en VAMP */
 #define IPUDPH_LEN   0     /* No hay header IP en VAMP */

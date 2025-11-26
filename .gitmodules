@@ -1,3 +1,6 @@
 [submodule "src/os/arch/dev/sensor/bosh/bme280/BME280"]
 	path = src/os/arch/dev/sensor/bosh/bme280/BME280
 	url = https://github.com/finitespace/BME280.git
+[submodule "src/os/sys/net/vamp"]
+	path = src/os/sys/net/vamp
+	url = https://github.com/aidoocu/vamp.git
