@@ -98,6 +98,8 @@ uint8_t idos_init(void){
     dev_start();
 
     /* Levantar las apps. Cada app que se adicione debe ser incluida aquí */
+    /* ToDo, aqui no se deben iniciar una a una las apps, aqui se debera lanzar un 
+    gestor de apps o algo asi */
     #ifdef BUILD_COAP
     #include "../apps/coap/coap.h"
     coap_start();
