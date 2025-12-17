@@ -47,13 +47,6 @@ bool mac_init(void) {
         return false; // EEPROM read not implemented for this platform  
     #endif /* AVR */
 
-    printf("ID: \n");
-    for (int i = 0; i < 5; i++) {
-        printf("%02X ", vamp_client_id[i]);
-    }
-    printf("\n");
-    delay(10);
-
     #include "../vamp/vamp_client.h"
     vamp_client_init(vamp_client_id);
 
