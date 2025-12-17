@@ -8,6 +8,11 @@
 
 #if defined(BME_280)
 
+/* ToDo esto tiene que pasarse a la biblioteca del BME280 que se carge desde el entorno
+no incluirla como parte del proyecto
+seria:*/
+/* #include <BME280I2C.h> */
+
 #include "BME280/src/BME280I2C.h"
 #include <Wire.h>
 

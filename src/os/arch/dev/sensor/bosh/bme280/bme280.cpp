@@ -35,12 +35,14 @@ void bme280_init() {
     if(!bme.begin()){
         
         #ifdef DEBUG_BME280
-        printf("BME280 error\n");
+        printf("[BME280] E\n");
+		delay(5);
         #endif
 		return;
     }
 
-	printf("BME280 init\n");
+	printf("[BME280] ok\n");
+	delay(5);
 }
 
 /* get temperature */
