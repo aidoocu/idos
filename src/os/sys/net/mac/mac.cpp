@@ -6,6 +6,10 @@
 #include <idos.h>
 #include "mac.h"
 
+#ifdef VAMP_STACK
+#include "../vamp/vamp_client.h"
+#endif /* VAMP_STACK */
+
 
 bool mac_init(void) {
     
@@ -47,7 +51,6 @@ bool mac_init(void) {
         return false; // EEPROM read not implemented for this platform  
     #endif /* AVR */
 
-    #include "../vamp/vamp_client.h"
     vamp_client_init(vamp_client_id);
 
     #endif /* VAMP_STACK */
@@ -107,6 +110,15 @@ bool mac_send(uint8_t * frame, uint16_t len){
     #ifdef NRF24L01
     return nrf_send(frame, len);
     #endif
+
+    /* --------------------- VAMP_STACK --------------------- */
+
+    #ifdef VAMP_STACK
+    if(vamp_client_tell(frame, len))
+        return true;
+    return false;
+    #endif
+
 
     return false;
 
