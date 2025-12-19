@@ -64,6 +64,7 @@ uint8_t spi_transfer(uint8_t data){
 */
 int serial_print(char c, FILE *){
   Serial.write(c);
+  Serial.flush();
   return c;
 }
 
